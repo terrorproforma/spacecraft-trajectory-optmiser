@@ -83,6 +83,13 @@ void run_case(int n, int iterations, bool missing_diagonal, bool unconstrained, 
         check(cudaMemcpyAsync(device + 1, packed.data(), packed.size() * sizeof(double), cudaMemcpyHostToDevice, stream));
         require(update(workspace, device + 1, stream) == 0, "device numerical update");
         auto* data = gpu->work->data; auto* scales = gpu->work->scaling;
+        const char* objective_policy = std::getenv("SPACEPDHCG_TEST_QOCO_RUIZ_PRESERVE_OBJECTIVE");
+        if (objective_policy && objective_policy[0] == '1') {
+            require(scales->k == 1.0 && scales->kinv == 1.0,
+                    "GPU Ruiz preserves objective magnitude");
+            require(cpu->work->scaling->k == 1.0 && cpu->work->scaling->kinv == 1.0,
+                    "reference Ruiz preserves objective magnitude");
+        }
 #ifdef SPACEPDHCG_QOCO_DEFERRED_TRANSPOSES
         for (auto* matrix : {data->At, data->Gt}) {
             require(matrix->transpose_source && matrix->transpose_values_pending,

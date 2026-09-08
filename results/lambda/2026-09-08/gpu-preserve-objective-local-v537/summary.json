@@ -1,0 +1,373 @@
+{
+  "default_enabled": false,
+  "source_base_commit": "71fb2b51b798ff0cb8b2b9002f5ed9a056f1de20",
+  "flag": "SPACEPDHCG_TEST_QOCO_RUIZ_PRESERVE_OBJECTIVE",
+  "local_legs": {
+    "baseline": {
+      "seconds": 126.03029841600255,
+      "converged": 205,
+      "priming": 522,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "infeasible": 14,
+        "failed": 6
+      }
+    },
+    "candidate": {
+      "seconds": 143.5143325730005,
+      "converged": 205,
+      "priming": 450,
+      "workspaces": 225,
+      "statuses": {
+        "converged": 205,
+        "failed": 3,
+        "infeasible": 17
+      }
+    },
+    "scope": "One full pass per mode with the same binary: zero Ruiz versus two Ruiz passes with objective magnitude preserved. Existing pool eligibility applies (zero Ruiz reuses workspaces; scaled workspaces rebuild). Original fixture budgets and accuracy tolerances are unchanged. Solver time excludes certification.",
+    "lost_baseline": [],
+    "max_certified_mass_delta": {
+      "index": 210,
+      "delta_kg": 4.8120909923454747e-08
+    },
+    "less_time_percent": -13.872881661587755,
+    "largest_timing_changes": [
+      {
+        "index": 44,
+        "baseline_seconds": 1.3517977880001126,
+        "candidate_seconds": 8.934188289000303,
+        "difference": 7.582390501000191,
+        "baseline_iterations": 10,
+        "candidate_iterations": 30
+      },
+      {
+        "index": 12,
+        "baseline_seconds": 5.809834089001015,
+        "candidate_seconds": 1.1677333699990413,
+        "difference": -4.642100719001974,
+        "baseline_iterations": 33,
+        "candidate_iterations": 15
+      },
+      {
+        "index": 87,
+        "baseline_seconds": 2.836108024999703,
+        "candidate_seconds": 6.722909224999967,
+        "difference": 3.8868012000002636,
+        "baseline_iterations": 34,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 170,
+        "baseline_seconds": 0.7178433329991094,
+        "candidate_seconds": 4.320936855998298,
+        "difference": 3.6030935229991883,
+        "baseline_iterations": 11,
+        "candidate_iterations": 38
+      },
+      {
+        "index": 207,
+        "baseline_seconds": 2.7625651830003335,
+        "candidate_seconds": 4.74814786099887,
+        "difference": 1.9855826779985364,
+        "baseline_iterations": 41,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 204,
+        "baseline_seconds": 5.729458829000578,
+        "candidate_seconds": 4.113726036999651,
+        "difference": -1.6157327920009266,
+        "baseline_iterations": 44,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 134,
+        "baseline_seconds": 1.6859785140004533,
+        "candidate_seconds": 0.5516399560001446,
+        "difference": -1.1343385580003087,
+        "baseline_iterations": 26,
+        "candidate_iterations": 9
+      },
+      {
+        "index": 209,
+        "baseline_seconds": 4.313290932999735,
+        "candidate_seconds": 5.440863145000549,
+        "difference": 1.127572212000814,
+        "baseline_iterations": 30,
+        "candidate_iterations": 27
+      },
+      {
+        "index": 129,
+        "baseline_seconds": 10.574693632999697,
+        "candidate_seconds": 11.702143700000306,
+        "difference": 1.1274500670006091,
+        "baseline_iterations": 29,
+        "candidate_iterations": 30
+      },
+      {
+        "index": 165,
+        "baseline_seconds": 5.0729244880003534,
+        "candidate_seconds": 3.9471230159997504,
+        "difference": -1.125801472000603,
+        "baseline_iterations": 27,
+        "candidate_iterations": 28
+      }
+    ]
+  },
+  "lambda_legs": {
+    "baseline": {
+      "seconds": 160.79363302874845,
+      "converged": 205,
+      "priming": 522,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "infeasible": 14,
+        "failed": 6
+      }
+    },
+    "candidate": {
+      "seconds": 158.81012351682875,
+      "converged": 205,
+      "priming": 450,
+      "workspaces": 225,
+      "statuses": {
+        "converged": 205,
+        "infeasible": 14,
+        "failed": 6
+      }
+    },
+    "scope": "One full pass per mode with the same binary: zero Ruiz versus two Ruiz passes with objective magnitude preserved. Existing pool eligibility applies (zero Ruiz reuses workspaces; scaled workspaces rebuild). Original fixture budgets and accuracy tolerances are unchanged. Solver time excludes certification.",
+    "lost_baseline": [],
+    "max_certified_mass_delta": {
+      "index": 53,
+      "delta_kg": 2.0314109860919416e-07
+    },
+    "less_time_percent": 1.2335746599898334,
+    "largest_timing_changes": [
+      {
+        "index": 175,
+        "baseline_seconds": 5.750290391035378,
+        "candidate_seconds": 1.4160720470244996,
+        "difference": -4.334218344010878,
+        "baseline_iterations": 44,
+        "candidate_iterations": 18
+      },
+      {
+        "index": 201,
+        "baseline_seconds": 3.7037475170218386,
+        "candidate_seconds": 6.715800474979915,
+        "difference": 3.012052957958076,
+        "baseline_iterations": 42,
+        "candidate_iterations": 40
+      },
+      {
+        "index": 195,
+        "baseline_seconds": 3.804399023007136,
+        "candidate_seconds": 6.741824776981957,
+        "difference": 2.9374257539748214,
+        "baseline_iterations": 42,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 204,
+        "baseline_seconds": 6.3508502199547365,
+        "candidate_seconds": 3.543913249974139,
+        "difference": -2.8069369699805975,
+        "baseline_iterations": 44,
+        "candidate_iterations": 41
+      },
+      {
+        "index": 87,
+        "baseline_seconds": 3.7337226180243306,
+        "candidate_seconds": 5.548060091037769,
+        "difference": 1.8143374730134383,
+        "baseline_iterations": 37,
+        "candidate_iterations": 41
+      },
+      {
+        "index": 12,
+        "baseline_seconds": 8.046806775033474,
+        "candidate_seconds": 6.279097726976033,
+        "difference": -1.7677090480574407,
+        "baseline_iterations": 41,
+        "candidate_iterations": 28
+      },
+      {
+        "index": 165,
+        "baseline_seconds": 6.38433793297736,
+        "candidate_seconds": 4.79921522497898,
+        "difference": -1.58512270799838,
+        "baseline_iterations": 27,
+        "candidate_iterations": 28
+      },
+      {
+        "index": 209,
+        "baseline_seconds": 5.984705965034664,
+        "candidate_seconds": 4.944227119965944,
+        "difference": -1.0404788450687192,
+        "baseline_iterations": 26,
+        "candidate_iterations": 30
+      },
+      {
+        "index": 60,
+        "baseline_seconds": 13.225593323004432,
+        "candidate_seconds": 12.27360623102868,
+        "difference": -0.9519870919757523,
+        "baseline_iterations": 34,
+        "candidate_iterations": 32
+      },
+      {
+        "index": 176,
+        "baseline_seconds": 5.964672620990314,
+        "candidate_seconds": 5.367974642955232,
+        "difference": -0.5966979780350812,
+        "baseline_iterations": 26,
+        "candidate_iterations": 32
+      }
+    ]
+  },
+  "local_campaign": {
+    "scope": "ABBA two runs per mode, identical binary. Zero Ruiz versus two Ruiz passes with objective magnitude preserved; existing pool eligibility remains in force. All runs pass both mission checkers.",
+    "baseline_process_median": 27.850480944999617,
+    "candidate_process_median": 29.952867985499324,
+    "less_process_time_percent": -7.548835672359111,
+    "rows": [
+      {
+        "name": "baseline0",
+        "candidate": false,
+        "process_seconds": 27.91909229399971,
+        "cli_seconds": 27.034738660000585,
+        "score": 548.2546201232001,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 9.65981845600254,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "candidate0",
+        "candidate": true,
+        "process_seconds": 30.316252475999136,
+        "cli_seconds": 29.456973607999316,
+        "score": 548.2546201231003,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 12.061334485997577,
+        "converged": 46,
+        "workspace_creations": 47
+      },
+      {
+        "name": "candidate1",
+        "candidate": true,
+        "process_seconds": 29.589483494999513,
+        "cli_seconds": 28.69118253600027,
+        "score": 548.2546201230996,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 11.33446182300031,
+        "converged": 46,
+        "workspace_creations": 47
+      },
+      {
+        "name": "baseline1",
+        "candidate": false,
+        "process_seconds": 27.781869595999524,
+        "cli_seconds": 26.89214821999849,
+        "score": 548.2546201232997,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 9.64903316598793,
+        "converged": 46,
+        "workspace_creations": 17
+      }
+    ]
+  },
+  "lambda_campaign": {
+    "scope": "ABBA two runs per mode, identical binary. Zero Ruiz versus two Ruiz passes with objective magnitude preserved; existing pool eligibility remains in force. All runs pass both mission checkers.",
+    "baseline_process_median": 29.554955538507784,
+    "candidate_process_median": 33.20926098100608,
+    "less_process_time_percent": -12.364442361407125,
+    "rows": [
+      {
+        "name": "baseline0",
+        "candidate": false,
+        "process_seconds": 29.20585749699967,
+        "cli_seconds": 28.404409895010758,
+        "score": 548.2546201231999,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 11.38943257520441,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "candidate0",
+        "candidate": true,
+        "process_seconds": 31.806588258012198,
+        "cli_seconds": 31.022813242976554,
+        "score": 548.2546201231999,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 13.983248512784485,
+        "converged": 46,
+        "workspace_creations": 47
+      },
+      {
+        "name": "candidate1",
+        "candidate": true,
+        "process_seconds": 34.611933703999966,
+        "cli_seconds": 33.805563335015904,
+        "score": 548.2546201234002,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 16.746674581081606,
+        "converged": 46,
+        "workspace_creations": 47
+      },
+      {
+        "name": "baseline1",
+        "candidate": false,
+        "process_seconds": 29.904053580015898,
+        "cli_seconds": 29.0974111520336,
+        "score": 548.2546201233001,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 12.104434553126339,
+        "converged": 46,
+        "workspace_creations": 17
+      }
+    ]
+  },
+  "final_preparation": {
+    "flag": "SPACEPDHCG_TEST_QOCO_RUIZ_PRESERVE_OBJECTIVE",
+    "default_enabled": false,
+    "files": {
+      "src/equilibration.c": {
+        "before_sha256": "ea3b1102e592ccc7824988b0538b283db63fdf4189f6323178e7310530963d5e",
+        "after_sha256": "04ab77326ced2e497fb5a08733a9269d8b95370c86f9ca7ca5ea3665183fc2d6"
+      },
+      "algebra/cuda/qoco_device_update.cuh": {
+        "before_sha256": "5c81fdf4652431c29a78697cd0feb163d16e42f98b925fb1be13b4d4d56ba987",
+        "after_sha256": "d3898abb7723d69ed462c6f2c8b891a3f4c80e036163e92255d3c9f410e5d9a0"
+      }
+    },
+    "final_preparer_sha256": "ced98ba4ad3109501d5fec9064d0aaf1b4584aa506c602469e41e057de40ee41",
+    "compiled_outputs_match": true
+  },
+  "limitations": [
+    "Opt-in accuracy fix; zero-Ruiz production default retained.",
+    "205/225 qualified on both GPUs; all remaining attempts remain rejected.",
+    "Scaled workspaces still rebuild; no broad performance improvement established.",
+    "No new fleet record or fully GPU-controlled route/fleet application."
+  ]
+}

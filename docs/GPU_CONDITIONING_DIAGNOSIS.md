@@ -106,8 +106,9 @@ scaled residuals. The instrumented traces are diagnostic, not throughput measure
 
 This isolates objective normalization as sufficient to trigger this numerical
 regression. It does not yet identify a faulty kernel or establish a general cure.
-Preserving objective magnitude during equilibration is the next candidate to
-evaluate over the complete workload; it has not been implemented or promoted.
+The [follow-up opt-in policy](GPU_OBJECTIVE_PRESERVING_RUIZ.md) now preserves
+objective magnitude during equilibration and retains all 205 certified legs on
+both GPUs. It does not establish an overall speedup; zero Ruiz remains the default.
 The earlier static-regularization and iterative-refinement sweeps did not restore
 reliable qualification. All production solver settings remain unchanged.
 

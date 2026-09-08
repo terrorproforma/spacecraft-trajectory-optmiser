@@ -1,0 +1,67 @@
+{
+  "pid": 199105,
+  "complete": true,
+  "stages": [
+    {
+      "name": "configure",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-preserve-objective-v535/source",
+        "-B",
+        "/home/ubuntu/spacepdhcg-preserve-objective-v535/build",
+        "-DQOCO_ALGEBRA_BACKEND=cuda",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DQOCO_BUILD_TYPE=Release",
+        "-DBUILD_QOCO_DEMO=OFF",
+        "-DCUDSS_LIB=/home/ubuntu/spacepdhcg-recovery-v152/cudss/lib/libcudss.so",
+        "-DCMAKE_CUDA_FLAGS=--default-stream per-thread -I/home/ubuntu/spacepdhcg-recovery-v152/cudss/include",
+        "-DCMAKE_C_FLAGS=-Werror=implicit-function-declaration"
+      ],
+      "returncode": 0,
+      "seconds": 2.217042693984695
+    },
+    {
+      "name": "build",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-preserve-objective-v535/build",
+        "--target",
+        "qoco",
+        "-j",
+        "8"
+      ],
+      "returncode": 0,
+      "seconds": 15.03782190399943
+    },
+    {
+      "name": "validation",
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-preserve-objective-v535/repo/build/performance/test_preserve_objective_v536.py"
+      ],
+      "returncode": 0,
+      "seconds": 494.4677248619846
+    }
+  ],
+  "patch": {
+    "flag": "SPACEPDHCG_TEST_QOCO_RUIZ_PRESERVE_OBJECTIVE",
+    "default_enabled": false,
+    "files": {
+      "src/equilibration.c": {
+        "before_sha256": "ea3b1102e592ccc7824988b0538b283db63fdf4189f6323178e7310530963d5e",
+        "after_sha256": "04ab77326ced2e497fb5a08733a9269d8b95370c86f9ca7ca5ea3665183fc2d6"
+      },
+      "algebra/cuda/qoco_device_update.cuh": {
+        "before_sha256": "5c81fdf4652431c29a78697cd0feb163d16e42f98b925fb1be13b4d4d56ba987",
+        "after_sha256": "d3898abb7723d69ed462c6f2c8b891a3f4c80e036163e92255d3c9f410e5d9a0"
+      }
+    }
+  },
+  "stage": "validation",
+  "child_pid": 199486,
+  "executed_worker_sha256": "5832745948a91be736664aa2b7746ee4f7ae12f67ac2b928c4f466c1104c4456"
+}

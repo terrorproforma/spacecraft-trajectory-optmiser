@@ -1355,6 +1355,10 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         patch_fused_kkt_product(destination, extension.with_name("qoco_fused_kkt_product.cuh"))
     if args.metric_graphs:
         patch_metric_graphs(destination, extension.with_name("qoco_metric_graph.cuh"))
+    if args.device_numeric_updates:
+        from prepare_qoco_preserve_objective import prepare as prepare_preserve_objective
+
+        prepare_preserve_objective(destination)
     provenance = {
         "upstream_commit": commit,
         "source": str(source),
@@ -1395,6 +1399,7 @@ void sync_matrix_values_to_device(QOCOMatrix* M)
         "vector_arena": args.vector_arena,
         "restore_inaccurate_best": args.restore_inaccurate_best,
         "host_ruiz_vector_sync": True,
+        "opt_in_ruiz_preserve_objective": args.device_numeric_updates,
         "compensated_soc_steps": True,
         "checked_cudss_abi": args.checked_cudss_abi,
     }

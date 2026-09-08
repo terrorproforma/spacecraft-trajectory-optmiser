@@ -36,6 +36,12 @@ legs fall from 205/225 to 191 locally and 192 on H100, and complete campaigns ta
 solver accuracy failure. Production settings and acceptance tolerances remain
 unchanged. [Diagnosis and reproducible negative results](docs/GPU_CONDITIONING_DIAGNOSIS.md).
 
+An opt-in objective-preserving Ruiz policy now fixes that captured failure in
+27 inner iterations and retains all 205 certified legs in the full replay on
+both GPUs. All 107 broader tests and three native sanitizer modes pass on each.
+It has not established an overall speedup, so zero Ruiz remains the default.
+[Implementation, accuracy checks and complete-workload measurements](docs/GPU_OBJECTIVE_PRESERVING_RUIZ.md).
+
 Compatible trajectory legs now reuse GPU QOCO workspaces, sparse conversion and
 vendor graphs. Complete-process one-ship medians fall **5.40% on RTX 5090** and
 **5.03% on H100**, with unchanged verified score. The fixed 225-leg replay takes
