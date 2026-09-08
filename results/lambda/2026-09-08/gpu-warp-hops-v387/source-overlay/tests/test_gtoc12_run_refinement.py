@@ -1,0 +1,97 @@
+"""Search must not mistake local solver failure for proven route infeasibility."""
+
+import json
+from types import SimpleNamespace
+
+import numpy as np
+import pytest
+
+from spacepdhcg.cli import build_parser
+from spacepdhcg.gtoc12 import cli, data, pipeline, search
+
+
+@pytest.mark.parametrize(
+    "recovery,expected", [(0, [0, 1, 2]), (1, [0, 1, 2, 4]), (3, [0, 1, 2, 4, 3, 5])]
+)
+@pytest.mark.parametrize("checker_rejects", [False, True])
+def test_failed_leg_does_not_suppress_later_candidates(
+    tmp_path, monkeypatch, recovery, expected, checker_rejects
+):
+    catalogue = SimpleNamespace(ids=np.array([57530]))
+    monkeypatch.setattr(data, "load_catalogue", lambda: catalogue)
+    monkeypatch.setattr(data, "load_bonus_table", lambda: None)
+    monkeypatch.setattr(cli, "catalogue_pool", lambda *_: catalogue.ids)
+    plans = []
+    # Same bodies/departure: first a repeat, then a different arrival. Both
+    # used to be skipped after the first local solver failure.
+    for arrival in (64828.0, 64828.0, 64928.0, 64828.0, 65028.0, 64928.0):
+        leg = SimpleNamespace(
+            from_id=0, to_id=57530, departure_epoch=64328.0, arrival_epoch=arrival
+        )
+        plans.append(SimpleNamespace(legs=[leg], summary=lambda: {}))
+    result = SimpleNamespace(
+        candidates=plans,
+        expansions=1,
+        lambert_evaluations=4,
+        wall_seconds=0.0,
+        failures=[],
+        depth_reached=1,
+        best_by_depth={},
+    )
+    monkeypatch.setattr(search, "RouteSearch", lambda *a, **kw: SimpleNamespace(run=lambda: result))
+    if checker_rejects:
+        from spacepdhcg.gtoc12 import official, solution, verifier, viewer_export
+
+        rejected = SimpleNamespace(
+            summary=lambda: {"ok": False, "violations": ["injected physics failure"]},
+            total_mass_kg=1e6,
+            scored_masses={},
+        )
+        monkeypatch.setattr(
+            verifier,
+            "Gtoc12Verifier",
+            lambda *a, **kw: SimpleNamespace(verify_file=lambda *a: rejected),
+        )
+        monkeypatch.setattr(official, "official_verifier_available", lambda: False)
+        monkeypatch.setattr(
+            pipeline, "write_route_artifacts", lambda *a: {"solution": str(tmp_path / "fake.txt")}
+        )
+        monkeypatch.setattr(solution.Solution, "read", lambda *a: None)
+        monkeypatch.setattr(viewer_export, "write_viewer_dataset", lambda *a, **kw: {})
+    attempted = []
+
+    def refine(plan, *args, **kwargs):
+        attempted.append(plan)
+        return SimpleNamespace(
+            certified=checker_rejects,
+            refined_arc_count=1,
+            legs=[SimpleNamespace(planned=plan.legs[0], certified=False)],
+            summary=lambda: {"certified": False},
+        )
+
+    monkeypatch.setattr(pipeline, "refine_route", refine)
+    args = build_parser().parse_args(
+        [
+            "gtoc12",
+            "run",
+            "--run-id",
+            "retry-regression",
+            "--output",
+            str(tmp_path),
+            "--full-catalogue",
+            "--ships",
+            "1",
+            "--refine-top",
+            "3",
+            "--refine-recovery",
+            str(recovery),
+            "--no-bonus-weights",
+            "--no-retime",
+            "--no-cooperative",
+        ]
+    )
+    assert cli.cmd_run(args) == 0
+    assert [id(plan) for plan in attempted] == [id(plans[i]) for i in expected]
+    report = json.loads((tmp_path / "run_report.json").read_text())
+    assert report["status"] == "no_certified_route"
+    assert [row["rank"] for row in report["ships"][0]["refinements"]] == expected

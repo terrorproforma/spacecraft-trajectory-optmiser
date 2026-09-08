@@ -1,0 +1,70 @@
+{
+  "complete": true,
+  "stages": [
+    {
+      "name": "compile",
+      "code": 0,
+      "seconds": 0.915001948014833,
+      "command": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++17",
+        "-I/home/ubuntu/spacepdhcg-warp-hops-v387/repo/cpp/include",
+        "-I/home/ubuntu/spacepdhcg-warp-hops-v387/repo/cpp/cuda/include",
+        "/home/ubuntu/spacepdhcg-warp-hops-v387/repo/cpp/cuda/tests/orbitweaver_hop_test.cu",
+        "-L/home/ubuntu/spacepdhcg-warp-hops-v387/core-build/cuda",
+        "-lspacepdhcg_cuda",
+        "-o",
+        "/home/ubuntu/spacepdhcg-warp-native-v390/probe"
+      ]
+    },
+    {
+      "name": "probe",
+      "code": 0,
+      "seconds": 0.4143253159709275,
+      "command": [
+        "/home/ubuntu/spacepdhcg-warp-native-v390/probe"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "code": 0,
+      "seconds": 0.5143985059694387,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-warp-native-v390/probe"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "code": 0,
+      "seconds": 0.5145709399948828,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-warp-native-v390/probe"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "code": 0,
+      "seconds": 0.9150531879859045,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "99",
+        "/home/ubuntu/spacepdhcg-warp-native-v390/probe"
+      ]
+    }
+  ],
+  "source_sha256": "c832f2388bfb201587864ddb7ffc173ff42954c03cdf3981b9befed86cb507d3",
+  "core_sha256": "699b450407baa06a8c9b57f9c431fffc7af49d3b7b4e6240d18d98e913aa2775"
+}

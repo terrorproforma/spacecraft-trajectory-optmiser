@@ -14,12 +14,29 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
-The latest fleet recovery fixes premature stopping after several similar routes
-fail refinement. A complete RTX 5090 run now verifies **four ships, 29 asteroids,
-2,095.962 kg returned and 2,088.669 weighted kg** in **467.69 seconds**, with both
-mission checkers passing. CUDA orders the bounded recovery attempts; Python
-still orchestrates the fleet. The separate best fleet remains **12,805.194
-weighted kg**. [Implementation, evidence, visualiser and copy/paste loading instructions](docs/GPU_FLEET_RECOVERY.md).
+The latest complete H100 campaign generated **32 individual routes** in
+**56 min 59 sec**, evaluating **1.417 billion transfer branches** and **137.35
+million collection options**. Fleet selection returned **15 ships, 105 mined
+asteroids and 7,802.295 weighted kg**, accepted by both final mission checkers.
+Bounded CUDA recovery prevents the earlier premature stop after three ships;
+Python still orchestrates the fleet. The separate best fleet remains
+**12,805.194 weighted kg**. [Implementation, evidence, visualiser and copy/paste loading instructions](docs/GPU_FLEET_RECOVERY.md).
+
+Cooperative Lambert screening now distributes each transfer's bracket scan
+across a warp. Complete-run measurements at unchanged accuracy are:
+
+| Hardware / fixture | Previous runtime | Cooperative runtime | Speedup |
+|---|---:|---:|---:|
+| RTX 5090, one ship (two runs per mode, medians) | 75.39 s | 42.67 s | 1.77× |
+| RTX 5090, four ships (one run per mode) | 469.53 s | 287.11 s | 1.64× |
+| H100, one ship (two runs per mode, medians) | 53.50 s | 44.00 s | 1.22× |
+
+Each comparison preserves the search counts and passes both final mission
+checkers. Candidate throughput on the RTX 5090 is about **1.06 million transfer
+branches/s** for the one-ship fixture and **591,000/s** for the four-ship fixture,
+using complete-run elapsed time. These are transfer candidates, not fully solved
+missions; the runs evaluate 45.19 million and 169.75 million branches respectively.
+[Accuracy checks, measurements and reproducible archives](docs/GPU_COOPERATIVE_HOP_SCAN.md).
 
 Resident harvest-window pricing also removes full collection-table downloads
 from the measured campaign. The H100 comparison showed **1.92% longer** median

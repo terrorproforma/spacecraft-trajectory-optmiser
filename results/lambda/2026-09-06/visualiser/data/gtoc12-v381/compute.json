@@ -1,0 +1,24 @@
+{
+  "run_id": "gpu_fleet_recovery381",
+  "fleet_run_id": "gpu_fleet_recovery381_fleet",
+  "commit": "3b1931309f0f4cd018a1f6f5596412224a01e6d0",
+  "source_revision_note": "Frozen H100 source and runtime hashes are archived in gpu-fleet-recovery-v381. This run predates the cooperative warp scan.",
+  "weighted_score_fixed_bonus_kg": 7802.295160087103,
+  "raw_kg_per_ship": 521.3689253935601,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB",
+    "upstream_search": "1,416,714,796 CUDA transfer branches"
+  },
+  "timing": {
+    "wall_seconds_total": 3419.051082713995,
+    "wall_human": "3419.05 s complete 32-route campaign, selecting 15 ships"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; both final fleet checkers pass",
+    "local_refine": "CUDA SCvx and QOCO graph loops"
+  },
+  "optimisation": {
+    "strategy": "Bounded CUDA recovery produced 32 routes; fleet selection retained 15 under the mission constraints. Incumbent remains 12,805.194 weighted kg.",
+    "proven_optimal": false
+  }
+}

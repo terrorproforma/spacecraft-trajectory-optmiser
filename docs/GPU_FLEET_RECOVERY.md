@@ -63,27 +63,45 @@ kg incumbent. This is a successful recovery demonstration, not a matched speed
 comparison or a new leaderboard score.
 
 [Complete local evidence, source snapshot and binary hashes](../results/lambda/2026-09-08/gpu-fleet-recovery-v380/summary.json)
-are archived. The H100 v381 wider campaign uses the same production source and
-has independently accepted candidate 26 for ship four; its full run is still
-pending at this checkpoint and must be verified before reporting a final fleet.
+are archived. The H100 v381 wider campaign completed using the same production
+source in **3,419.051083 seconds**. It generated 32 individual routes and 74
+candidate columns, evaluating **1,416,714,796 transfer branches** and
+**137,350,630 collection options**. Fleet selection returned **15 ships and
+105 mined asteroids**, with **7,820.533881 kg returned** and **7,802.295160
+weighted kg**. Both final fleet checkers pass.
+
+The fleet master closes its bound for this candidate pool; that does not prove
+optimality over the full mission search space. More individual routes do not
+automatically permit a larger fleet: the ship-count rule also depends on average
+returned mass. The best route per search slot gives a top-16 average of about
+516.8 kg, below the 519.9 kg required for 16 ships. Improving haul per ship is a
+remaining search problem. This run does not improve the 12,805.194 incumbent.
+
+[Full H100 results and checksums](../results/lambda/2026-09-08/gpu-fleet-recovery-v381/summary.json)
+include the frozen source archive, complete raw reports, commands and binary
+hashes. Retrieval verified all 326 archived files. The separate final-status fix
+also ensures an assembled fleet rejected by either available checker exits with
+failure and cannot be labelled as scored; three integration cases cover that
+gate, independently of per-route solver certification.
 
 ## Display and reproduce
 
-The existing web visualiser includes **GPU recovery v380**. Its 2,030 trajectory
-samples match the archived export exactly; 10,957 Kepler context points were
-cross-checked. The displayed geometry uses physical 1× vertical scale.
+The existing web visualiser includes **H100 recovery v381**. Its 7,617 trajectory
+samples match the archived export exactly; 39,735 Kepler context points were
+cross-checked. The displayed geometry uses physical 1× vertical scale. The earlier
+four-ship **GPU recovery v380** dataset remains available.
 
 ```powershell
 Set-Location 'C:\Users\Angus\Desktop\projects\spacecraft-trajectory-optmiser\results\lambda\2026-09-06\visualiser'
 node scripts/serve.mjs --port=4173
-# Open this URL, or select "GPU recovery v380" in the dataset menu:
-# http://127.0.0.1:4173/?dataset=gtoc12-v380&epoch=69807&preset=oblique&z=1
+# Open this URL, or select "H100 recovery v381" in the dataset menu:
+# http://127.0.0.1:4173/?dataset=gtoc12-v381&epoch=69807&preset=oblique&z=1
 ```
 
 Exact solution file:
 
 ```text
-C:\Users\Angus\Desktop\projects\spacecraft-trajectory-optmiser\results\lambda\2026-09-08\gpu-fleet-recovery-v380\local\output\fleet\Result.txt
+C:\Users\Angus\Desktop\projects\spacecraft-trajectory-optmiser\results\lambda\2026-09-08\gpu-fleet-recovery-v381\fleet\Result.txt
 ```
 
 The archived `run_recovery_v380.py` records the environment, commands, source

@@ -1,7 +1,7 @@
 # Cooperative Lambert screening scan
 
-Status: validated on the RTX 5090; H100 validation is queued behind the ongoing
-v381 fleet campaign. This candidate is not yet promoted to main.
+Status: validated on the RTX 5090 and Lambda H100 with complete mission checks,
+matching screening outputs, and native graph sanitizer coverage.
 
 ## Measured bottleneck
 
@@ -82,3 +82,25 @@ include both threshold experiments, complete campaign reports, source snapshots,
 binary hashes, profiler captures and reproduction recipes. Each archive has a
 manifest of the exact bytes of every member. CPU orchestration and independent
 mission checking still remain outside the GPU; the fleet incumbent is unchanged.
+
+## H100 validation
+
+The H100 comparison uses the frozen v381 baseline source plus the archived warp
+overlay, built for SM90. All 120 selected tests passed. Eight Python hop tests
+passed both memory and synchronization checking; the separate uncached native
+graph probe passed memory, synchronization and race checking. All fields match
+exactly, treating NaNs as equal, in the same 216 microbenchmark comparisons.
+
+| Run | Complete CLI seconds | Verified weighted kg |
+|---|---:|---:|
+| Baseline 0 | 53.594064 | 548.254620 |
+| Candidate 0 | 44.063453 | 548.254620 |
+| Candidate 1 | 43.943981 | 548.254620 |
+| Baseline 1 | 53.400079 | 548.254620 |
+
+Median runtime fell from **53.497072 to 44.003717 seconds**: **17.75% less time**,
+or **1.22× faster**. All four campaigns have identical search counts and pass
+both final mission checkers. This is two samples per mode on the named fixture,
+not a universal cross-hardware estimate.
+[H100 raw outputs, overlay, native probe and checksums](../results/lambda/2026-09-08/gpu-warp-hops-v387/summary.json)
+are retained separately from the local measurements.

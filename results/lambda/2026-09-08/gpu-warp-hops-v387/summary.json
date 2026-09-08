@@ -1,0 +1,459 @@
+{
+  "hardware": "Lambda NVIDIA H100 80 GB",
+  "complete": true,
+  "baseline_median_seconds": 53.49707179897814,
+  "candidate_median_seconds": 44.00371699902462,
+  "speedup": 1.2157398385269125,
+  "time_reduction_percent": 17.74555967404342,
+  "campaigns": [
+    {
+      "name": "baseline0",
+      "candidate": false,
+      "seconds": 53.59406419994775,
+      "score": 548.2546201232997,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599589984,
+          "23760": 71.86858316229996,
+          "25792": 85.83162217659992,
+          "53410": 73.51129363450013,
+          "57530": 117.86447638599998
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.09337617695564404
+      },
+      "independent": {
+        "max_mass_error_kg": 6.343725544866174e-11,
+        "max_position_error_km": 0.6344809763053376,
+        "max_velocity_error_km_s": 1.1102822490426555e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599589984,
+          "23760": 71.86858316229996,
+          "25792": 85.83162217659992,
+          "53410": 73.51129363450013,
+          "57530": 117.86447638599998
+        },
+        "ship_limit": 17.924449255082706,
+        "ships": 1,
+        "total_mass_kg": 548.2546201232997,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201232997
+      }
+    },
+    {
+      "name": "candidate0",
+      "candidate": true,
+      "seconds": 44.063453310052864,
+      "score": 548.2546201232999,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778199877,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316229996,
+          "25792": 85.83162217660015,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638610002
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.09324352402472869
+      },
+      "independent": {
+        "max_mass_error_kg": 8.321876521222293e-11,
+        "max_position_error_km": 0.6341962510638781,
+        "max_velocity_error_km_s": 1.1093442552961766e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778199877,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316229996,
+          "25792": 85.83162217660015,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638610002
+        },
+        "ship_limit": 17.92444925508272,
+        "ships": 1,
+        "total_mass_kg": 548.2546201232999,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201232999
+      }
+    },
+    {
+      "name": "candidate1",
+      "candidate": true,
+      "seconds": 43.94398068799637,
+      "score": 548.254620123,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944549992,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778200104,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316219991,
+          "25792": 85.83162217660015,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.09302852704422548
+      },
+      "independent": {
+        "max_mass_error_kg": 7.412381819449365e-11,
+        "max_position_error_km": 0.6348032993370617,
+        "max_velocity_error_km_s": 1.1104388121994303e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944549992,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778200104,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316219991,
+          "25792": 85.83162217660015,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ship_limit": 17.924449255061212,
+        "ships": 1,
+        "total_mass_kg": 548.254620123,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.254620123
+      }
+    },
+    {
+      "name": "baseline1",
+      "candidate": false,
+      "seconds": 53.40007939800853,
+      "score": 548.2546201231999,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.4579055442,
+          "10664": 13.141683778200104,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316219991,
+          "25792": 85.83162217659992,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.0929276219685562
+      },
+      "independent": {
+        "max_mass_error_kg": 7.116796041373163e-11,
+        "max_position_error_km": 0.6320689914020993,
+        "max_velocity_error_km_s": 1.1056692605082653e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.4579055442,
+          "10664": 13.141683778200104,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316219991,
+          "25792": 85.83162217659992,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ship_limit": 17.924449255075547,
+        "ships": 1,
+        "total_mass_kg": 548.2546201231999,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201231999
+      }
+    }
+  ],
+  "same_search_counts": true,
+  "all_mission_checkers_pass": true,
+  "accuracy_audit": {
+    "compared_outputs": 216,
+    "all_fields_exact_equal": true,
+    "timings": [
+      {
+        "count": 1,
+        "baseline_ms": 0.31411097734235227,
+        "candidate_ms": 0.12463500024750829,
+        "speedup": 2.520246934798173
+      },
+      {
+        "count": 31,
+        "baseline_ms": 2.2666909790132195,
+        "candidate_ms": 0.1256090181414038,
+        "speedup": 18.045607015743904
+      },
+      {
+        "count": 32,
+        "baseline_ms": 2.356039476580918,
+        "candidate_ms": 0.1258790143765509,
+        "speedup": 18.71669784077851
+      },
+      {
+        "count": 127,
+        "baseline_ms": 2.7870845224242657,
+        "candidate_ms": 0.13135597691871226,
+        "speedup": 21.217797528535854
+      },
+      {
+        "count": 257,
+        "baseline_ms": 2.795308013446629,
+        "candidate_ms": 0.14636298874393106,
+        "speedup": 19.098462237179046
+      },
+      {
+        "count": 451,
+        "baseline_ms": 2.7961164887528867,
+        "candidate_ms": 0.15500900917686522,
+        "speedup": 18.0384127580773
+      },
+      {
+        "count": 480,
+        "baseline_ms": 2.7966460038442165,
+        "candidate_ms": 0.15054098912514746,
+        "speedup": 18.577305889224057
+      },
+      {
+        "count": 533,
+        "baseline_ms": 2.7989674999844283,
+        "candidate_ms": 0.15691950102336705,
+        "speedup": 17.836964059474234
+      },
+      {
+        "count": 1024,
+        "baseline_ms": 2.8186545241624117,
+        "candidate_ms": 0.17891550669446588,
+        "speedup": 15.754109726083328
+      },
+      {
+        "count": 1025,
+        "baseline_ms": 2.8183929971419275,
+        "candidate_ms": 0.17888800357468426,
+        "speedup": 15.755069880721608
+      },
+      {
+        "count": 4096,
+        "baseline_ms": 3.0111884989310056,
+        "candidate_ms": 0.42500399285927415,
+        "speedup": 7.085082845158257
+      },
+      {
+        "count": 16384,
+        "baseline_ms": 3.2954045163933188,
+        "candidate_ms": 1.4713540149386972,
+        "speedup": 2.239708787236102
+      }
+    ]
+  },
+  "native_graph_probe": {
+    "complete": true,
+    "stages": [
+      {
+        "name": "compile",
+        "code": 0,
+        "seconds": 0.915001948014833,
+        "command": [
+          "/usr/local/cuda/bin/nvcc",
+          "-std=c++17",
+          "-I/home/ubuntu/spacepdhcg-warp-hops-v387/repo/cpp/include",
+          "-I/home/ubuntu/spacepdhcg-warp-hops-v387/repo/cpp/cuda/include",
+          "/home/ubuntu/spacepdhcg-warp-hops-v387/repo/cpp/cuda/tests/orbitweaver_hop_test.cu",
+          "-L/home/ubuntu/spacepdhcg-warp-hops-v387/core-build/cuda",
+          "-lspacepdhcg_cuda",
+          "-o",
+          "/home/ubuntu/spacepdhcg-warp-native-v390/probe"
+        ]
+      },
+      {
+        "name": "probe",
+        "code": 0,
+        "seconds": 0.4143253159709275,
+        "command": [
+          "/home/ubuntu/spacepdhcg-warp-native-v390/probe"
+        ]
+      },
+      {
+        "name": "memcheck",
+        "code": 0,
+        "seconds": 0.5143985059694387,
+        "command": [
+          "/usr/local/cuda/bin/compute-sanitizer",
+          "--tool",
+          "memcheck",
+          "--error-exitcode",
+          "99",
+          "/home/ubuntu/spacepdhcg-warp-native-v390/probe"
+        ]
+      },
+      {
+        "name": "synccheck",
+        "code": 0,
+        "seconds": 0.5145709399948828,
+        "command": [
+          "/usr/local/cuda/bin/compute-sanitizer",
+          "--tool",
+          "synccheck",
+          "--error-exitcode",
+          "99",
+          "/home/ubuntu/spacepdhcg-warp-native-v390/probe"
+        ]
+      },
+      {
+        "name": "racecheck",
+        "code": 0,
+        "seconds": 0.9150531879859045,
+        "command": [
+          "/usr/local/cuda/bin/compute-sanitizer",
+          "--tool",
+          "racecheck",
+          "--error-exitcode",
+          "99",
+          "/home/ubuntu/spacepdhcg-warp-native-v390/probe"
+        ]
+      }
+    ],
+    "source_sha256": "c832f2388bfb201587864ddb7ffc173ff42954c03cdf3981b9befed86cb507d3",
+    "core_sha256": "699b450407baa06a8c9b57f9c431fffc7af49d3b7b4e6240d18d98e913aa2775"
+  },
+  "source_sha256": {
+    "cpp/cuda/src/orbitweaver_gpu.cu": "49a2cb1a7ead3ffa25e87ab7c1eda26367a607174cad3073e623a7f52e6d27b9",
+    "tests/test_gtoc12_gpu_hops.py": "8490a7db508a78cd3b1e5f31c4da86f54c64f86c94a6e7f3484982937d2437da",
+    "tests/test_gtoc12_run_refinement.py": "60c40c8475e3460ce6512b98282c7b3c8f2a1f832bea2d78c1f2b6f1cb023790",
+    "build/performance/hop_micro_v384.py": "d563af506d3360702582405164bb7370f63fc962fa5446efc76b9854cf398171"
+  },
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "699b450407baa06a8c9b57f9c431fffc7af49d3b7b4e6240d18d98e913aa2775",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "scope": "ABBA complete one-ship campaigns, two samples per mode. Frozen source from v381 plus the included four-file overlay; the full base source is preserved in gpu-fleet-recovery-v381/raw.tar.gz. Both final mission checkers pass in every campaign. Fleet incumbent unchanged."
+}
