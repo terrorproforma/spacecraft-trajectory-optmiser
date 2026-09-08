@@ -171,11 +171,16 @@ def insertions(joint, visits, arrivals, departures, candidates, *, layouts_per_b
     from .lambert import _GPU_BACKEND
 
     gpu = _GPU_BACKEND.get()
+    points = joint.settings.insert_split_points
+    if type(points) is not int or points not in (1, 3, 5, 7, 9):
+        raise ValueError("insert_split_points must be an odd integer from 1 to 9")
     requested = os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_LAYOUTS")
+    if points != 1 and requested == "0":
+        raise RuntimeError("unequal insertion splits require CUDA device layouts")
     available = gpu is not None and hasattr(
         gpu.library, "spacepdhcg_gtoc12_joint_prepare_insertions_host"
     )
-    if requested == "1" or (requested is None and available):
+    if points != 1 or requested == "1" or (requested is None and available):
         if not available:
             raise RuntimeError("CUDA insertion layouts require the prepared insertion API")
         from .gpu_joint_layouts import insertions as prepared_insertions
@@ -186,7 +191,10 @@ def insertions(joint, visits, arrivals, departures, candidates, *, layouts_per_b
             arrivals,
             departures,
             candidates,
-            layouts_per_batch=4096 if layouts_per_batch is None else layouts_per_batch,
+            layouts_per_batch=(4096 // points**2)
+            if layouts_per_batch is None
+            else layouts_per_batch,
+            split_points=points,
         )
     if layouts_per_batch is None:
         layouts_per_batch = 256

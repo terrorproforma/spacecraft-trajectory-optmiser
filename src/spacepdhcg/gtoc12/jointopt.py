@@ -101,6 +101,7 @@ class JointSettings:
     # insertion of one more asteroid once the joint schedule has converged
     insert: bool = True
     insert_neighbours: int = 40
+    insert_split_points: int = 1  # odd 1..9; unequal split grid requires native CUDA layouts
     insert_radius: float = 2.5  # co-moving neighbourhood radius in band units (beam: 1.5)
     insert_trials: int = 3
     insert_mesh_days: tuple[float, ...] = (20.0, 8.0, 3.0)
@@ -769,6 +770,9 @@ class JointItinerary:
             from .gpu_joint_insertions import insertions
 
             return insertions(self, visits, arrivals, departures, candidates)
+
+        if self.settings.insert_split_points != 1:
+            raise RuntimeError("unequal insertion splits require the CUDA joint backend")
 
         n = len(visits)
         present = {v.body for v in visits}

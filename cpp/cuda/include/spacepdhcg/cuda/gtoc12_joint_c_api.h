@@ -283,6 +283,21 @@ int spacepdhcg_gtoc12_joint_prepared_insertions_host(void* workspace,
     spacepdhcg_gtoc12_joint_geometry_stats* stats,
     spacepdhcg_gtoc12_joint_visit* generated_visits, int32_t* edge_ids);
 
+/* Unequal deployment/collection splits on the same retained source. split_points
+ * is odd, 1..9; fractions are (j+1)/(split_points+1). Each layout emits
+ * V=4*split_points^2 rows ordered deployment fraction, collection fraction,
+ * borrowed-time seed. Midpoint rows retain the legacy arithmetic. Workspace
+ * capacity and all result/detail buffers must hold layouts*V rows. Metadata
+ * outputs still have layouts rows. Invalid grid inputs leave outputs untouched.
+ */
+int spacepdhcg_gtoc12_joint_prepared_insertion_grid_host(void* workspace,
+    int64_t first_layout, int32_t layouts, int32_t split_points,
+    spacepdhcg_gtoc12_joint_result* results, uint8_t* enabled,
+    double* masses, double* inflations, double* proxies, double* collected,
+    double* arrivals, double* departures,
+    spacepdhcg_gtoc12_joint_geometry_stats* stats,
+    spacepdhcg_gtoc12_joint_visit* generated_visits, int32_t* edge_ids);
+
 #ifdef __cplusplus
 }
 #endif

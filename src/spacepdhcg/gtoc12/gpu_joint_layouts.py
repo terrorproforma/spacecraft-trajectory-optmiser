@@ -124,11 +124,25 @@ def compile_source(joint, visits, arrivals, departures, candidates):
 
 
 class PreparedInsertions:
-    def __init__(self, joint, visits, arrivals, departures, candidates, layouts_per_batch=4096):
+    def __init__(
+        self,
+        joint,
+        visits,
+        arrivals,
+        departures,
+        candidates,
+        layouts_per_batch=4096,
+        *,
+        split_points=1,
+    ):
         from .lambert import _GPU_BACKEND
 
         if not isinstance(layouts_per_batch, int) or layouts_per_batch < 1:
             raise ValueError("layouts_per_batch must be a positive integer")
+        if type(split_points) is not int or split_points not in (1, 3, 5, 7, 9):
+            raise ValueError("split_points must be an odd integer from 1 to 9")
+        self.split_points = split_points
+        self.rows_per_layout = 4 * split_points**2
         self.joint, self.visits = joint, tuple(visits)
         self.source = s = compile_source(joint, visits, arrivals, departures, candidates)
         self.total = 0 if s is None else s["layouts"]
@@ -139,7 +153,11 @@ class PreparedInsertions:
         self.gpu = gpu = _GPU_BACKEND.get()
         gpu._owned()
         self.n = len(visits) + 2
-        capacity = 4 * min(layouts_per_batch, self.total)
+        capacity = self.rows_per_layout * min(layouts_per_batch, self.total)
+        if split_points != 1 and not hasattr(
+            gpu.library, "spacepdhcg_gtoc12_joint_prepared_insertion_grid_host"
+        ):
+            raise RuntimeError("CUDA insertion grid API is unavailable")
         current = gpu.joint_workspace
         if current is None or current.capacity < capacity or current.visits != self.n:
             if current is not None:
@@ -155,8 +173,16 @@ class PreparedInsertions:
             + [ct.c_int32]
         )
         self.prepare.restype = ct.c_int
-        self.evaluate = gpu.library.spacepdhcg_gtoc12_joint_prepared_insertions_host
-        self.evaluate.argtypes = [ct.c_void_p, ct.c_int64, ct.c_int32] + [ct.c_void_p] * 11
+        self.evaluate = (
+            gpu.library.spacepdhcg_gtoc12_joint_prepared_insertions_host
+            if split_points == 1
+            else gpu.library.spacepdhcg_gtoc12_joint_prepared_insertion_grid_host
+        )
+        self.evaluate.argtypes = (
+            [ct.c_void_p, ct.c_int64, ct.c_int32]
+            + ([ct.c_int32] if split_points != 1 else [])
+            + [ct.c_void_p] * 11
+        )
         self.evaluate.restype = ct.c_int
         current._check(
             self.prepare(
@@ -192,7 +218,7 @@ class PreparedInsertions:
             raise RuntimeError("prepared insertion source has been replaced")
         if first < 0 or count < 1 or count > self.batch_size or first + count > self.total:
             raise ValueError("invalid prepared insertion slice")
-        n, rows = self.n, 4 * count
+        n, rows = self.n, self.rows_per_layout * count
         result, enabled, stats = (
             np.empty(rows, RESULT),
             np.empty(rows, np.uint8),
@@ -207,6 +233,7 @@ class PreparedInsertions:
                 self.native.handle,
                 first,
                 count,
+                *([self.split_points] if self.split_points != 1 else []),
                 *(
                     a.ctypes.data
                     for a in (
@@ -270,16 +297,24 @@ class PreparedInsertions:
         return expanded, asteroid
 
 
-def insertions(joint, visits, arrivals, departures, candidates, *, layouts_per_batch=4096):
+def insertions(
+    joint, visits, arrivals, departures, candidates, *, layouts_per_batch=4096, split_points=1
+):
     prepared = PreparedInsertions(
-        joint, visits, arrivals, departures, candidates, layouts_per_batch
+        joint,
+        visits,
+        arrivals,
+        departures,
+        candidates,
+        layouts_per_batch,
+        split_points=split_points,
     )
     results = []
     for first in range(0, prepared.total, layouts_per_batch):
         count = min(layouts_per_batch, prepared.total - first)
         value, enabled, arr, dep, mass, inflation, proxy, payload, _, _ = prepared.run(first, count)
         for row in np.flatnonzero(enabled & (value["failure"] == 0)):
-            expanded, asteroid = prepared.layout(first + row // 4)
+            expanded, asteroid = prepared.layout(first + row // prepared.rows_per_layout)
             ev = _decode_evaluation(
                 joint,
                 expanded,

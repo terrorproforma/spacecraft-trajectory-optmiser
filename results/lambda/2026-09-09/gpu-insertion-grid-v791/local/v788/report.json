@@ -1,0 +1,124 @@
+{
+  "pid": 378,
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "git-init",
+      "code": 0,
+      "seconds": 0.008058950000076948,
+      "command": [
+        "git",
+        "init"
+      ]
+    },
+    {
+      "name": "git-add",
+      "code": 0,
+      "seconds": 0.15456232400015324,
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ]
+    },
+    {
+      "name": "git-freeze",
+      "code": 0,
+      "seconds": 0.037745653000001766,
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Freeze CUDA insertion batches"
+      ]
+    },
+    {
+      "name": "pytest",
+      "code": 0,
+      "seconds": 5.6862932509998245,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint.py",
+        "tests/test_gtoc12_gpu_joint_compatibility.py",
+        "tests/test_gtoc12_gpu_joint_geometry.py",
+        "tests/test_gtoc12_gpu_joint_insertions.py",
+        "tests/test_gtoc12_gpu_joint_layouts.py",
+        "tests/test_gtoc12_gpu_joint_mesh.py",
+        "tests/test_gtoc12_gpu_joint_search.py",
+        "tests/test_gtoc12_gpu_joint_selection.py",
+        "tests/test_gtoc12_jointopt.py",
+        "tests/test_gtoc12_insertion_pivot.py",
+        "tests/test_gtoc12_gpu_insertion_grid.py"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "code": 0,
+      "seconds": 7.550813630999983,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_insertion_grid.py",
+        "tests/test_gtoc12_gpu_joint_layouts.py",
+        "tests/test_gtoc12_gpu_joint_insertions.py"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "code": 0,
+      "seconds": 7.561648592999973,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_insertion_grid.py",
+        "tests/test_gtoc12_gpu_joint_layouts.py",
+        "tests/test_gtoc12_gpu_joint_insertions.py"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "code": 0,
+      "seconds": 5.642750373999888,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_insertion_grid.py",
+        "tests/test_gtoc12_gpu_joint_layouts.py",
+        "tests/test_gtoc12_gpu_joint_insertions.py"
+      ]
+    }
+  ],
+  "stage": "synccheck",
+  "child_pid": 457,
+  "core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+}

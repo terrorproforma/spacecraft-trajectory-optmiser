@@ -112,16 +112,19 @@ extern "C" int spacepdhcg_gtoc12_joint_prepare_insertions_host(void* opaque,
     return release_prepared_insertion(previous)?0:2;
 }
 
-extern "C" int spacepdhcg_gtoc12_joint_prepared_insertions_host(void* opaque,
-    int64_t first,int32_t layouts,Result* results,uint8_t* enabled,
+extern "C" int spacepdhcg_gtoc12_joint_prepared_insertion_grid_host(void* opaque,
+    int64_t first,int32_t layouts,int32_t split_points,Result* results,uint8_t* enabled,
     double* masses,double* inflations,double* proxies,double* collected,
     double* arrivals,double* departures,GeometryStats* stats,Visit* generated_visits,int32_t* edge_ids) {
     auto* w=static_cast<Workspace*>(opaque);
-    if(!correct_device(w)||!stats||first<0||layouts<0||layouts>w->capacity/4)return 1;
+    if(!correct_device(w)||!stats||first<0||layouts<0
+        ||split_points<1||split_points>9||split_points%2!=1)return 1;
+    const int variants=4*split_points*split_points;
+    if(layouts>w->capacity/variants)return 1;
     std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);
     if(!lock.owns_lock())return 3;
     const auto* s=w->prepared_insertion;if(!s)return 1;
-    const int n=w->n,base=n-2,count=4*layouts;
+    const int n=w->n,base=n-2,count=variants*layouts;
     const int64_t total=int64_t(s->candidates)*(s->camp-1)*(base-1-s->camp);
     if(first>total||layouts>total-first||(!results&&layouts)||(!enabled&&layouts))return 1;
     if(!layouts){*stats={};return 0;}
@@ -143,17 +146,17 @@ extern "C" int spacepdhcg_gtoc12_joint_prepared_insertions_host(void* opaque,
     if(cudaGetLastError()!=cudaSuccess)return failed();
     const unsigned blocks=unsigned((size_t(count)+127)/128);
     generate_insertions<<<blocks,128,0,w->stream>>>(count,n,s->camp,s->policy,w->insertion_slots,
-        s->arrivals,s->departures,w->arrivals,w->departures,w->insertion_enabled);
+        s->arrivals,s->departures,w->arrivals,w->departures,w->insertion_enabled,split_points);
     if(cudaGetLastError()!=cudaSuccess)return failed();
     clear_geometry_costs<<<unsigned((legs+127)/128),128,0,w->stream>>>(legs,w->costs);
     if(cudaGetLastError()!=cudaSuccess)return failed();
     const auto evaluate=[&](){evaluate_candidates<<<blocks,128,0,w->stream>>>(count,n,s->policy,
         w->insertion_visits,w->insertion_stages,w->arrivals,w->departures,w->costs,w->results,
-        w->masses,w->inflations,w->proxies,w->collected,4,w->insertion_enabled);return cudaGetLastError();};
+        w->masses,w->inflations,w->proxies,w->collected,variants,w->insertion_enabled);return cudaGetLastError();};
     if(evaluate()!=cudaSuccess)return failed();
     if(spacepdhcg_joint_geometry_launch(count,n,s->elements,w->arrivals,w->departures,w->results,
         s->records,s->record_count,w->costs,w->hop_requests,w->hop_results,w->geometry_stats,w->stream,
-        4,nullptr,w->insertion_edge_ids)!=cudaSuccess||evaluate()!=cudaSuccess)return failed();
+        variants,nullptr,w->insertion_edge_ids)!=cudaSuccess||evaluate()!=cudaSuccess)return failed();
     if(!download(results,w->results,size_t(count),w->stream)||!download(enabled,w->insertion_enabled,size_t(count),w->stream)
         ||!download(masses,w->masses,legs,w->stream)||!download(inflations,w->inflations,legs,w->stream)
         ||!download(proxies,w->proxies,legs,w->stream)||!download(collected,w->collected,epochs,w->stream)
@@ -162,4 +165,13 @@ extern "C" int spacepdhcg_gtoc12_joint_prepared_insertions_host(void* opaque,
         ||!download(generated_visits,w->insertion_visits,size_t(layouts)*n,w->stream)
         ||!download(edge_ids,w->insertion_edge_ids,size_t(layouts)*(n-1),w->stream))return failed();
     return cudaStreamSynchronize(w->stream)==cudaSuccess?0:2;
+}
+
+extern "C" int spacepdhcg_gtoc12_joint_prepared_insertions_host(void* opaque,
+    int64_t first,int32_t layouts,Result* results,uint8_t* enabled,
+    double* masses,double* inflations,double* proxies,double* collected,
+    double* arrivals,double* departures,GeometryStats* stats,Visit* generated_visits,int32_t* edge_ids) {
+    return spacepdhcg_gtoc12_joint_prepared_insertion_grid_host(opaque,first,layouts,1,
+        results,enabled,masses,inflations,proxies,collected,arrivals,departures,stats,
+        generated_visits,edge_ids);
 }

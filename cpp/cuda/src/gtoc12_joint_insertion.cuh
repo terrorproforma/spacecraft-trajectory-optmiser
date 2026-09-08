@@ -2,10 +2,11 @@
 namespace {
 __global__ void generate_insertions(int count, int n, int camp, const Policy* policy,
     const int32_t* slots, const double* base_arr, const double* base_dep,
-    double* arrivals, double* departures, uint8_t* enabled) {
+    double* arrivals, double* departures, uint8_t* enabled, int split_points=1) {
     const size_t row=size_t(blockIdx.x)*blockDim.x+threadIdx.x;
     if(row>=size_t(count))return;
-    const int i=slots[2*(row/4)],k=slots[2*(row/4)+1],seed=int(row%4);
+    const int variants=4*split_points*split_points;
+    const int i=slots[2*(row/variants)],k=slots[2*(row/variants)+1],seed=int(row%4);
     const double gap_d=base_arr[i+1]-base_dep[i],gap_c=base_arr[k+1]-base_dep[k];
     const double dwell=base_dep[camp]-base_arr[camp];
     const double slack=fmax(0.0,dwell-policy->minimum_stay-5.0);
@@ -17,8 +18,13 @@ __global__ void generate_insertions(int count, int n, int camp, const Policy* po
         lend_c=fmin(0.5*gap_c,share_c*slack);
     }
     enabled[row]=!seed || lend_d+lend_c>1.0;
-    const double td=base_dep[i]+0.5*(gap_d+lend_d);
-    const double tc=base_dep[k]+0.5*(gap_c-lend_c);
+    // Grid offsets preserve the existing midpoint arithmetic exactly. Splits
+    // move only the inserted visits; borrowed-time shifts remain unchanged.
+    const int grid=int(row%variants)/4;
+    const double fd=double(grid/split_points+1)/(split_points+1);
+    const double fc=double(grid%split_points+1)/(split_points+1);
+    const double td=base_dep[i]+0.5*(gap_d+lend_d)+(fd-0.5)*(gap_d+lend_d);
+    const double tc=base_dep[k]+0.5*(gap_c-lend_c)+(fc-0.5)*(gap_c+lend_c);
     double* arr=arrivals+row*n;double* dep=departures+row*n;
     for(int j=0;j<n;++j) {
         if(j==i+1){arr[j]=dep[j]=td;continue;}

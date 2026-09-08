@@ -14,6 +14,13 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+CUDA insertion search can now vary deployment and collection flight splits
+independently. A five-point grid screened **12.48 million schedules per GPU** on
+the two-route probe, with no feasible insertion or score gain. Full mission
+replays retain **12,843.556 weighted kg** and pass both physics checkers. The grid
+is configurable; the cheaper midpoint search remains the default.
+[Native timing grid, validation and rejected-candidate diagnostics](docs/GPU_INSERTION_GRID.md).
+
 The insertion search now also covers routes that deploy at their turnaround and
 return to collect that miner later. The widest two-route probe evaluates **499,380
 surrogate schedules** on each GPU, including 85,428 previously skipped schedules.

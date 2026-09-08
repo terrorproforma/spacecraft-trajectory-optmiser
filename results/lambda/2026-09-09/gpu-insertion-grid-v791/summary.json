@@ -1,0 +1,476 @@
+{
+  "local": {
+    "score_kg": 12843.555695585288,
+    "raw_kg": 14044.353182751696,
+    "score_change_from_v780": -1.000444171950221e-10,
+    "ships": 23,
+    "asteroids": 195,
+    "campaign_seconds": 47.588817874999904,
+    "route_search_seconds": 24.24384866599985,
+    "independent_seconds": 21.365311639000083,
+    "official_seconds": 0.17944370099985463,
+    "native_solves": 36,
+    "native_seconds": 22.657936919999656,
+    "native_status_counts": {
+      "infeasible": 2,
+      "converged": 34
+    },
+    "gpu_telemetry": {
+      "backend": "cuda",
+      "completed_batches": 204,
+      "completed_branch_requests": 2370092,
+      "gpu_used": true,
+      "joint_geometry_computed_hops": 1185023,
+      "joint_geometry_cached_hops": 154,
+      "joint_geometry_rejected_hops": 2257778,
+      "completed_element_hops": 1185023,
+      "joint_geometry_stats_download_bytes": 4632,
+      "completed_joint_batches": 193,
+      "completed_joint_evaluations": 136694,
+      "joint_result_download_bytes": 122328872,
+      "completed_joint_mesh_batches": 16,
+      "joint_mesh_epoch_upload_bytes": 3360,
+      "joint_mesh_epoch_download_bytes": 3360,
+      "completed_joint_searches": 12,
+      "joint_search_accepted_moves": 4,
+      "joint_search_report_download_bytes": 384,
+      "joint_layout_preparations": 2,
+      "joint_layout_source_edges": 2733,
+      "joint_layout_source_upload_bytes": 575640,
+      "completed_joint_insertion_batches": 13,
+      "completed_joint_insertion_layouts": 5138,
+      "joint_insertion_skipped_seeds": 51030,
+      "joint_insertion_epoch_download_bytes": 57318912
+    },
+    "solution_sha256": "09c02f6d469ed9f880b9401d1b5b7915ed3b6ee6e37c03040f31b6068f8d784d",
+    "archive_sha256": "b9f19f6cfb31df80f9a88db50aecc4e1c32e81ed8cdcad6e0b0007d20fcba968",
+    "verified_members": 918,
+    "probes": [
+      {
+        "identifier": 1786,
+        "split_points": 1,
+        "radius": 2.5,
+        "requested_neighbours": 60,
+        "neighbourhood": 66,
+        "candidates": 58,
+        "layouts": 3248,
+        "evaluations": 12992,
+        "seconds": 0.49296887300010894,
+        "failures": {
+          "leg_authority": 10481,
+          "tof_outside_limits": 2436,
+          "mass_below_dry_plus_collected": 19,
+          "leg_infeasible": 43,
+          "mass_below_dry": 13
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 1786,
+        "split_points": 3,
+        "radius": 2.5,
+        "requested_neighbours": 60,
+        "neighbourhood": 66,
+        "candidates": 58,
+        "layouts": 3248,
+        "evaluations": 116928,
+        "seconds": 0.4751497820000168,
+        "failures": {
+          "tof_outside_limits": 58464,
+          "leg_authority": 57254,
+          "leg_infeasible": 1175,
+          "mass_below_dry_plus_collected": 21,
+          "mass_below_dry": 14
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 1786,
+        "split_points": 3,
+        "radius": 4.0,
+        "requested_neighbours": 600,
+        "neighbourhood": 404,
+        "candidates": 387,
+        "layouts": 21672,
+        "evaluations": 780192,
+        "seconds": 2.0409996910000245,
+        "failures": {
+          "tof_outside_limits": 390096,
+          "leg_authority": 378537,
+          "leg_infeasible": 11510,
+          "mass_below_dry_plus_collected": 29,
+          "mass_below_dry": 20
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 1786,
+        "split_points": 3,
+        "radius": 8.0,
+        "requested_neighbours": 3000,
+        "neighbourhood": 1910,
+        "candidates": 1848,
+        "layouts": 103488,
+        "evaluations": 3725568,
+        "seconds": 9.147342490000028,
+        "failures": {
+          "tof_outside_limits": 1862784,
+          "leg_authority": 1782426,
+          "leg_infeasible": 80302,
+          "mass_below_dry_plus_collected": 35,
+          "mass_below_dry": 21
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 1786,
+        "split_points": 5,
+        "radius": 8.0,
+        "requested_neighbours": 3000,
+        "neighbourhood": 1910,
+        "candidates": 1848,
+        "layouts": 103488,
+        "evaluations": 10348800,
+        "seconds": 19.96859246300005,
+        "failures": {
+          "tof_outside_limits": 6120576,
+          "leg_authority": 4013204,
+          "leg_infeasible": 214917,
+          "mass_below_dry_plus_collected": 77,
+          "mass_below_dry": 26
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 2297,
+        "split_points": 1,
+        "radius": 2.5,
+        "requested_neighbours": 60,
+        "neighbourhood": 41,
+        "candidates": 30,
+        "layouts": 1890,
+        "evaluations": 1890,
+        "seconds": 0.17304504200001247,
+        "failures": {
+          "leg_authority": 1669,
+          "tof_outside_limits": 210,
+          "leg_infeasible": 10,
+          "mass_below_dry_plus_collected": 1
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 2297,
+        "split_points": 3,
+        "radius": 2.5,
+        "requested_neighbours": 60,
+        "neighbourhood": 41,
+        "candidates": 30,
+        "layouts": 1890,
+        "evaluations": 17010,
+        "seconds": 0.21462250200011113,
+        "failures": {
+          "leg_authority": 5025,
+          "tof_outside_limits": 11610,
+          "leg_infeasible": 374,
+          "mass_below_dry_plus_collected": 1
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 2297,
+        "split_points": 3,
+        "radius": 4.0,
+        "requested_neighbours": 600,
+        "neighbourhood": 224,
+        "candidates": 207,
+        "layouts": 13041,
+        "evaluations": 117369,
+        "seconds": 0.7208798960000422,
+        "failures": {
+          "leg_authority": 33579,
+          "tof_outside_limits": 80109,
+          "leg_infeasible": 3678,
+          "mass_below_dry_plus_collected": 1,
+          "mass_below_dry": 2
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 2297,
+        "split_points": 3,
+        "radius": 8.0,
+        "requested_neighbours": 3000,
+        "neighbourhood": 1401,
+        "candidates": 1356,
+        "layouts": 85428,
+        "evaluations": 768852,
+        "seconds": 3.7453336200001104,
+        "failures": {
+          "leg_authority": 217191,
+          "tof_outside_limits": 524772,
+          "leg_infeasible": 26886,
+          "mass_below_dry_plus_collected": 1,
+          "mass_below_dry": 2
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 2297,
+        "split_points": 5,
+        "radius": 8.0,
+        "requested_neighbours": 3000,
+        "neighbourhood": 1401,
+        "candidates": 1356,
+        "layouts": 85428,
+        "evaluations": 2135700,
+        "seconds": 8.792068866000136,
+        "failures": {
+          "tof_outside_limits": 1423800,
+          "leg_authority": 657541,
+          "leg_infeasible": 54356,
+          "mass_below_dry_plus_collected": 2,
+          "mass_below_dry": 1
+        },
+        "feasible": 0
+      }
+    ]
+  },
+  "h100": {
+    "score_kg": 12843.555695585199,
+    "raw_kg": 14044.353182751598,
+    "score_change_from_v780": -1.8917489796876907e-10,
+    "ships": 23,
+    "asteroids": 195,
+    "campaign_seconds": 69.61592895997455,
+    "route_search_seconds": 27.191276722063776,
+    "independent_seconds": 39.16366617201129,
+    "official_seconds": 0.35915486403973773,
+    "native_solves": 36,
+    "native_seconds": 25.443275027966592,
+    "native_status_counts": {
+      "infeasible": 2,
+      "converged": 34
+    },
+    "gpu_telemetry": {
+      "backend": "cuda",
+      "completed_batches": 204,
+      "completed_branch_requests": 2370092,
+      "gpu_used": true,
+      "joint_geometry_computed_hops": 1185023,
+      "joint_geometry_cached_hops": 154,
+      "joint_geometry_rejected_hops": 2257778,
+      "completed_element_hops": 1185023,
+      "joint_geometry_stats_download_bytes": 4632,
+      "completed_joint_batches": 193,
+      "completed_joint_evaluations": 136694,
+      "joint_result_download_bytes": 122328872,
+      "completed_joint_mesh_batches": 16,
+      "joint_mesh_epoch_upload_bytes": 3360,
+      "joint_mesh_epoch_download_bytes": 3360,
+      "completed_joint_searches": 12,
+      "joint_search_accepted_moves": 4,
+      "joint_search_report_download_bytes": 384,
+      "joint_layout_preparations": 2,
+      "joint_layout_source_edges": 2733,
+      "joint_layout_source_upload_bytes": 575640,
+      "completed_joint_insertion_batches": 13,
+      "completed_joint_insertion_layouts": 5138,
+      "joint_insertion_skipped_seeds": 51030,
+      "joint_insertion_epoch_download_bytes": 57318912
+    },
+    "solution_sha256": "d1d66232ef2192487a6204f31db308e8501814186674cd5f221ab78685f4eb25",
+    "archive_sha256": "24060b5441678a90f1b9a5a6b17f7956686b1e892af01b45d1958a88442d3c98",
+    "verified_members": 918,
+    "probes": [
+      {
+        "identifier": 1786,
+        "split_points": 1,
+        "radius": 2.5,
+        "requested_neighbours": 60,
+        "neighbourhood": 66,
+        "candidates": 58,
+        "layouts": 3248,
+        "evaluations": 12992,
+        "seconds": 0.8926363690407015,
+        "failures": {
+          "leg_authority": 10481,
+          "tof_outside_limits": 2436,
+          "mass_below_dry_plus_collected": 19,
+          "leg_infeasible": 43,
+          "mass_below_dry": 13
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 1786,
+        "split_points": 3,
+        "radius": 2.5,
+        "requested_neighbours": 60,
+        "neighbourhood": 66,
+        "candidates": 58,
+        "layouts": 3248,
+        "evaluations": 116928,
+        "seconds": 0.6088242749683559,
+        "failures": {
+          "tof_outside_limits": 58464,
+          "leg_authority": 57254,
+          "leg_infeasible": 1175,
+          "mass_below_dry_plus_collected": 21,
+          "mass_below_dry": 14
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 1786,
+        "split_points": 3,
+        "radius": 4.0,
+        "requested_neighbours": 600,
+        "neighbourhood": 404,
+        "candidates": 387,
+        "layouts": 21672,
+        "evaluations": 780192,
+        "seconds": 1.5840794030227698,
+        "failures": {
+          "tof_outside_limits": 390096,
+          "leg_authority": 378537,
+          "leg_infeasible": 11510,
+          "mass_below_dry_plus_collected": 29,
+          "mass_below_dry": 20
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 1786,
+        "split_points": 3,
+        "radius": 8.0,
+        "requested_neighbours": 3000,
+        "neighbourhood": 1910,
+        "candidates": 1848,
+        "layouts": 103488,
+        "evaluations": 3725568,
+        "seconds": 5.795396898989566,
+        "failures": {
+          "tof_outside_limits": 1862784,
+          "leg_authority": 1782426,
+          "leg_infeasible": 80302,
+          "mass_below_dry_plus_collected": 35,
+          "mass_below_dry": 21
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 1786,
+        "split_points": 5,
+        "radius": 8.0,
+        "requested_neighbours": 3000,
+        "neighbourhood": 1910,
+        "candidates": 1848,
+        "layouts": 103488,
+        "evaluations": 10348800,
+        "seconds": 8.896897300030105,
+        "failures": {
+          "tof_outside_limits": 6120576,
+          "leg_authority": 4013204,
+          "leg_infeasible": 214917,
+          "mass_below_dry_plus_collected": 77,
+          "mass_below_dry": 26
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 2297,
+        "split_points": 1,
+        "radius": 2.5,
+        "requested_neighbours": 60,
+        "neighbourhood": 41,
+        "candidates": 30,
+        "layouts": 1890,
+        "evaluations": 1890,
+        "seconds": 0.368379844003357,
+        "failures": {
+          "leg_authority": 1669,
+          "tof_outside_limits": 210,
+          "leg_infeasible": 10,
+          "mass_below_dry_plus_collected": 1
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 2297,
+        "split_points": 3,
+        "radius": 2.5,
+        "requested_neighbours": 60,
+        "neighbourhood": 41,
+        "candidates": 30,
+        "layouts": 1890,
+        "evaluations": 17010,
+        "seconds": 0.3777358329971321,
+        "failures": {
+          "leg_authority": 5025,
+          "tof_outside_limits": 11610,
+          "leg_infeasible": 374,
+          "mass_below_dry_plus_collected": 1
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 2297,
+        "split_points": 3,
+        "radius": 4.0,
+        "requested_neighbours": 600,
+        "neighbourhood": 224,
+        "candidates": 207,
+        "layouts": 13041,
+        "evaluations": 117369,
+        "seconds": 0.8347022999660112,
+        "failures": {
+          "leg_authority": 33579,
+          "tof_outside_limits": 80109,
+          "leg_infeasible": 3678,
+          "mass_below_dry_plus_collected": 1,
+          "mass_below_dry": 2
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 2297,
+        "split_points": 3,
+        "radius": 8.0,
+        "requested_neighbours": 3000,
+        "neighbourhood": 1401,
+        "candidates": 1356,
+        "layouts": 85428,
+        "evaluations": 768852,
+        "seconds": 3.2529186970205046,
+        "failures": {
+          "leg_authority": 217191,
+          "tof_outside_limits": 524772,
+          "leg_infeasible": 26886,
+          "mass_below_dry_plus_collected": 1,
+          "mass_below_dry": 2
+        },
+        "feasible": 0
+      },
+      {
+        "identifier": 2297,
+        "split_points": 5,
+        "radius": 8.0,
+        "requested_neighbours": 3000,
+        "neighbourhood": 1401,
+        "candidates": 1356,
+        "layouts": 85428,
+        "evaluations": 2135700,
+        "seconds": 4.804033881984651,
+        "failures": {
+          "tof_outside_limits": 1423800,
+          "leg_authority": 657541,
+          "leg_infeasible": 54356,
+          "mass_below_dry_plus_collected": 2,
+          "mass_below_dry": 1
+        },
+        "feasible": 0
+      }
+    ]
+  }
+}
