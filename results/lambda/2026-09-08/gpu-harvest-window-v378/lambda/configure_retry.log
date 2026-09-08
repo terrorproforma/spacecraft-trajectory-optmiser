@@ -1,0 +1,23 @@
+-- SpacePDHCG persistent adapter strategy: linked_internal_adapter
+-- Pinned PDHCG commit: 167c8b72b4b96d2f94d405b8763e485514192b81
+-- Pinned PDHCG tree: 62b05e6c1bedd385f6c267af3645ae4aae0421b4
+(Stripping trailing CRs from patch; use --binary to disable.)
+checking file src/solver_state.cu
+Hunk #1 succeeded at 752 (offset 1 line).
+(Stripping trailing CRs from patch; use --binary to disable.)
+checking file src/pdhg_core_op.cu
+Hunk #1 succeeded at 1690 (offset 1 line).
+(Stripping trailing CRs from patch; use --binary to disable.)
+checking file src/spmv_backend.cu
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file src/solver_state.cu
+Hunk #1 succeeded at 752 (offset 1 line).
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file src/pdhg_core_op.cu
+Hunk #1 succeeded at 1690 (offset 1 line).
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file src/spmv_backend.cu
+-- Pinned PDHCG patch: 0001-free-quadratic-state.patch sha256=dd31b99869bda77400d8cf33c2048ad424d345a17b17898420f5dab96766ecc6
+-- Configuring done (0.1s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/ubuntu/spacepdhcg-harvest-window-v378/core-build

@@ -1,0 +1,17 @@
+{
+  "returncode": 0,
+  "seconds": 10.476621795999563,
+  "core_sha256": "1b9563bdbc4f0818d43af548ad1bb7ea9a2c2b2e2f1b13c29169d3cd102e4fb8",
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "-m",
+    "pytest",
+    "tests/test_gtoc12_gpu_harvest_window.py",
+    "tests/test_gtoc12_gpu_resident_collect_tables.py",
+    "tests/test_gtoc12_gpu_collect_tables.py",
+    "tests/test_gtoc12_gpu_collect_dp.py",
+    "tests/test_gtoc12_gpu_scvx.py",
+    "tests/test_gtoc12_gpu_cli.py",
+    "-q"
+  ]
+}

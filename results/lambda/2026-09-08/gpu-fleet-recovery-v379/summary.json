@@ -1,0 +1,143 @@
+{
+  "hardware": "Local NVIDIA RTX 5090",
+  "complete": true,
+  "search_seconds": 58.62642042600055,
+  "candidates": 198,
+  "selected_ranks": [
+    0,
+    11,
+    16,
+    21,
+    26,
+    27
+  ],
+  "attempts": [
+    {
+      "rank": 0,
+      "mode": "baseline_prefix",
+      "seconds": 3.968913676999364,
+      "certified": false,
+      "collected_kg": 0.0,
+      "official": null,
+      "independent": null,
+      "failures": [
+        {
+          "pass": 1,
+          "leg": 2,
+          "from": 23045,
+          "to": 10816,
+          "status": "infeasible",
+          "diagnostic": "virtual control remains 1.447e-03",
+          "certification": "optimizer status is not certification"
+        }
+      ]
+    },
+    {
+      "rank": 11,
+      "mode": "different_prefix",
+      "seconds": 5.148266498000339,
+      "certified": false,
+      "collected_kg": 0.0,
+      "official": null,
+      "independent": null,
+      "failures": [
+        {
+          "pass": 1,
+          "leg": 0,
+          "from": 0,
+          "to": 37833,
+          "status": "infeasible",
+          "diagnostic": "virtual control remains 1.275e-02",
+          "certification": "optimizer status is not certification"
+        }
+      ]
+    },
+    {
+      "rank": 16,
+      "mode": "different_prefix",
+      "seconds": 4.117735194000488,
+      "certified": false,
+      "collected_kg": 0.0,
+      "official": null,
+      "independent": null,
+      "failures": [
+        {
+          "pass": 1,
+          "leg": 0,
+          "from": 0,
+          "to": 37833,
+          "status": "infeasible",
+          "diagnostic": "virtual control remains 1.275e-02",
+          "certification": "optimizer status is not certification"
+        }
+      ]
+    },
+    {
+      "rank": 21,
+      "mode": "different_prefix",
+      "seconds": 5.778298875000473,
+      "certified": false,
+      "collected_kg": 0.0,
+      "official": null,
+      "independent": null,
+      "failures": [
+        {
+          "pass": 1,
+          "leg": 3,
+          "from": 6545,
+          "to": 25614,
+          "status": "infeasible",
+          "diagnostic": "virtual control remains 2.064e-03",
+          "certification": "optimizer status is not certification"
+        }
+      ]
+    },
+    {
+      "rank": 26,
+      "mode": "different_prefix",
+      "seconds": 3.6866317169997274,
+      "certified": true,
+      "collected_kg": 419.0280629705681,
+      "official": {
+        "ok": true,
+        "ships": 1,
+        "mined_asteroids": 5,
+        "total_mass_kg": 419.028,
+        "return_code": 0,
+        "wall_seconds": 0.045428024000102596,
+        "message": "Check successfully!"
+      },
+      "independent": {
+        "ok": true,
+        "ships": 1,
+        "mined_asteroids": 5,
+        "total_mass_kg": 419.02806297050006,
+        "weighted_score_fixed_bonus_kg": 419.02806297050006,
+        "weighted_score_dynamic_kg": null,
+        "ship_limit": 10.689473075146214,
+        "max_position_error_km": 1.2750383684464806,
+        "max_velocity_error_km_s": 2.1093046927219926e-07,
+        "max_mass_error_kg": 8.753886504564434e-11,
+        "violations": []
+      },
+      "failures": []
+    }
+  ],
+  "screening": {
+    "backend": "cuda",
+    "completed_batches": 5851,
+    "completed_branch_requests": 23347236,
+    "gpu_used": true,
+    "completed_collection_queries": 6224,
+    "completed_collection_options": 3018339,
+    "completed_neighbour_queries": 776,
+    "completed_element_hops": 6109638,
+    "collect_resident_builds": 1457,
+    "collect_resident_dp_builds": 464,
+    "completed_collection_dp_passes": 704,
+    "collect_window_queries": 590,
+    "collect_window_download_bytes": 4720,
+    "collect_window_geometry_upload_bytes": 0
+  },
+  "scope": "Independent diagnostic of alternate route prefixes after excluding all asteroids in the v374 three-ship fleet. The accepted route is not yet a combined fleet or an incumbent score increase."
+}
