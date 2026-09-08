@@ -1,0 +1,11 @@
+from pathlib import Path
+import json
+root=Path('results/lambda/2026-09-08/gpu-fleet-v374/spacepdhcg-fleet-search-v374')
+run=json.loads((root/'output/run_report.json').read_text());best=run['best'];assert best['official']['ok'] and best['independent']['ok']
+(root/'viewer-input.json').write_text(json.dumps(dict(fleet=run['fleet'],official=best['official'],independent=best['independent'],viewer_manifest=best['viewer_manifest']),indent=2))
+viewer=Path('results/lambda/2026-09-06/visualiser');out=viewer/'data/gtoc12-v374';out.mkdir(exist_ok=False)
+export=json.loads((root/'output/fleet/viewer/trajectories.json').read_text())
+meta=dict(run_id=run['run_id'],fleet_run_id=export['trajectories'][0]['source']['run_id'],commit=export['generated_by_commit'],source_revision_note='Validated final v359 QOCO and v314 native core, recorded in the fleet runner manifest. New harvest-window kernel not used in this run.',weighted_score_fixed_bonus_kg=best['independent']['weighted_score_fixed_bonus_kg'],raw_kg_per_ship=best['independent']['total_mass_kg']/3,hardware=dict(gpu='Lambda NVIDIA H100 80 GB',upstream_search='148,555,144 CUDA transfer branches; 18,250,121 collection options'),timing=dict(wall_seconds_total=run['wall_seconds_total'],wall_human=f"{run['wall_seconds_total']:.2f} s complete campaign; GPU graph execution"),model=dict(dynamics='Official GTOC12 low-thrust dynamics; both mission checkers pass',local_refine='CUDA SCvx and QOCO graph loops after priming'),optimisation=dict(strategy='Fresh wider-beam fleet search. Stopped when the first five candidates for ship 4 did not certify. Incumbent remains 12,805.194 weighted kg.',proven_optimal=False))
+(out/'compute.json').write_text(json.dumps(meta,indent=2))
+for name,old,new in [('app.js','  "gtoc12-v360":','  "gtoc12-v374": { directory: "./data/gtoc12-v374", label: "GPU fleet v374 (3 ships, 1,670 weighted kg)" },\n  "gtoc12-v360":'),('index.html','            <option value="gtoc12-v360"','            <option value="gtoc12-v374" disabled>GPU fleet v374 — checking…</option>\n            <option value="gtoc12-v360"'),('scripts/check.mjs','"data/gtoc12-v360"]','"data/gtoc12-v360", "data/gtoc12-v374"]')]:
+ p=viewer/name;s=p.read_text();assert old in s and 'gtoc12-v374' not in s;p.write_text(s.replace(old,new,1))

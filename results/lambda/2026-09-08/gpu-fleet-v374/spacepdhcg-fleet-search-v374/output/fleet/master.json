@@ -1,0 +1,325 @@
+{
+  "columns": [
+    {
+      "certified": true,
+      "collected_kg": 593.5660506502395,
+      "collects": [
+        1122,
+        8123,
+        8846,
+        12992,
+        27861,
+        37385,
+        49900,
+        57949
+      ],
+      "deploys": [
+        1122,
+        8123,
+        8846,
+        12992,
+        27861,
+        37385,
+        49900,
+        57949
+      ],
+      "foreign": [],
+      "identifier": 0,
+      "label": "s01_c01",
+      "members": [],
+      "ships": 1,
+      "slot": 1
+    },
+    {
+      "certified": true,
+      "collected_kg": 595.2087611225188,
+      "collects": [
+        806,
+        1122,
+        8123,
+        8846,
+        27861,
+        37385,
+        49900,
+        57949
+      ],
+      "deploys": [
+        806,
+        1122,
+        8123,
+        8846,
+        27861,
+        37385,
+        49900,
+        57949
+      ],
+      "foreign": [],
+      "identifier": 1,
+      "label": "s01_c04",
+      "members": [],
+      "ships": 1,
+      "slot": 1
+    },
+    {
+      "certified": true,
+      "collected_kg": 520.4654346338125,
+      "collects": [
+        7885,
+        9644,
+        11147,
+        12706,
+        18870,
+        22878,
+        32153,
+        51359
+      ],
+      "deploys": [
+        7885,
+        9644,
+        11147,
+        12706,
+        18870,
+        22878,
+        32153,
+        51359
+      ],
+      "foreign": [],
+      "identifier": 2,
+      "label": "s02_c02",
+      "members": [],
+      "ships": 1,
+      "slot": 2
+    },
+    {
+      "certified": true,
+      "collected_kg": 533.47022587269,
+      "collects": [
+        7885,
+        9644,
+        11147,
+        12706,
+        18870,
+        22878,
+        32153,
+        51359
+      ],
+      "deploys": [
+        7885,
+        9644,
+        11147,
+        12706,
+        18870,
+        22878,
+        32153,
+        51359
+      ],
+      "foreign": [],
+      "identifier": 3,
+      "label": "s02_retimed0",
+      "members": [],
+      "ships": 1,
+      "slot": 2
+    },
+    {
+      "certified": true,
+      "collected_kg": 475.9753593429158,
+      "collects": [
+        9595,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "deploys": [
+        9595,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "foreign": [],
+      "identifier": 4,
+      "label": "s03_c00",
+      "members": [],
+      "ships": 1,
+      "slot": 3
+    },
+    {
+      "certified": true,
+      "collected_kg": 548.2546201232033,
+      "collects": [
+        4928,
+        9595,
+        10664,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "deploys": [
+        4928,
+        9595,
+        10664,
+        16118,
+        23760,
+        25792,
+        53410,
+        57530
+      ],
+      "foreign": [],
+      "identifier": 5,
+      "label": "s03_retimed0",
+      "members": [],
+      "ships": 1,
+      "slot": 3
+    }
+  ],
+  "master": {
+    "collected_kg": 1676.933607118412,
+    "columns": 6,
+    "cooperative": {
+      "bundle_columns": 0,
+      "collector_ships": 0,
+      "deployer_ships": 0,
+      "foreign_collects": 0
+    },
+    "exhaustive": true,
+    "gap_kg": 0.0,
+    "greedy_collected_kg": 1676.933607118412,
+    "greedy_objective_kg": 1669.6405291845824,
+    "greedy_ships": 3,
+    "lp_bound_kg": 1669.6405291845824,
+    "lp_gap_kg": 0.0,
+    "lp_nodes": 0,
+    "lp_relaxations_kg": {
+      "1": 595.2087611225188,
+      "2": 1143.463381245722,
+      "3": 1669.6405291845824
+    },
+    "lp_seconds": 0.010687923000659794,
+    "lp_sizes_searched": [],
+    "mean_collected_kg": 558.9778690394706,
+    "nodes": 1,
+    "objective_kg": 1669.6405291845824,
+    "proven_optimal": true,
+    "rejected": [
+      {
+        "identifier": 0,
+        "label": "s01_c01",
+        "reason": "dominated or incompatible with the incumbent",
+        "value_kg": 593.5660506502395
+      },
+      {
+        "identifier": 2,
+        "label": "s02_c02",
+        "reason": "dominated or incompatible with the incumbent",
+        "value_kg": 513.4911797790575
+      },
+      {
+        "identifier": 4,
+        "label": "s03_c00",
+        "reason": "dominated or incompatible with the incumbent",
+        "value_kg": 475.9753593429158
+      }
+    ],
+    "root_bound_kg": 1669.6405291845824,
+    "selected": [
+      {
+        "certified": true,
+        "collected_kg": 595.2087611225188,
+        "collects": [
+          806,
+          1122,
+          8123,
+          8846,
+          27861,
+          37385,
+          49900,
+          57949
+        ],
+        "deploys": [
+          806,
+          1122,
+          8123,
+          8846,
+          27861,
+          37385,
+          49900,
+          57949
+        ],
+        "foreign": [],
+        "identifier": 1,
+        "label": "s01_c04",
+        "members": [],
+        "ships": 1,
+        "slot": 1
+      },
+      {
+        "certified": true,
+        "collected_kg": 533.47022587269,
+        "collects": [
+          7885,
+          9644,
+          11147,
+          12706,
+          18870,
+          22878,
+          32153,
+          51359
+        ],
+        "deploys": [
+          7885,
+          9644,
+          11147,
+          12706,
+          18870,
+          22878,
+          32153,
+          51359
+        ],
+        "foreign": [],
+        "identifier": 3,
+        "label": "s02_retimed0",
+        "members": [],
+        "ships": 1,
+        "slot": 2
+      },
+      {
+        "certified": true,
+        "collected_kg": 548.2546201232033,
+        "collects": [
+          4928,
+          9595,
+          10664,
+          16118,
+          23760,
+          25792,
+          53410,
+          57530
+        ],
+        "deploys": [
+          4928,
+          9595,
+          10664,
+          16118,
+          23760,
+          25792,
+          53410,
+          57530
+        ],
+        "foreign": [],
+        "identifier": 5,
+        "label": "s03_retimed0",
+        "members": [],
+        "ships": 1,
+        "slot": 3
+      }
+    ],
+    "ship_limit": 18.71000966244203,
+    "ships": 3,
+    "upper_bound_kg": 1669.6405291845824
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "run_id": "gpu_fleet_374",
+  "fleet_run_id": "gpu_fleet_374_fleet",
+  "commit": "3c7521bae0cd0e3522c9316bfcabf16b2130741d",
+  "source_revision_note": "Validated final v359 QOCO and v314 native core, recorded in the fleet runner manifest. New harvest-window kernel not used in this run.",
+  "weighted_score_fixed_bonus_kg": 1669.6405291846588,
+  "raw_kg_per_ship": 558.9778690395002,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB",
+    "upstream_search": "148,555,144 CUDA transfer branches; 18,250,121 collection options"
+  },
+  "timing": {
+    "wall_seconds_total": 333.6325348179671,
+    "wall_human": "333.63 s complete campaign; GPU graph execution"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; both mission checkers pass",
+    "local_refine": "CUDA SCvx and QOCO graph loops after priming"
+  },
+  "optimisation": {
+    "strategy": "Fresh wider-beam fleet search. Stopped when the first five candidates for ship 4 did not certify. Incumbent remains 12,805.194 weighted kg.",
+    "proven_optimal": false
+  }
+}
