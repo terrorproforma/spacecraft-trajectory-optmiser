@@ -1,0 +1,150 @@
+{
+  "pid": 197031,
+  "complete": true,
+  "stages": [
+    {
+      "name": "origin0-ruiz0",
+      "returncode": 0,
+      "seconds": 26.90678694099188,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/conditioning_cases.py',run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-conditioning-v520/origin0-ruiz0",
+        "0",
+        "0"
+      ]
+    },
+    {
+      "name": "origin1-ruiz0",
+      "returncode": 0,
+      "seconds": 25.207278529996984,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/conditioning_cases.py',run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-conditioning-v520/origin1-ruiz0",
+        "1",
+        "0"
+      ]
+    },
+    {
+      "name": "origin0-ruiz2",
+      "returncode": 0,
+      "seconds": 8.625429007981438,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/conditioning_cases.py',run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-conditioning-v520/origin0-ruiz2",
+        "0",
+        "2"
+      ]
+    },
+    {
+      "name": "origin1-ruiz2",
+      "returncode": 0,
+      "seconds": 9.07596398802707,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/conditioning_cases.py',run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-conditioning-v520/origin1-ruiz2",
+        "1",
+        "2"
+      ]
+    },
+    {
+      "name": "origin0-ruiz5",
+      "returncode": 0,
+      "seconds": 8.725665076053701,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/conditioning_cases.py',run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-conditioning-v520/origin0-ruiz5",
+        "0",
+        "5"
+      ]
+    },
+    {
+      "name": "origin1-ruiz5",
+      "returncode": 0,
+      "seconds": 8.675362317007966,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/conditioning_cases.py',run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-conditioning-v520/origin1-ruiz5",
+        "1",
+        "5"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "origin1-ruiz5",
+  "source_sha256": {
+    "build/performance/conditioning_cases.py": "bf7a255c520c40d047f9b75f4f45a07b6fe51c8ececb8acd46481c3cc005c1d6",
+    "build/performance/grid-cache-fleet-v403/scvx-calls.json": "09da720e7eca6481e9504ffa02840b5f35b9c2398ed229098c574c885510c846",
+    "cpp/cuda/src/gtoc12_qoco.cu": "534b362452c0953a81b474cf8c8b003fa51c985728b5deafb1ed27eae769c149",
+    "cpp/cuda/src/gtoc12_scvx.cu": "cbc57ee0df683d71ec2d14ded277fc490b642aff5a0093eb38616175c53914bb",
+    "cpp/cuda/src/native_qoco_adapter.cpp": "390b48abdd58d95a82e241bbeacdf9476df75459225c113ee42ae1222601f156",
+    "src/spacepdhcg/gtoc12/__init__.py": "ac225d7a1da88bbde102908bb37ad74f7c447ec5925ecd6310255b6e852eb4c5",
+    "src/spacepdhcg/gtoc12/archive.py": "c496b994d88629655c3894581e4d005fca4a0fd4bb29d514b5ca139d44da8261",
+    "src/spacepdhcg/gtoc12/bundles.py": "95a5ab8decdf9ddf135e66ff198c497673fc65e41bf6c75179ebef3a14fc376f",
+    "src/spacepdhcg/gtoc12/chainprior.py": "e9fc6134cb049c31d364b4d02a0a285abb06211905df0d7c53f20c0cdc192cb9",
+    "src/spacepdhcg/gtoc12/cli.py": "0276a4b140f1ecb72c72709246ded5c15025959d16706d31876cfdfbc9dd2951",
+    "src/spacepdhcg/gtoc12/clusters.py": "a7285b2675c7ed855e12a43f5664381eccdf7b736e35c68127b5c11c0f7964cf",
+    "src/spacepdhcg/gtoc12/collectdp.py": "e50f3d55ec1086e308d2c684d0efbded423ec1bb6b76fb2aaf083e657d3f3a48",
+    "src/spacepdhcg/gtoc12/constants.py": "02a47133a5d709fe81d1cc28807edcdb790b1325e4c2fb12d046db8c5029a00e",
+    "src/spacepdhcg/gtoc12/cooperative.py": "460af7f69811c668cc5cc3443b576013ac30b1b3836d02b1c99fec8b4689a05b",
+    "src/spacepdhcg/gtoc12/data.py": "919840f7e7902b0d9ad5aa557c057c6b5b71101a50c525ef7b29fee6f4a7d8d8",
+    "src/spacepdhcg/gtoc12/earthleg.py": "876c4f2e99c47ece83002f590db894b5427ddc43e29d865cb6c865bc720d2b8f",
+    "src/spacepdhcg/gtoc12/ephemeris.py": "b0c583ce0092709f40deba7904efeb6314e3db98a1225705f9de5103e60112fe",
+    "src/spacepdhcg/gtoc12/fetch.py": "d5b19c6f2865c94e52a17d28b718830cb5d2d6c2f5eef52fed7ad9cd7f3c2046",
+    "src/spacepdhcg/gtoc12/fleet.py": "68506f32ea10c9ef65e10b7aa9830983fa2b6d9ca44f877a775bddcdd05dd9c4",
+    "src/spacepdhcg/gtoc12/gpu_beam.py": "92824506f03c381cb781d6ea756ebb890f003b644466fd53c6d6c3cfd03867ce",
+    "src/spacepdhcg/gtoc12/gpu_collect_dp.py": "00e87a1b2924c23d618b60ee13bd7faa5483c3dfba3f31bc19c0403d15e6d52a",
+    "src/spacepdhcg/gtoc12/gpu_collect_tables.py": "04ed6a70e12a85619842a0cdf91d1d6382d3de49216c5d4fa31fed4d0d8afff0",
+    "src/spacepdhcg/gtoc12/gpu_collection.py": "c4939d1cc982cf9f7c13fe582551848f1d2b1916b2130eec4e40c7a11e29bffa",
+    "src/spacepdhcg/gtoc12/gpu_conic.py": "c90712f0b1cd9e7272c789395cb30d6f4e3d76be2946bc4b8876a21e5f4906b7",
+    "src/spacepdhcg/gtoc12/gpu_discretisation.py": "252af6ea53f856069e22ddf326457eb8ffaa1c7796e480ad3871a3aa832e4a8a",
+    "src/spacepdhcg/gtoc12/gpu_execution.py": "3dde7ea9e1e43aa14de8ba097ef8c781480e494ee6c9396d8bd88b3069885277",
+    "src/spacepdhcg/gtoc12/gpu_lambert.py": "0a91f8449af3161ad1b98df51c1b232ff16f05bcfa4d43e72d1a273dbdf394ea",
+    "src/spacepdhcg/gtoc12/gpu_neighbours.py": "c522c449ff4b5047592d3c4b77ba5a254315b3b3755baad97a84e423154d812c",
+    "src/spacepdhcg/gtoc12/gpu_options.py": "915e4e4ab022072a3b3f9e6a9c292003ad54ae45a8355cca7bcd301220ac5c7f",
+    "src/spacepdhcg/gtoc12/gpu_qoco.py": "556105ddaed229fd4208c16c84536b3b6c0406d3214ef5ecab89e5104c39321e",
+    "src/spacepdhcg/gtoc12/gpu_retime.py": "cba5bc698f36741343f51352ea80aba30955412b94ce99530fd9651d4bb081a0",
+    "src/spacepdhcg/gtoc12/gpu_scvx.py": "ef2e9427cae46ecb8fc60b0f13cd731de3c05b128adac87764c7c02ba5ab076e",
+    "src/spacepdhcg/gtoc12/gpu_verifier.py": "59ac5847130196565ee51b7eefcd0bf994b4001993e1ea777a0833c147238a23",
+    "src/spacepdhcg/gtoc12/harvest.py": "702d32be6728a484cc6b31566859bc843372cccbeafb15580c6357f747b8669f",
+    "src/spacepdhcg/gtoc12/harvestphase.py": "c1014533eb970af0301305063f048d6c8d021c9a8b564def20fb4395e590db4a",
+    "src/spacepdhcg/gtoc12/hopcalib.py": "6684d05881f2a613a0e0f537498e04a1b1a64fcf913dd37a18d53c1267c51c98",
+    "src/spacepdhcg/gtoc12/jointcampaign.py": "1a05ff040514c3f2fa90a2684003fcdd3c3d9b7ae5272442aca6cd217ba10ce6",
+    "src/spacepdhcg/gtoc12/jointopt.py": "1bafcf6865ba202cdf7f16e3e08cc6d4892821b811f139d52b07118bbd96a1f1",
+    "src/spacepdhcg/gtoc12/lambert.py": "1f6c1dd25e09a0782a7c186e697dbba61ca31855b7921190700b93bdbe18b4c8",
+    "src/spacepdhcg/gtoc12/legstats.py": "55e298506965944a77178869e8be5fcca50c76db8a65ff0b33fb501585bfe546",
+    "src/spacepdhcg/gtoc12/low_thrust.py": "c0b51d7c0d8654ebd6ac43e28bb05f21994a23b6112c21b474769facd850aafd",
+    "src/spacepdhcg/gtoc12/memory.py": "cca761a465a700922b34cbd51344d930ba83e438bdf6ef67c93aea3f5b1251ec",
+    "src/spacepdhcg/gtoc12/official.py": "bfba9ee22a9819b1f5bf5d225d399dcd85e7a7745143447e25d62a700d5d0412",
+    "src/spacepdhcg/gtoc12/pipeline.py": "62dab69643cd644efafe82044f1dc2de5ca77023513b5ddb8f7d2ce2b9330732",
+    "src/spacepdhcg/gtoc12/proxies.py": "9c1b279de813aa5d3ac2d8cfaf9f4fd73d9ce6db300a869dc83aaf1cd2d94156",
+    "src/spacepdhcg/gtoc12/reduced_instance.py": "9115569684c96b7d526171957655b69615556d525453f6a0eb3da49fbdc84dcd",
+    "src/spacepdhcg/gtoc12/references.py": "ab5397270a21ae468df4be0772a2d3c40e597f15afc9dd6ff6ca9091afd50cfa",
+    "src/spacepdhcg/gtoc12/refinement_queue.py": "67c3dfea6b93d8d1f437095bf724f05569ed0d961b95b2738461fcd2858eecaf",
+    "src/spacepdhcg/gtoc12/retiming.py": "710cf727eda68681c361c84f327bbf616598c887b31cf093e6791a9da3a13499",
+    "src/spacepdhcg/gtoc12/returncampaign.py": "8ef8fb97e75fa902853155d7f0a33a712a8412cb4eba39462f66886a7b78f824",
+    "src/spacepdhcg/gtoc12/returnsweep.py": "2988e7a7628106231bc7a04d6f92f90f361cd14e8bed84fcc78474924e1fd7e3",
+    "src/spacepdhcg/gtoc12/screening.py": "b9678da3935993bae5db0537e30c8f84e470fe780071c2581b2765217e5d87c0",
+    "src/spacepdhcg/gtoc12/search.py": "f5b0bf717ed40157b19e2d8ae61e4cc5d6025018edb779d388e1fd5c9968f0b4",
+    "src/spacepdhcg/gtoc12/solution.py": "25ac567dc8fc9af4146adb620bf433ca3e318c98bc0bf0a818b6f9753a289108",
+    "src/spacepdhcg/gtoc12/verifier.py": "56148828b0c0bed3e52263f54f1ad189019cf250b15008a75d8d5f3ea3b658cd",
+    "src/spacepdhcg/gtoc12/viewer_export.py": "a664c8c998b57caacc1141da388998284a2a6bfdf2fe4a18da5542042da9e37b"
+  },
+  "frozen_source_commit": "f5908d489494d0e292af20fade1207bb6489515f",
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "1ddc574b18c3ba6dc4ded3faedfcf146cd92d67feba9ddb8db024965e0901d2d",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "child_pid": 197113
+}

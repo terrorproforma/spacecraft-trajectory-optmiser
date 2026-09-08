@@ -1,0 +1,128 @@
+{
+  "baseline": {
+    "seconds": 137.064799984626,
+    "converged": 205,
+    "priming": 522,
+    "workspaces": 72,
+    "statuses": {
+      "converged": 205,
+      "failed": 6,
+      "infeasible": 14
+    }
+  },
+  "candidate": {
+    "seconds": 204.7752380950842,
+    "converged": 192,
+    "priming": 450,
+    "workspaces": 225,
+    "statuses": {
+      "converged": 192,
+      "failed": 4,
+      "infeasible": 16,
+      "iteration_limit": 13
+    }
+  },
+  "scope": "One full pass per mode with the same binary: zero versus two Ruiz iterations. Existing pool eligibility applies (zero Ruiz reuses workspaces; scaled workspaces rebuild). Original fixture budgets and accuracy tolerances are unchanged. Solver time excludes certification.",
+  "lost_baseline": [
+    68,
+    130,
+    137,
+    152,
+    158,
+    166,
+    192,
+    193,
+    196,
+    199,
+    202,
+    205,
+    223
+  ],
+  "max_certified_mass_delta": {
+    "index": 171,
+    "delta_kg": 0.017348810605653853
+  },
+  "less_time_percent": -49.400311471692945,
+  "largest_timing_changes": [
+    {
+      "index": 129,
+      "baseline_seconds": 13.320499810972251,
+      "candidate_seconds": 1.089875182020478,
+      "difference": -12.230624628951773,
+      "baseline_iterations": 29,
+      "candidate_iterations": 24
+    },
+    {
+      "index": 68,
+      "baseline_seconds": 0.31978672195691615,
+      "candidate_seconds": 11.748510880977847,
+      "difference": 11.42872415902093,
+      "baseline_iterations": 4,
+      "candidate_iterations": 40
+    },
+    {
+      "index": 192,
+      "baseline_seconds": 0.5207266919896938,
+      "candidate_seconds": 11.77059004403418,
+      "difference": 11.249863352044486,
+      "baseline_iterations": 8,
+      "candidate_iterations": 44
+    },
+    {
+      "index": 158,
+      "baseline_seconds": 0.33336351899197325,
+      "candidate_seconds": 10.10984055098379,
+      "difference": 9.776477031991817,
+      "baseline_iterations": 4,
+      "candidate_iterations": 40
+    },
+    {
+      "index": 137,
+      "baseline_seconds": 0.1653135209926404,
+      "candidate_seconds": 7.834349821030628,
+      "difference": 7.6690363000379875,
+      "baseline_iterations": 4,
+      "candidate_iterations": 40
+    },
+    {
+      "index": 196,
+      "baseline_seconds": 0.6668936769710854,
+      "candidate_seconds": 7.833673382003326,
+      "difference": 7.166779705032241,
+      "baseline_iterations": 8,
+      "candidate_iterations": 44
+    },
+    {
+      "index": 193,
+      "baseline_seconds": 1.1135970120085403,
+      "candidate_seconds": 7.9316611110116355,
+      "difference": 6.818064099003095,
+      "baseline_iterations": 10,
+      "candidate_iterations": 42
+    },
+    {
+      "index": 223,
+      "baseline_seconds": 0.4900829489924945,
+      "candidate_seconds": 6.974308057047892,
+      "difference": 6.484225108055398,
+      "baseline_iterations": 8,
+      "candidate_iterations": 41
+    },
+    {
+      "index": 205,
+      "baseline_seconds": 0.6803215150139295,
+      "candidate_seconds": 7.1228091469965875,
+      "difference": 6.442487631982658,
+      "baseline_iterations": 8,
+      "candidate_iterations": 43
+    },
+    {
+      "index": 130,
+      "baseline_seconds": 0.3036518119624816,
+      "candidate_seconds": 6.66002136800671,
+      "difference": 6.356369556044228,
+      "baseline_iterations": 5,
+      "candidate_iterations": 40
+    }
+  ]
+}

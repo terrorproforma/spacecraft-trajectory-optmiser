@@ -1,0 +1,42 @@
+{
+  "pid": 197185,
+  "complete": true,
+  "stages": [
+    {
+      "name": "baseline",
+      "returncode": 0,
+      "seconds": 165.200185979018,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_conditioning.py',run_name='__main__')",
+        "0",
+        "/home/ubuntu/spacepdhcg-conditioning-legs-v522/baseline"
+      ]
+    },
+    {
+      "name": "candidate",
+      "returncode": 0,
+      "seconds": 230.98419818800176,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_conditioning.py',run_name='__main__')",
+        "2",
+        "/home/ubuntu/spacepdhcg-conditioning-legs-v522/candidate"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "candidate",
+  "source_sha256": {
+    "build/performance/replay_conditioning.py": "953e0bfd96d3c697619ae4d5cbab5c7d780e5116e9d301b04bbb93ee382d8c49",
+    "build/performance/grid-cache-fleet-v403/scvx-calls.json": "09da720e7eca6481e9504ffa02840b5f35b9c2398ed229098c574c885510c846"
+  },
+  "frozen_source_commit": "9a6881adb38c865143f567860c20b20566d6168d",
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "1ddc574b18c3ba6dc4ded3faedfcf146cd92d67feba9ddb8db024965e0901d2d",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "child_pid": 197337
+}

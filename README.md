@@ -30,6 +30,12 @@ campaign timings overlap; the local 225-leg replay preserves all 205 certified
 legs but is essentially flat in total solver time. The experiment remains
 disabled by default. [Measurements and limitations](docs/GPU_RETAINED_REPLAY.md).
 
+Full-workload tests reject enabling two Ruiz scaling passes globally: certified
+legs fall from 205/225 to 191 locally and 192 on H100, and complete campaigns take
+2.56x / 2.75x as long. An identical saved convex subproblem isolates a scaled
+solver accuracy failure. Production settings and acceptance tolerances remain
+unchanged. [Diagnosis and reproducible negative results](docs/GPU_CONDITIONING_DIAGNOSIS.md).
+
 Compatible trajectory legs now reuse GPU QOCO workspaces, sparse conversion and
 vendor graphs. Complete-process one-ship medians fall **5.40% on RTX 5090** and
 **5.03% on H100**, with unchanged verified score. The fixed 225-leg replay takes

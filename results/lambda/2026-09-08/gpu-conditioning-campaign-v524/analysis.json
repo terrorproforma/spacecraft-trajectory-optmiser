@@ -1,0 +1,60 @@
+{
+  "scope": "ABBA two runs per mode, identical binary. Zero versus two Ruiz iterations; existing pool eligibility remains in force. All runs pass both mission checkers.",
+  "baseline_process_median": 29.980828801490134,
+  "candidate_process_median": 82.45402769002249,
+  "less_process_time_percent": -175.02250933744796,
+  "rows": [
+    {
+      "name": "baseline0",
+      "candidate": false,
+      "process_seconds": 30.505297386960592,
+      "cli_seconds": 29.492647717997897,
+      "score": 548.2546201232001,
+      "same_initial_plans": true,
+      "same_logical_counts": true,
+      "calls": 47,
+      "solver_seconds": 12.382583606871776,
+      "converged": 46,
+      "workspace_creations": 17
+    },
+    {
+      "name": "candidate0",
+      "candidate": true,
+      "process_seconds": 81.77584190899506,
+      "cli_seconds": 80.97472048102645,
+      "score": 548.2546201231,
+      "same_initial_plans": true,
+      "same_logical_counts": true,
+      "calls": 47,
+      "solver_seconds": 62.971009392873384,
+      "converged": 40,
+      "workspace_creations": 47
+    },
+    {
+      "name": "candidate1",
+      "candidate": true,
+      "process_seconds": 83.13221347104991,
+      "cli_seconds": 82.34673291601939,
+      "score": 548.2546201233997,
+      "same_initial_plans": true,
+      "same_logical_counts": true,
+      "calls": 47,
+      "solver_seconds": 63.960944334743544,
+      "converged": 40,
+      "workspace_creations": 47
+    },
+    {
+      "name": "baseline1",
+      "candidate": false,
+      "process_seconds": 29.456360216019675,
+      "cli_seconds": 28.612893427023664,
+      "score": 548.2546201231003,
+      "same_initial_plans": true,
+      "same_logical_counts": true,
+      "calls": 47,
+      "solver_seconds": 11.656942843925208,
+      "converged": 46,
+      "workspace_creations": 17
+    }
+  ]
+}
