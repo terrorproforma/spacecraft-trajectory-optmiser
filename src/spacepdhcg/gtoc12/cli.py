@@ -79,6 +79,51 @@ def _candidate_support_routes(previous: list, candidate) -> tuple[list, list[dic
     return [routes[index] for index in sorted(selected)], missing
 
 
+def _write_bundle_route_artifacts(bundle, catalogue, directory: Path) -> None:
+    """Persist the primary routes and every standalone variant offered to the master."""
+
+    from .pipeline import write_route_artifacts
+
+    for ship in bundle.ships:
+        ship_dir = directory / f"ship_{ship.slot:02d}"
+        write_route_artifacts(ship.route, catalogue, ship_dir)
+        records = [
+            {
+                "role": "bundle_primary",
+                "summary": "route_summary.json",
+                "solution": "Result.txt",
+                "has_foreign_collects": bool(ship.route.plan.foreign_deploy_epochs),
+                "has_orphaned_deploys": bool(ship.route.plan.orphaned),
+            }
+        ]
+        seen = {id(ship.route)}
+        for index, variant in enumerate(ship.variants):
+            standalone = not variant.plan.orphaned and not variant.plan.foreign_deploy_epochs
+            if id(variant) in seen or not standalone or not variant.certified:
+                continue
+            seen.add(id(variant))
+            relative = Path("variants") / f"variant_{index:03d}"
+            write_route_artifacts(variant, catalogue, ship_dir / relative)
+            records.append(
+                {
+                    "role": "standalone_variant",
+                    "variant_index": index,
+                    "summary": (relative / "route_summary.json").as_posix(),
+                    "solution": (relative / "Result.txt").as_posix(),
+                    "has_foreign_collects": False,
+                    "has_orphaned_deploys": False,
+                }
+            )
+        (ship_dir / "archive_manifest.json").write_text(
+            _json({
+                "schema_version": 1,
+                "qualification": "route_certified",
+                "requires_final_fleet_verification": True,
+                "routes": records,
+            }) + "\n", encoding="utf-8",
+        )
+
+
 def _with_screening_backend(function):
     @wraps(function)
     def run(args):
@@ -947,7 +992,6 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .official import official_verifier_available, run_official_verifier
-    from .pipeline import write_route_artifacts
     from .solution import Solution
     from .verifier import Gtoc12Verifier
     from .viewer_export import write_viewer_dataset
@@ -1251,8 +1295,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
         worker_rss.append(bundle.peak_rss_mb)
         cluster_dir = output_dir / "clusters" / f"family_{bundle.label:04d}"
         cluster_dir.mkdir(parents=True, exist_ok=True)
-        for ship in bundle.ships:
-            write_route_artifacts(ship.route, catalogue, cluster_dir / f"ship_{ship.slot:02d}")
+        _write_bundle_route_artifacts(bundle, catalogue, cluster_dir)
         (cluster_dir / "bundle.json").write_text(_json(summary) + "\n", encoding="utf-8")
         report["bundles"].append(
             {k: v for k, v in summary.items() if k not in ("rejected", "earth_legs", "repairs")}
@@ -1394,7 +1437,6 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .official import official_verifier_available, run_official_verifier
-    from .pipeline import write_route_artifacts
     from .solution import Solution
     from .verifier import Gtoc12Verifier
     from .viewer_export import write_viewer_dataset
@@ -1461,11 +1503,9 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     for bundle in bundles:
         summary = bundle.summary()
         report["bundles"].append(summary)
-        for ship in bundle.ships:
-            write_route_artifacts(
-                ship.route,
-                catalogue,
-                output_dir / "columns" / summary_dir(bundle) / f"ship_{ship.slot:02d}",
+        if bundle.ships:
+            _write_bundle_route_artifacts(
+                bundle, catalogue, output_dir / "columns" / summary_dir(bundle)
             )
         columns.extend(bundle_columns(bundle, len(columns), prefix="a"))
     report["columns"] = len(columns)

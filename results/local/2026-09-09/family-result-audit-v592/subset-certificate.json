@@ -1,0 +1,646 @@
+{
+  "status": "all_persisted_primary_additions_excluded_from_improving_the_retained_fleet",
+  "scope": "23 retained incumbent routes plus 3 primary routes persisted by either v588 or v589; no unseen historical alternatives or lost in-memory variants are covered",
+  "method": "Exact dependence/dominance checks followed by conservative cardinality bounds; no GPU work, SCvx, MILP, or trajectory integration",
+  "bonus_sha256": "e8a3795e599556ed5b66713ab1fa176de93ef37f93cb2a4a87d561539b1caa21",
+  "incumbent_raw_kg": 14047.802874743327,
+  "incumbent_weighted_kg": 12805.194102488209,
+  "incumbent_rule_headroom_raw_kg": 4.307421370402153,
+  "pilot_per_ship_raw_kg": [
+    641.0677618069815,
+    533.47022587269,
+    412.73100616016427
+  ],
+  "pilot_per_ship_weighted_kg": [
+    569.0537293322462,
+    490.11127400340683,
+    361.7444051552028
+  ],
+  "dominated_pilot_ship_1": {
+    "pilot_raw_kg": 641.0677618069815,
+    "pilot_weighted_kg": 569.0537293322462,
+    "incumbent_ship": 6,
+    "incumbent_raw_kg": 644.3531827515401,
+    "incumbent_weighted_kg": 571.9148159092401
+  },
+  "new_cooperative_pair": {
+    "raw_kg": 946.2012320328543,
+    "weighted_kg": 851.8556791586096,
+    "foreign_asteroids": [
+      12043,
+      49895
+    ]
+  },
+  "cardinality_bounds": [
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 1,
+      "retained_incumbent_ships": 0,
+      "physical_mass_upper_bound_kg": 533.47022587269,
+      "physical_mass_required_kg": -173.2867951399863,
+      "weighted_objective_upper_bound_kg": 490.11127400340683,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 2,
+      "retained_incumbent_ships": 1,
+      "physical_mass_upper_bound_kg": 1187.5701574264203,
+      "physical_mass_required_kg": 0.0,
+      "weighted_objective_upper_bound_kg": 1104.8409112381776,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 3,
+      "retained_incumbent_ships": 2,
+      "physical_mass_upper_bound_kg": 1831.9233401779604,
+      "physical_mass_required_kg": 304.0988310811233,
+      "weighted_objective_upper_bound_kg": 1708.041225089889,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 4,
+      "retained_incumbent_ships": 3,
+      "physical_mass_upper_bound_kg": 2464.1752224503766,
+      "physical_mass_required_kg": 693.1471805599452,
+      "weighted_objective_upper_bound_kg": 2303.6880423383486,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 5,
+      "retained_incumbent_ships": 4,
+      "physical_mass_upper_bound_kg": 3092.703627652293,
+      "physical_mass_required_kg": 1145.3634148426938,
+      "weighted_objective_upper_bound_kg": 2898.4861258427977,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 6,
+      "retained_incumbent_ships": 5,
+      "physical_mass_upper_bound_kg": 3718.056125941136,
+      "physical_mass_required_kg": 1647.9184330021644,
+      "weighted_objective_upper_bound_kg": 3491.8575140314447,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 7,
+      "retained_incumbent_ships": 6,
+      "physical_mass_upper_bound_kg": 4341.902806297057,
+      "physical_mass_required_kg": 2192.335194866894,
+      "weighted_objective_upper_bound_kg": 4081.2075789994865,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 8,
+      "retained_incumbent_ships": 7,
+      "physical_mass_upper_bound_kg": 4964.13415468857,
+      "physical_mass_required_kg": 2772.588722239781,
+      "weighted_objective_upper_bound_kg": 4668.0658952212525,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 9,
+      "retained_incumbent_ships": 8,
+      "physical_mass_upper_bound_kg": 5582.067077344285,
+      "physical_mass_required_kg": 3384.174142746617,
+      "weighted_objective_upper_bound_kg": 5239.980711130493,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 10,
+      "retained_incumbent_ships": 9,
+      "physical_mass_upper_bound_kg": 6199.452429842574,
+      "physical_mass_required_kg": 4023.594781085251,
+      "weighted_objective_upper_bound_kg": 5810.740464723922,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 11,
+      "retained_incumbent_ships": 10,
+      "physical_mass_upper_bound_kg": 6816.563997262149,
+      "physical_mass_required_kg": 4688.057253655669,
+      "weighted_objective_upper_bound_kg": 6378.580005249333,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 12,
+      "retained_incumbent_ships": 11,
+      "physical_mass_upper_bound_kg": 7431.29363449692,
+      "physical_mass_required_kg": 5375.278407684165,
+      "weighted_objective_upper_bound_kg": 6935.4920144263615,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 13,
+      "retained_incumbent_ships": 12,
+      "physical_mass_upper_bound_kg": 8045.722108145106,
+      "physical_mass_required_kg": 6083.357074930172,
+      "weighted_objective_upper_bound_kg": 7482.714896513886,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 14,
+      "retained_incumbent_ships": 13,
+      "physical_mass_upper_bound_kg": 8655.687885010268,
+      "physical_mass_required_kg": 6810.6855216935965,
+      "weighted_objective_upper_bound_kg": 8029.191375748815,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 15,
+      "retained_incumbent_ships": 14,
+      "physical_mass_upper_bound_kg": 9263.983572895278,
+      "physical_mass_required_kg": 7555.886327033492,
+      "weighted_objective_upper_bound_kg": 8571.312562661398,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 16,
+      "retained_incumbent_ships": 15,
+      "physical_mass_upper_bound_kg": 9869.62354551677,
+      "physical_mass_required_kg": 8317.766166719342,
+      "weighted_objective_upper_bound_kg": 9107.176789059919,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 17,
+      "retained_incumbent_ships": 16,
+      "physical_mass_upper_bound_kg": 10468.58316221766,
+      "physical_mass_required_kg": 9095.281194859152,
+      "weighted_objective_upper_bound_kg": 9640.243698040587,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 18,
+      "retained_incumbent_ships": 17,
+      "physical_mass_upper_bound_kg": 11064.22997946612,
+      "physical_mass_required_kg": 9887.510598012987,
+      "weighted_objective_upper_bound_kg": 10167.353873584092,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 19,
+      "retained_incumbent_ships": 18,
+      "physical_mass_upper_bound_kg": 11659.028062970568,
+      "physical_mass_required_kg": 10693.636043380851,
+      "weighted_objective_upper_bound_kg": 10693.474128204809,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 20,
+      "retained_incumbent_ships": 19,
+      "physical_mass_upper_bound_kg": 12250.896646132785,
+      "physical_mass_required_kg": 11512.92546497023,
+      "weighted_objective_upper_bound_kg": 11218.993020993588,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 21,
+      "retained_incumbent_ships": 20,
+      "physical_mass_upper_bound_kg": 12841.587953456537,
+      "physical_mass_required_kg": 12344.720100108258,
+      "weighted_objective_upper_bound_kg": 11741.628909558523,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 22,
+      "retained_incumbent_ships": 21,
+      "physical_mass_upper_bound_kg": 13428.446269678303,
+      "physical_mass_required_kg": 13188.424000391038,
+      "weighted_objective_upper_bound_kg": 12264.12173010744,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 23,
+      "retained_incumbent_ships": 22,
+      "physical_mass_upper_bound_kg": 14010.513347022588,
+      "physical_mass_required_kg": 14043.495453372925,
+      "weighted_objective_upper_bound_kg": 12781.255208337992,
+      "excluded_by": "ship_count_rule"
+    },
+    {
+      "new_ships": [
+        2
+      ],
+      "ships": 24,
+      "retained_incumbent_ships": 23,
+      "physical_mass_upper_bound_kg": 14581.273100616017,
+      "physical_mass_required_kg": 14909.439898728002,
+      "weighted_objective_upper_bound_kg": 13295.305376491615,
+      "excluded_by": "ship_count_rule"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 2,
+      "retained_incumbent_ships": 0,
+      "physical_mass_upper_bound_kg": 946.2012320328543,
+      "physical_mass_required_kg": 0.0,
+      "weighted_objective_upper_bound_kg": 851.8556791586096,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 3,
+      "retained_incumbent_ships": 1,
+      "physical_mass_upper_bound_kg": 1600.3011635865846,
+      "physical_mass_required_kg": 304.0988310811233,
+      "weighted_objective_upper_bound_kg": 1466.5853163933803,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 4,
+      "retained_incumbent_ships": 2,
+      "physical_mass_upper_bound_kg": 2244.654346338125,
+      "physical_mass_required_kg": 693.1471805599452,
+      "weighted_objective_upper_bound_kg": 2069.785630245092,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 5,
+      "retained_incumbent_ships": 3,
+      "physical_mass_upper_bound_kg": 2876.906228610541,
+      "physical_mass_required_kg": 1145.3634148426938,
+      "weighted_objective_upper_bound_kg": 2665.4324474935515,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 6,
+      "retained_incumbent_ships": 4,
+      "physical_mass_upper_bound_kg": 3505.434633812457,
+      "physical_mass_required_kg": 1647.9184330021644,
+      "weighted_objective_upper_bound_kg": 3260.2305309980006,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 7,
+      "retained_incumbent_ships": 5,
+      "physical_mass_upper_bound_kg": 4130.787132101301,
+      "physical_mass_required_kg": 2192.335194866894,
+      "weighted_objective_upper_bound_kg": 3853.6019191866476,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 8,
+      "retained_incumbent_ships": 6,
+      "physical_mass_upper_bound_kg": 4754.633812457221,
+      "physical_mass_required_kg": 2772.588722239781,
+      "weighted_objective_upper_bound_kg": 4442.951984154689,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 9,
+      "retained_incumbent_ships": 7,
+      "physical_mass_upper_bound_kg": 5376.8651608487335,
+      "physical_mass_required_kg": 3384.174142746617,
+      "weighted_objective_upper_bound_kg": 5029.810300376455,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 10,
+      "retained_incumbent_ships": 8,
+      "physical_mass_upper_bound_kg": 5994.798083504449,
+      "physical_mass_required_kg": 4023.594781085251,
+      "weighted_objective_upper_bound_kg": 5601.725116285696,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 11,
+      "retained_incumbent_ships": 9,
+      "physical_mass_upper_bound_kg": 6612.183436002738,
+      "physical_mass_required_kg": 4688.057253655669,
+      "weighted_objective_upper_bound_kg": 6172.484869879125,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 12,
+      "retained_incumbent_ships": 10,
+      "physical_mass_upper_bound_kg": 7229.295003422313,
+      "physical_mass_required_kg": 5375.278407684165,
+      "weighted_objective_upper_bound_kg": 6740.324410404536,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 13,
+      "retained_incumbent_ships": 11,
+      "physical_mass_upper_bound_kg": 7844.024640657084,
+      "physical_mass_required_kg": 6083.357074930172,
+      "weighted_objective_upper_bound_kg": 7297.236419581564,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 14,
+      "retained_incumbent_ships": 12,
+      "physical_mass_upper_bound_kg": 8458.45311430527,
+      "physical_mass_required_kg": 6810.6855216935965,
+      "weighted_objective_upper_bound_kg": 7844.459301669089,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 15,
+      "retained_incumbent_ships": 13,
+      "physical_mass_upper_bound_kg": 9068.418891170431,
+      "physical_mass_required_kg": 7555.886327033492,
+      "weighted_objective_upper_bound_kg": 8390.935780904018,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 16,
+      "retained_incumbent_ships": 14,
+      "physical_mass_upper_bound_kg": 9676.714579055442,
+      "physical_mass_required_kg": 8317.766166719342,
+      "weighted_objective_upper_bound_kg": 8933.056967816601,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 17,
+      "retained_incumbent_ships": 15,
+      "physical_mass_upper_bound_kg": 10282.354551676934,
+      "physical_mass_required_kg": 9095.281194859152,
+      "weighted_objective_upper_bound_kg": 9468.92119421512,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 18,
+      "retained_incumbent_ships": 16,
+      "physical_mass_upper_bound_kg": 10881.314168377823,
+      "physical_mass_required_kg": 9887.510598012987,
+      "weighted_objective_upper_bound_kg": 10001.988103195788,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 19,
+      "retained_incumbent_ships": 17,
+      "physical_mass_upper_bound_kg": 11476.960985626283,
+      "physical_mass_required_kg": 10693.636043380851,
+      "weighted_objective_upper_bound_kg": 10529.098278739293,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 20,
+      "retained_incumbent_ships": 18,
+      "physical_mass_upper_bound_kg": 12071.759069130732,
+      "physical_mass_required_kg": 11512.92546497023,
+      "weighted_objective_upper_bound_kg": 11055.218533360012,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 21,
+      "retained_incumbent_ships": 19,
+      "physical_mass_upper_bound_kg": 12663.62765229295,
+      "physical_mass_required_kg": 12344.720100108258,
+      "weighted_objective_upper_bound_kg": 11580.73742614879,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 22,
+      "retained_incumbent_ships": 20,
+      "physical_mass_upper_bound_kg": 13254.318959616701,
+      "physical_mass_required_kg": 13188.424000391038,
+      "weighted_objective_upper_bound_kg": 12103.373314713725,
+      "excluded_by": "weighted_objective_bound"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 23,
+      "retained_incumbent_ships": 21,
+      "physical_mass_upper_bound_kg": 13841.177275838467,
+      "physical_mass_required_kg": 14043.495453372925,
+      "weighted_objective_upper_bound_kg": 12625.866135262642,
+      "excluded_by": "ship_count_rule"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 24,
+      "retained_incumbent_ships": 22,
+      "physical_mass_upper_bound_kg": 14423.244353182752,
+      "physical_mass_required_kg": 14909.439898728002,
+      "weighted_objective_upper_bound_kg": 13142.999613493195,
+      "excluded_by": "ship_count_rule"
+    },
+    {
+      "new_ships": [
+        2,
+        3
+      ],
+      "ships": 25,
+      "retained_incumbent_ships": 23,
+      "physical_mass_upper_bound_kg": 14994.004106776181,
+      "physical_mass_required_kg": 15785.804026926598,
+      "weighted_objective_upper_bound_kg": 13657.049781646818,
+      "excluded_by": "ship_count_rule"
+    }
+  ],
+  "ship_2_historical_vs_pilot": {
+    "old_raw_kg": 535.1129363449692,
+    "new_raw_kg": 533.47022587269,
+    "old_weighted_kg": 491.60821215505706,
+    "new_weighted_kg": 490.11127400340683,
+    "summed_mining_day_change": -60.0,
+    "per_asteroid": [
+      {
+        "asteroid": 7789,
+        "old_mining_days": 2685.0,
+        "new_mining_days": 2640.0,
+        "change_days": -45.0,
+        "raw_mass_change_kg": -1.23203285420945
+      },
+      {
+        "asteroid": 16349,
+        "old_mining_days": 3180.0,
+        "new_mining_days": 3195.0,
+        "change_days": 15.0,
+        "raw_mass_change_kg": 0.41067761806982617
+      },
+      {
+        "asteroid": 24684,
+        "old_mining_days": 3675.0,
+        "new_mining_days": 3690.0,
+        "change_days": 15.0,
+        "raw_mass_change_kg": 0.41067761806981196
+      },
+      {
+        "asteroid": 26515,
+        "old_mining_days": 2100.0,
+        "new_mining_days": 2085.0,
+        "change_days": -15.0,
+        "raw_mass_change_kg": -0.41067761806981906
+      },
+      {
+        "asteroid": 31708,
+        "old_mining_days": 2205.0,
+        "new_mining_days": 2175.0,
+        "change_days": -30.0,
+        "raw_mass_change_kg": -0.821355236139631
+      },
+      {
+        "asteroid": 36147,
+        "old_mining_days": 3360.0,
+        "new_mining_days": 3360.0,
+        "change_days": 0.0,
+        "raw_mass_change_kg": 0.0
+      },
+      {
+        "asteroid": 47986,
+        "old_mining_days": 2340.0,
+        "new_mining_days": 2340.0,
+        "change_days": 0.0,
+        "raw_mass_change_kg": 0.0
+      }
+    ]
+  }
+}

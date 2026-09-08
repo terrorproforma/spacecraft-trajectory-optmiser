@@ -1,0 +1,1981 @@
+{
+  "historical_route_files": 3545,
+  "incumbent": {
+    "artifacts": {
+      "solution": "results/gtoc12/runs/fleet_master_v11/fleet/Result.txt"
+    },
+    "fleet": {
+      "asteroids": [
+        333,
+        665,
+        913,
+        1122,
+        1297,
+        1897,
+        1908,
+        1965,
+        2000,
+        2009,
+        2154,
+        2328,
+        2363,
+        2642,
+        3002,
+        3027,
+        3194,
+        3196,
+        3299,
+        3750,
+        3896,
+        3909,
+        3944,
+        4367,
+        4524,
+        4650,
+        5095,
+        5162,
+        5473,
+        6014,
+        6736,
+        6757,
+        6872,
+        8123,
+        8226,
+        8846,
+        8913,
+        9443,
+        9767,
+        10341,
+        10538,
+        10646,
+        10828,
+        10938,
+        11187,
+        11253,
+        11721,
+        11983,
+        12705,
+        12930,
+        12944,
+        13077,
+        13998,
+        14130,
+        14708,
+        14880,
+        15049,
+        15060,
+        15206,
+        15372,
+        15711,
+        15785,
+        16048,
+        16821,
+        17199,
+        17222,
+        17697,
+        19102,
+        19401,
+        19893,
+        19906,
+        21016,
+        21105,
+        22490,
+        22542,
+        22674,
+        23153,
+        23402,
+        23448,
+        23457,
+        24025,
+        24172,
+        24677,
+        25023,
+        25279,
+        25358,
+        26251,
+        26896,
+        26975,
+        27087,
+        27157,
+        27344,
+        27463,
+        27464,
+        27855,
+        27861,
+        28079,
+        28118,
+        28411,
+        28553,
+        28740,
+        29766,
+        29787,
+        30383,
+        30519,
+        30797,
+        30805,
+        31302,
+        31365,
+        31520,
+        32087,
+        32321,
+        32647,
+        33208,
+        33279,
+        33300,
+        33441,
+        33707,
+        34101,
+        34287,
+        34523,
+        34525,
+        34724,
+        35329,
+        35344,
+        35473,
+        35731,
+        36235,
+        36739,
+        37066,
+        37322,
+        37385,
+        37789,
+        38331,
+        39085,
+        39584,
+        39740,
+        40153,
+        40868,
+        41045,
+        41073,
+        41270,
+        41944,
+        42326,
+        42615,
+        43005,
+        43563,
+        43651,
+        44233,
+        44409,
+        44683,
+        44769,
+        45619,
+        45699,
+        46525,
+        47458,
+        47630,
+        49218,
+        49284,
+        49519,
+        49691,
+        49850,
+        49856,
+        49900,
+        50075,
+        50091,
+        50601,
+        50674,
+        51006,
+        51417,
+        51489,
+        51591,
+        51643,
+        51831,
+        52020,
+        52453,
+        53201,
+        53228,
+        53343,
+        53400,
+        54492,
+        54545,
+        55827,
+        56400,
+        56502,
+        56730,
+        56811,
+        57189,
+        57827,
+        57844,
+        57877,
+        57878,
+        57949,
+        59027,
+        59653,
+        59701
+      ],
+      "average_collected_kg": 610.7740380323186,
+      "collected_kg_per_ship": [
+        617.3853524982889,
+        632.2518822724162,
+        590.6913073237508,
+        586.8583162217659,
+        625.3524982888432,
+        644.3531827515401,
+        614.4284736481861,
+        617.1115674195756,
+        608.2956878850102,
+        582.0670773442847,
+        617.9329226557153,
+        570.7597535934292,
+        598.9596167008898,
+        595.6468172484599,
+        605.6399726214921,
+        614.7296372347707,
+        628.5284052019165,
+        594.798083504449,
+        609.9657768651608,
+        591.8685831622176,
+        623.8466803559206,
+        622.2313483915127,
+        654.0999315537304
+      ],
+      "rule_satisfied": true,
+      "ship_limit": 23.017236140616472,
+      "ships": 23,
+      "total_collected_kg": 14047.802874743327
+    },
+    "independent": {
+      "max_mass_error_kg": 9.185896487906575e-11,
+      "max_position_error_km": 66.8554018025909,
+      "max_velocity_error_km_s": 4.949671007934027e-06,
+      "mined_asteroids": 194,
+      "ok": true,
+      "ship_limit": 23.017236140617964,
+      "ships": 23,
+      "total_mass_kg": 14047.802874743698,
+      "violations": [],
+      "weighted_score_dynamic_kg": null,
+      "weighted_score_fixed_bonus_kg": 12805.194102488575
+    },
+    "master": {
+      "collected_kg": 14047.802874743327,
+      "columns": 3869,
+      "cooperative": {
+        "bundle_columns": 0,
+        "collector_ships": 0,
+        "deployer_ships": 0,
+        "foreign_collects": 0
+      },
+      "exhaustive": false,
+      "gap_kg": 29.20384483320413,
+      "greedy_objective_kg": 12589.553964732904,
+      "lp_bound_kg": 12834.397947321413,
+      "lp_gap_kg": 29.20384483320413,
+      "lp_nodes": 20000,
+      "lp_relaxations_kg": {
+        "1": 614.7296372347707,
+        "10": 5890.649724601419,
+        "11": 6460.5881229587085,
+        "12": 7030.389628776641,
+        "13": 7600.124653013057,
+        "14": 8169.132182102721,
+        "15": 8738.084954176644,
+        "16": 9305.924494702056,
+        "17": 9873.159080952782,
+        "18": 10438.08721236962,
+        "19": 11002.590723725845,
+        "2": 1217.929951086482,
+        "20": 11563.45990777677,
+        "21": 12117.01066376785,
+        "22": 12554.35275119522,
+        "23": 12834.397947321413,
+        "3": 1813.576768334942,
+        "4": 2408.374851839391,
+        "5": 3001.746240028038,
+        "6": 3591.0963049960797,
+        "7": 4177.954621217846,
+        "8": 4749.869437127086,
+        "9": 5320.629190720515
+      },
+      "lp_seconds": 7.908394896003301,
+      "lp_sizes_searched": [
+        23
+      ],
+      "mean_collected_kg": 610.7740380323186,
+      "nodes": 2000011,
+      "objective_kg": 12805.194102488209,
+      "proven_optimal": false,
+      "root_bound_kg": 12834.397947321413,
+      "ship_limit": 23.017236140616472,
+      "ships": 23,
+      "upper_bound_kg": 12834.397947321413
+    },
+    "official": {
+      "message": "Check successfully!",
+      "mined_asteroids": 194,
+      "ok": true,
+      "return_code": 0,
+      "ships": 23,
+      "total_mass_kg": 14047.8,
+      "wall_seconds": 0.35622994900040794
+    },
+    "ok": true,
+    "score_kg": 14047.8,
+    "viewer_manifest": {
+      "files": {
+        "trajectories.json": {
+          "bytes": 10557377,
+          "sha256": "fee64a8cbe67fd65578309b15fe0d162b75dd8d9998e66fa5e7b2a7c103a9e5a"
+        }
+      },
+      "schema_version": "1.0.0",
+      "source": {
+        "bytes": 10079339,
+        "path_basename": "Result.txt",
+        "sha256": "f0688310d1a2fcd572e35ada7ec8b10edca1136ccf8b57abd2979b6614104f91"
+      },
+      "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+    }
+  },
+  "pilots": [
+    {
+      "name": "local_v588",
+      "best": {
+        "artifacts": {
+          "solution": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/family-gpu-v588/output/fleets/fleet_000_03ships/Result.txt"
+        },
+        "elapsed_seconds": 929.0794217270001,
+        "fleet": {
+          "asteroids": [
+            5473,
+            7789,
+            8226,
+            9159,
+            9680,
+            10828,
+            12043,
+            16349,
+            23402,
+            24684,
+            25358,
+            26515,
+            31708,
+            32647,
+            35024,
+            36147,
+            45235,
+            47986,
+            49519,
+            49895,
+            52453,
+            54545
+          ],
+          "average_collected_kg": 529.0896646132786,
+          "collected_kg_per_ship": [
+            641.0677618069815,
+            533.47022587269,
+            412.73100616016427
+          ],
+          "rule_satisfied": true,
+          "ship_limit": 16.60171227290286,
+          "ships": 3,
+          "total_collected_kg": 1587.2689938398357
+        },
+        "independent": {
+          "max_mass_error_kg": 9.072209650184959e-11,
+          "max_position_error_km": 0.8664075597212152,
+          "max_velocity_error_km_s": 1.4280586713767095e-07,
+          "mined_asteroids": 22,
+          "ok": true,
+          "ship_limit": 16.60171227289099,
+          "ships": 3,
+          "total_mass_kg": 1587.2689938392996,
+          "violations": [],
+          "weighted_score_dynamic_kg": null,
+          "weighted_score_fixed_bonus_kg": 1420.9094084903725
+        },
+        "master": {
+          "collected_kg": 1587.2689938398357,
+          "columns": 8,
+          "cooperative": {
+            "bundle_columns": 1,
+            "collector_ships": 1,
+            "deployer_ships": 1,
+            "foreign_collects": 2
+          },
+          "exhaustive": true,
+          "gap_kg": 0.0,
+          "greedy_objective_kg": 1420.9094084908559,
+          "lp_bound_kg": 1420.909408490856,
+          "lp_gap_kg": 2.2737367544323206e-13,
+          "lp_nodes": 0,
+          "lp_relaxations_kg": {
+            "1": 569.0537293322462,
+            "2": 1059.1650033356532,
+            "3": 1420.909408490856
+          },
+          "lp_seconds": 0.011836127999913515,
+          "lp_sizes_searched": [],
+          "mean_collected_kg": 529.0896646132786,
+          "nodes": 1,
+          "objective_kg": 1420.9094084908559,
+          "proven_optimal": true,
+          "root_bound_kg": 1420.909408490856,
+          "ship_limit": 16.60171227290286,
+          "ships": 3,
+          "upper_bound_kg": 1420.9094084908559
+        },
+        "official": {
+          "message": "Check successfully!",
+          "mined_asteroids": 22,
+          "ok": true,
+          "return_code": 0,
+          "ships": 3,
+          "total_mass_kg": 1587.27,
+          "wall_seconds": 0.0581987460000164
+        },
+        "ok": true,
+        "score_kg": 1420.9094084903725,
+        "score_kind": "weighted_score_fixed_bonus_kg",
+        "total_mass_kg": 1587.2689938392996,
+        "weighted_score_fixed_bonus_kg": 1420.9094084903725
+      },
+      "wall_seconds_total": 932.3228717989999,
+      "columns": 8,
+      "routes": [
+        {
+          "path": "build/performance/family-gpu-v588/output/clusters/family_0032/ship_01/route_summary.json",
+          "raw_kg": 641.0677618069815,
+          "final_mass_kg": 504.5555182134731,
+          "collects": [
+            5473,
+            8226,
+            10828,
+            23402,
+            25358,
+            32647,
+            49519,
+            52453,
+            54545
+          ],
+          "deploys": [
+            5473,
+            8226,
+            10828,
+            23402,
+            25358,
+            32647,
+            49519,
+            52453,
+            54545
+          ],
+          "foreign": [],
+          "orphaned": [],
+          "signature_sha256": "95ce2e5741ba46a8119385ed27daa9fbbe1e18f321fd345c4c6f1859f83dbb7d",
+          "identical_schedule_history": [
+            {
+              "path": "results/gtoc12/runs/cluster_fleet_v10_control/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.0677618069815,
+              "final_mass_kg": 504.5555187549471,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "95ce2e5741ba46a8119385ed27daa9fbbe1e18f321fd345c4c6f1859f83dbb7d"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/cluster_fleet_v10_control/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.0677618069815,
+              "final_mass_kg": 504.5555187549471,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "95ce2e5741ba46a8119385ed27daa9fbbe1e18f321fd345c4c6f1859f83dbb7d"
+            }
+          ],
+          "same_collect_set_history": [
+            {
+              "path": "results/gtoc12/runs/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0032/ship_01/route_summary.json",
+              "raw_kg": 644.3531827515401,
+              "final_mass_kg": 503.67376178054155,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "a5a7673834d36b703b4681058772cfdc7fa3d016f6b2ff63b5bfb1de150a3dd9"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0032/ship_01/route_summary.json",
+              "raw_kg": 644.3531827515401,
+              "final_mass_kg": 503.67376178054155,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "a5a7673834d36b703b4681058772cfdc7fa3d016f6b2ff63b5bfb1de150a3dd9"
+            },
+            {
+              "path": "results/gtoc12/runs/cluster_fleet_v10/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.5879534565366,
+              "final_mass_kg": 504.18130257562814,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "dcbda60d4a977099fb41320b385ce26f3195b538a0c5dd6526205bfb2f6da7ad"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/cluster_fleet_v10/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.5879534565366,
+              "final_mass_kg": 504.18130257562814,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "dcbda60d4a977099fb41320b385ce26f3195b538a0c5dd6526205bfb2f6da7ad"
+            },
+            {
+              "path": "results/gtoc12/runs/cluster_fleet_v10_control/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.0677618069815,
+              "final_mass_kg": 504.5555187549471,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "95ce2e5741ba46a8119385ed27daa9fbbe1e18f321fd345c4c6f1859f83dbb7d"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/cluster_fleet_v10_control/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.0677618069815,
+              "final_mass_kg": 504.5555187549471,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "95ce2e5741ba46a8119385ed27daa9fbbe1e18f321fd345c4c6f1859f83dbb7d"
+            }
+          ],
+          "incumbent_conflicts": [
+            {
+              "path": "results/lambda/2026-09-08/fleet-objective-v229/incumbent-sources/ship-06.json",
+              "raw_kg": 644.3531827515401,
+              "final_mass_kg": 503.67376178054155,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "a5a7673834d36b703b4681058772cfdc7fa3d016f6b2ff63b5bfb1de150a3dd9",
+              "overlap": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ]
+            }
+          ]
+        },
+        {
+          "path": "build/performance/family-gpu-v588/output/clusters/family_0032/ship_02/route_summary.json",
+          "raw_kg": 533.47022587269,
+          "final_mass_kg": 517.9489058726508,
+          "collects": [
+            7789,
+            16349,
+            24684,
+            26515,
+            31708,
+            36147,
+            47986
+          ],
+          "deploys": [
+            7789,
+            12043,
+            16349,
+            24684,
+            26515,
+            31708,
+            36147,
+            47986,
+            49895
+          ],
+          "foreign": [],
+          "orphaned": [
+            49895,
+            12043
+          ],
+          "signature_sha256": "74813ef90d5e047f5f45eaae921f2dab1723195d91af6a8ea777bb5cebc131b9",
+          "identical_schedule_history": [],
+          "same_collect_set_history": [
+            {
+              "path": "results/gtoc12/runs/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0032/ship_02/route_summary.json",
+              "raw_kg": 555.2635181382615,
+              "final_mass_kg": 503.638558562424,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "45688eb4c219f71c10f321cc86efc62aa122da45b083695c02ea120c282cc226"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0032/ship_02/route_summary.json",
+              "raw_kg": 555.2635181382615,
+              "final_mass_kg": 503.638558562424,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "45688eb4c219f71c10f321cc86efc62aa122da45b083695c02ea120c282cc226"
+            },
+            {
+              "path": "results/gtoc12/runs/cluster_fleet_v10_control/clusters/family_0032/ship_02/route_summary.json",
+              "raw_kg": 535.1129363449692,
+              "final_mass_kg": 629.7887331064964,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "0548496853feccdbc66e3cf79e555277535eb8968923c14eae37ddfe0e493523"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/cluster_fleet_v10_control/clusters/family_0032/ship_02/route_summary.json",
+              "raw_kg": 535.1129363449692,
+              "final_mass_kg": 629.7887331064964,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "0548496853feccdbc66e3cf79e555277535eb8968923c14eae37ddfe0e493523"
+            },
+            {
+              "path": "results/gtoc12/runs/cluster_fleet_v10/clusters/family_0032/ship_02/route_summary.json",
+              "raw_kg": 505.27036276522927,
+              "final_mass_kg": 768.1345804975808,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "22d7a691bdea4a56ac342c37608007eefba8819de3c5d6cb67af3f6863f66746"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/cluster_fleet_v10/clusters/family_0032/ship_02/route_summary.json",
+              "raw_kg": 505.27036276522927,
+              "final_mass_kg": 768.1345804975808,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "22d7a691bdea4a56ac342c37608007eefba8819de3c5d6cb67af3f6863f66746"
+            }
+          ],
+          "incumbent_conflicts": []
+        },
+        {
+          "path": "build/performance/family-gpu-v588/output/clusters/family_0032/ship_03/route_summary.json",
+          "raw_kg": 412.73100616016427,
+          "final_mass_kg": 508.9110107022984,
+          "collects": [
+            9159,
+            9680,
+            12043,
+            35024,
+            45235,
+            49895
+          ],
+          "deploys": [
+            9159,
+            9680,
+            35024,
+            45235
+          ],
+          "foreign": [
+            12043,
+            49895
+          ],
+          "orphaned": [],
+          "signature_sha256": "7a6701c7d3bd1de623dfc8d2500a54f3cbe32538de49ce7db7a3782607ac1a60",
+          "identical_schedule_history": [],
+          "same_collect_set_history": [],
+          "incumbent_conflicts": []
+        }
+      ]
+    },
+    {
+      "name": "h100_v589",
+      "best": {
+        "artifacts": {
+          "solution": "/home/ubuntu/spacepdhcg-family-v589/output/fleets/fleet_000_03ships/Result.txt"
+        },
+        "elapsed_seconds": 1009.3067989490228,
+        "fleet": {
+          "asteroids": [
+            5473,
+            7789,
+            8226,
+            9159,
+            9680,
+            10828,
+            12043,
+            16349,
+            23402,
+            24684,
+            25358,
+            26515,
+            31708,
+            32647,
+            35024,
+            36147,
+            45235,
+            47986,
+            49519,
+            49895,
+            52453,
+            54545
+          ],
+          "average_collected_kg": 529.0896646132786,
+          "collected_kg_per_ship": [
+            641.0677618069815,
+            533.47022587269,
+            412.73100616016427
+          ],
+          "rule_satisfied": true,
+          "ship_limit": 16.60171227290286,
+          "ships": 3,
+          "total_collected_kg": 1587.2689938398357
+        },
+        "independent": {
+          "max_mass_error_kg": 9.57243173616007e-11,
+          "max_position_error_km": 0.8313437531043648,
+          "max_velocity_error_km_s": 1.358828861701872e-07,
+          "mined_asteroids": 22,
+          "ok": true,
+          "ship_limit": 16.601712272897636,
+          "ships": 3,
+          "total_mass_kg": 1587.2689938396002,
+          "violations": [],
+          "weighted_score_dynamic_kg": null,
+          "weighted_score_fixed_bonus_kg": 1420.9094084906242
+        },
+        "master": {
+          "collected_kg": 1587.2689938398357,
+          "columns": 8,
+          "cooperative": {
+            "bundle_columns": 1,
+            "collector_ships": 1,
+            "deployer_ships": 1,
+            "foreign_collects": 2
+          },
+          "exhaustive": true,
+          "gap_kg": 0.0,
+          "greedy_objective_kg": 1420.9094084908559,
+          "lp_bound_kg": 1420.909408490856,
+          "lp_gap_kg": 2.2737367544323206e-13,
+          "lp_nodes": 0,
+          "lp_relaxations_kg": {
+            "1": 569.0537293322462,
+            "2": 1059.1650033356532,
+            "3": 1420.909408490856
+          },
+          "lp_seconds": 0.019723133009392768,
+          "lp_sizes_searched": [],
+          "mean_collected_kg": 529.0896646132786,
+          "nodes": 1,
+          "objective_kg": 1420.9094084908559,
+          "proven_optimal": true,
+          "root_bound_kg": 1420.909408490856,
+          "ship_limit": 16.60171227290286,
+          "ships": 3,
+          "upper_bound_kg": 1420.9094084908559
+        },
+        "official": {
+          "message": "Check successfully!",
+          "mined_asteroids": 22,
+          "ok": true,
+          "return_code": 0,
+          "ships": 3,
+          "total_mass_kg": 1587.27,
+          "wall_seconds": 0.11871639802120626
+        },
+        "ok": true,
+        "score_kg": 1420.9094084906242,
+        "score_kind": "weighted_score_fixed_bonus_kg",
+        "total_mass_kg": 1587.2689938396002,
+        "weighted_score_fixed_bonus_kg": 1420.9094084906242
+      },
+      "wall_seconds_total": 1015.2859712690115,
+      "columns": 8,
+      "routes": [
+        {
+          "path": "results/lambda/2026-09-09/family-gpu-v589/output/clusters/family_0032/ship_01/route_summary.json",
+          "raw_kg": 641.0677618069815,
+          "final_mass_kg": 504.5555181866446,
+          "collects": [
+            5473,
+            8226,
+            10828,
+            23402,
+            25358,
+            32647,
+            49519,
+            52453,
+            54545
+          ],
+          "deploys": [
+            5473,
+            8226,
+            10828,
+            23402,
+            25358,
+            32647,
+            49519,
+            52453,
+            54545
+          ],
+          "foreign": [],
+          "orphaned": [],
+          "signature_sha256": "95ce2e5741ba46a8119385ed27daa9fbbe1e18f321fd345c4c6f1859f83dbb7d",
+          "identical_schedule_history": [
+            {
+              "path": "results/gtoc12/runs/cluster_fleet_v10_control/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.0677618069815,
+              "final_mass_kg": 504.5555187549471,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "95ce2e5741ba46a8119385ed27daa9fbbe1e18f321fd345c4c6f1859f83dbb7d"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/cluster_fleet_v10_control/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.0677618069815,
+              "final_mass_kg": 504.5555187549471,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "95ce2e5741ba46a8119385ed27daa9fbbe1e18f321fd345c4c6f1859f83dbb7d"
+            }
+          ],
+          "same_collect_set_history": [
+            {
+              "path": "results/gtoc12/runs/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0032/ship_01/route_summary.json",
+              "raw_kg": 644.3531827515401,
+              "final_mass_kg": 503.67376178054155,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "a5a7673834d36b703b4681058772cfdc7fa3d016f6b2ff63b5bfb1de150a3dd9"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_clusters_family_0032/ship_01/route_summary.json",
+              "raw_kg": 644.3531827515401,
+              "final_mass_kg": 503.67376178054155,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "a5a7673834d36b703b4681058772cfdc7fa3d016f6b2ff63b5bfb1de150a3dd9"
+            },
+            {
+              "path": "results/gtoc12/runs/cluster_fleet_v10/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.5879534565366,
+              "final_mass_kg": 504.18130257562814,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "dcbda60d4a977099fb41320b385ce26f3195b538a0c5dd6526205bfb2f6da7ad"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/cluster_fleet_v10/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.5879534565366,
+              "final_mass_kg": 504.18130257562814,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "dcbda60d4a977099fb41320b385ce26f3195b538a0c5dd6526205bfb2f6da7ad"
+            },
+            {
+              "path": "results/gtoc12/runs/cluster_fleet_v10_control/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.0677618069815,
+              "final_mass_kg": 504.5555187549471,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "95ce2e5741ba46a8119385ed27daa9fbbe1e18f321fd345c4c6f1859f83dbb7d"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/cluster_fleet_v10_control/clusters/family_0032/ship_01/route_summary.json",
+              "raw_kg": 641.0677618069815,
+              "final_mass_kg": 504.5555187549471,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "95ce2e5741ba46a8119385ed27daa9fbbe1e18f321fd345c4c6f1859f83dbb7d"
+            }
+          ],
+          "incumbent_conflicts": [
+            {
+              "path": "results/lambda/2026-09-08/fleet-objective-v229/incumbent-sources/ship-06.json",
+              "raw_kg": 644.3531827515401,
+              "final_mass_kg": 503.67376178054155,
+              "collects": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "deploys": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "a5a7673834d36b703b4681058772cfdc7fa3d016f6b2ff63b5bfb1de150a3dd9",
+              "overlap": [
+                5473,
+                8226,
+                10828,
+                23402,
+                25358,
+                32647,
+                49519,
+                52453,
+                54545
+              ]
+            }
+          ]
+        },
+        {
+          "path": "results/lambda/2026-09-09/family-gpu-v589/output/clusters/family_0032/ship_02/route_summary.json",
+          "raw_kg": 533.47022587269,
+          "final_mass_kg": 517.9489058221918,
+          "collects": [
+            7789,
+            16349,
+            24684,
+            26515,
+            31708,
+            36147,
+            47986
+          ],
+          "deploys": [
+            7789,
+            12043,
+            16349,
+            24684,
+            26515,
+            31708,
+            36147,
+            47986,
+            49895
+          ],
+          "foreign": [],
+          "orphaned": [
+            49895,
+            12043
+          ],
+          "signature_sha256": "74813ef90d5e047f5f45eaae921f2dab1723195d91af6a8ea777bb5cebc131b9",
+          "identical_schedule_history": [],
+          "same_collect_set_history": [
+            {
+              "path": "results/gtoc12/runs/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0032/ship_02/route_summary.json",
+              "raw_kg": 555.2635181382615,
+              "final_mass_kg": 503.638558562424,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "45688eb4c219f71c10f321cc86efc62aa122da45b083695c02ea120c282cc226"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/joint_itinerary_v10/ships/cluster_fleet_v10_control_clusters_family_0032/ship_02/route_summary.json",
+              "raw_kg": 555.2635181382615,
+              "final_mass_kg": 503.638558562424,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "45688eb4c219f71c10f321cc86efc62aa122da45b083695c02ea120c282cc226"
+            },
+            {
+              "path": "results/gtoc12/runs/cluster_fleet_v10_control/clusters/family_0032/ship_02/route_summary.json",
+              "raw_kg": 535.1129363449692,
+              "final_mass_kg": 629.7887331064964,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "0548496853feccdbc66e3cf79e555277535eb8968923c14eae37ddfe0e493523"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/cluster_fleet_v10_control/clusters/family_0032/ship_02/route_summary.json",
+              "raw_kg": 535.1129363449692,
+              "final_mass_kg": 629.7887331064964,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "0548496853feccdbc66e3cf79e555277535eb8968923c14eae37ddfe0e493523"
+            },
+            {
+              "path": "results/gtoc12/runs/cluster_fleet_v10/clusters/family_0032/ship_02/route_summary.json",
+              "raw_kg": 505.27036276522927,
+              "final_mass_kg": 768.1345804975808,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "22d7a691bdea4a56ac342c37608007eefba8819de3c5d6cb67af3f6863f66746"
+            },
+            {
+              "path": "results/lambda-h100/gtoc12/cluster_fleet_v10/clusters/family_0032/ship_02/route_summary.json",
+              "raw_kg": 505.27036276522927,
+              "final_mass_kg": 768.1345804975808,
+              "collects": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "deploys": [
+                7789,
+                16349,
+                24684,
+                26515,
+                31708,
+                36147,
+                47986
+              ],
+              "foreign": [],
+              "orphaned": [],
+              "signature_sha256": "22d7a691bdea4a56ac342c37608007eefba8819de3c5d6cb67af3f6863f66746"
+            }
+          ],
+          "incumbent_conflicts": []
+        },
+        {
+          "path": "results/lambda/2026-09-09/family-gpu-v589/output/clusters/family_0032/ship_03/route_summary.json",
+          "raw_kg": 412.73100616016427,
+          "final_mass_kg": 508.9110106912815,
+          "collects": [
+            9159,
+            9680,
+            12043,
+            35024,
+            45235,
+            49895
+          ],
+          "deploys": [
+            9159,
+            9680,
+            35024,
+            45235
+          ],
+          "foreign": [
+            12043,
+            49895
+          ],
+          "orphaned": [],
+          "signature_sha256": "7a6701c7d3bd1de623dfc8d2500a54f3cbe32538de49ce7db7a3782607ac1a60",
+          "identical_schedule_history": [],
+          "same_collect_set_history": [],
+          "incumbent_conflicts": []
+        }
+      ]
+    }
+  ],
+  "historical_family32": {
+    "asteroid_prices": {
+      "max_kg": 0.0,
+      "priced_members": 0,
+      "sum_kg": 0
+    },
+    "cooperative": {
+      "asteroids": 16,
+      "collected_kg": 1176.1806981519508,
+      "collectors_per_deployer": {
+        "1": 0,
+        "2": 0
+      },
+      "cooperative_collects": 0,
+      "deployers_with_collectors": 0,
+      "orphans_left": [],
+      "ships": 2
+    },
+    "earth_legs_certified": 8,
+    "earth_legs_checked": 9,
+    "harvest": {},
+    "label": 32,
+    "members": 23,
+    "memory_phases": [
+      {
+        "elapsed_seconds": 0.0,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "start",
+        "rss_after_trim_mb": 193.5,
+        "rss_mb": 209.7
+      },
+      {
+        "elapsed_seconds": 0.0,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 1 start",
+        "rss_after_trim_mb": 193.5,
+        "rss_mb": 193.5
+      },
+      {
+        "elapsed_seconds": 294.5,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 1 earth legs",
+        "rss_after_trim_mb": 153.6,
+        "rss_mb": 181.1
+      },
+      {
+        "elapsed_seconds": 1457.2,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 1 beam 0",
+        "rss_after_trim_mb": 203.5,
+        "rss_mb": 227.3
+      },
+      {
+        "elapsed_seconds": 1491.2,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 1 refine 0",
+        "rss_after_trim_mb": 204.3,
+        "rss_mb": 222.3
+      },
+      {
+        "elapsed_seconds": 1672.3,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 1 return sweep",
+        "rss_after_trim_mb": 204.3,
+        "rss_mb": 221.7
+      },
+      {
+        "elapsed_seconds": 1874.1,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 1 retime/harvest",
+        "rss_after_trim_mb": 211.2,
+        "rss_mb": 227.7
+      },
+      {
+        "elapsed_seconds": 1949.6,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 1 joint itinerary",
+        "rss_after_trim_mb": 211.9,
+        "rss_mb": 227.9
+      },
+      {
+        "elapsed_seconds": 1949.7,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 2 start",
+        "rss_after_trim_mb": 195.2,
+        "rss_mb": 195.2
+      },
+      {
+        "elapsed_seconds": 1989.9,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 2 earth legs",
+        "rss_after_trim_mb": 195.0,
+        "rss_mb": 216.0
+      },
+      {
+        "elapsed_seconds": 2363.9,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 2 beam 0",
+        "rss_after_trim_mb": 201.6,
+        "rss_mb": 218.6
+      },
+      {
+        "elapsed_seconds": 2387.6,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 2 refine 0",
+        "rss_after_trim_mb": 202.1,
+        "rss_mb": 221.0
+      },
+      {
+        "elapsed_seconds": 2450.2,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "slot 2 retime/harvest",
+        "rss_after_trim_mb": 204.5,
+        "rss_mb": 221.2
+      },
+      {
+        "elapsed_seconds": 2450.2,
+        "peak_growth_mb": 0.0,
+        "peak_mb": 419.6,
+        "phase": "orphan repair",
+        "rss_after_trim_mb": 196.2,
+        "rss_mb": 196.2
+      }
+    ],
+    "peak_rss_mb": 419.63671875,
+    "rejected": 1,
+    "repairs": 0,
+    "ships": [
+      {
+        "asteroids": [
+          49519,
+          5473,
+          10828,
+          54545,
+          8226,
+          52453,
+          32647,
+          25358,
+          23402
+        ],
+        "certified_variants": 3,
+        "collected_kg": 641.0677618069815,
+        "final_mass_kg": 504.5555187549471,
+        "foreign_collects": [],
+        "joint_itinerary": {
+          "after_kg": 641.0677618069815,
+          "asteroids_after": 9,
+          "asteroids_before": 9,
+          "attempts": 2,
+          "baseline_error_kg": 0.0,
+          "before_kg": 632.4435318275154,
+          "certifications": 2,
+          "earth_leg": null,
+          "evaluations": 3170,
+          "gain_kg": 8.624229979466122,
+          "inserted": null,
+          "lambert_evaluations": 1168,
+          "stopped": "",
+          "wall_seconds": 75.50191544300469
+        },
+        "launch_epoch": 64358.0,
+        "orphaned": [],
+        "refined_arcs": 19,
+        "refined_attempt": 0,
+        "refined_rank": 0,
+        "released_caches": {
+          "chain_tours": 224,
+          "collects": 1163,
+          "harvest": 70,
+          "hops": 537,
+          "lookahead": 0,
+          "pairs": 372,
+          "returns": 4
+        },
+        "retiming": {
+          "after_kg": 632.4435318275154,
+          "attempts": 3,
+          "bans": {
+            "5473->0": 0.2911858721199613
+          },
+          "before_kg": 613.1416837782341,
+          "certified_variants": 1,
+          "wall_seconds": 201.76072374600335
+        },
+        "return_sweep": {
+          "asteroid": 5473,
+          "cells": 17,
+          "certified": 12,
+          "cheapest_cell": [
+            69098.0,
+            600.0
+          ],
+          "cheapest_certified_kg": 197.58455826947664,
+          "flown_return_kg": 207.66489064314646,
+          "mass_kg": 1415.6683127669567,
+          "solves": 17,
+          "wall_seconds": 181.11713419799344
+        },
+        "search": [
+          {
+            "attempt": 0,
+            "banned_earth": 0,
+            "banned_pairs": 0,
+            "best_by_depth": {
+              "2": 206.43394934976044,
+              "3": 290.75975359342914,
+              "4": 369.60985626283366,
+              "5": 442.7104722792608,
+              "6": 498.56262833675567,
+              "7": 561.3963039014374,
+              "8": 595.482546201232,
+              "9": 613.1416837782341
+            },
+            "candidates": 176,
+            "chain_tour": {
+              "cache_hits": 0,
+              "levels": 8,
+              "no_tour": 1,
+              "not_closing": 17,
+              "phase_kg": 0.0,
+              "reranked": 31,
+              "scored": 224,
+              "seconds": 316.1908749919967
+            },
+            "collect_dp": {
+              "failed": 31,
+              "peak_growth_mb": 0.0,
+              "priced": 209,
+              "seconds": 543.0406736851291,
+              "won": 174
+            },
+            "collect_table_pairs": 372,
+            "earth_legs": [
+              49519,
+              24684,
+              16387,
+              47986
+            ],
+            "failed_chains": 24,
+            "priced_asteroids": 20,
+            "substitution": {
+              "best_predicted_kg": -46.10012560279057,
+              "candidates": 9,
+              "endpoints": 6,
+              "gain_kg": 0.0,
+              "improved": 0,
+              "rebuild_failed": 0,
+              "seconds": 100.15445655600342,
+              "tried": 9
+            },
+            "wall_seconds": 1162.6859835850046
+          }
+        ],
+        "slot": 1
+      },
+      {
+        "asteroids": [
+          24684,
+          16349,
+          47986,
+          36147,
+          26515,
+          7789,
+          31708
+        ],
+        "certified_variants": 2,
+        "collected_kg": 535.1129363449692,
+        "final_mass_kg": 629.7887331064964,
+        "foreign_collects": [],
+        "launch_epoch": 64358.0,
+        "orphaned": [],
+        "refined_arcs": 15,
+        "refined_attempt": 0,
+        "refined_rank": 0,
+        "released_caches": {
+          "chain_tours": 128,
+          "collects": 869,
+          "harvest": 28,
+          "hops": 416,
+          "lookahead": 0,
+          "pairs": 174,
+          "returns": 4
+        },
+        "retiming": {
+          "after_kg": 535.1129363449692,
+          "attempts": 2,
+          "bans": {},
+          "before_kg": 505.27036276522927,
+          "certified_variants": 1,
+          "wall_seconds": 62.54117762799433
+        },
+        "search": [
+          {
+            "attempt": 0,
+            "banned_earth": 0,
+            "banned_pairs": 0,
+            "best_by_depth": {
+              "2": 208.0766598220397,
+              "3": 282.54620123203284,
+              "4": 342.23134839151265,
+              "5": 400.2737850787132,
+              "6": 461.6016427104723,
+              "7": 505.27036276522927
+            },
+            "candidates": 135,
+            "chain_tour": {
+              "cache_hits": 0,
+              "levels": 6,
+              "no_tour": 0,
+              "not_closing": 3,
+              "phase_kg": 0.0,
+              "reranked": 0,
+              "scored": 128,
+              "seconds": 79.86722892300168
+            },
+            "collect_dp": {
+              "failed": 9,
+              "peak_growth_mb": 0.0,
+              "priced": 148,
+              "seconds": 76.40485159901436,
+              "won": 137
+            },
+            "collect_table_pairs": 174,
+            "earth_legs": [
+              24684,
+              16387,
+              47986,
+              36147
+            ],
+            "failed_chains": 9,
+            "priced_asteroids": 20,
+            "substitution": {
+              "best_predicted_kg": -16.97225659472059,
+              "candidates": 4,
+              "endpoints": 4,
+              "gain_kg": 0.0,
+              "improved": 0,
+              "rebuild_failed": 0,
+              "seconds": 21.51495309000893,
+              "tried": 4
+            },
+            "wall_seconds": 374.03849616801017
+          }
+        ],
+        "slot": 2
+      }
+    ],
+    "stopped": "time budget before ship slot 3",
+    "wall_seconds": 2450.218476099006
+  }
+}

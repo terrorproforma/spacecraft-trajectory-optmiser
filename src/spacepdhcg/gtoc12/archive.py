@@ -88,8 +88,17 @@ def discover_archives(sources: list[Path]) -> list[ArchivedGroup]:
     for group in ordered:
         group.ships.sort(key=lambda s: s.slot)
         for ship in group.ships:
-            # the emitted (best) archive first; the others become stand-alone variants
-            ship.summaries.sort(key=lambda item: (-float(item[1]["total_collected_kg"]), item[0]))
+            # A direct ship_NN archive is the emitted cooperative primary. Its
+            # standalone variants can carry more raw cargo without supplying the
+            # same miners. Preserve that context; legacy candidate-only layouts
+            # keep their existing mass ordering.
+            ship.summaries.sort(
+                key=lambda item: (
+                    not bool(SHIP_DIR.fullmatch(item[0].parent.name)),
+                    -float(item[1]["total_collected_kg"]),
+                    item[0],
+                )
+            )
     return ordered
 
 
