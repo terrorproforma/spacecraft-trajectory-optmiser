@@ -657,8 +657,15 @@ def cmd_run(args: argparse.Namespace) -> int:
         )
         fleet_entry["viewer_manifest"] = viewer
         fleet_entry["artifacts"]["viewer"] = str(fleet_dir / "viewer" / "trajectories.json")
+        fleet_entry["accepted"] = fleet_entry["independent"]["ok"] and fleet_entry.get(
+            "official", {"ok": True}
+        )["ok"]
+        if not fleet_entry["accepted"]:
+            # Keep raw checker diagnostics and the rejected artifact, but never
+            # export its mass as a successful score.
+            fleet_entry["score_kg"] = None
         report["best"] = fleet_entry
-        report["status"] = "scored"
+        report["status"] = "scored" if fleet_entry["accepted"] else "fleet_failed_verification"
     else:
         report["best"] = None
         report["status"] = "no_certified_route" if not args.search_only else "search_only"
@@ -679,7 +686,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             }
         )
     )
-    return 0
+    return 1 if report["status"] == "fleet_failed_verification" else 0
 
 
 def _optional_bonus(loader):
