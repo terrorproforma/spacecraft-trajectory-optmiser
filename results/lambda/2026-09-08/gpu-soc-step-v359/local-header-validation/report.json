@@ -1,0 +1,88 @@
+[
+  {
+    "name": "old-build",
+    "command": [
+      "/usr/local/cuda-12.8/bin/nvcc",
+      "-O3",
+      "-std=c++17",
+      "-arch=sm_120",
+      "--default-stream",
+      "per-thread",
+      "cpp/cuda/tests/qoco_soc_step_probe.cu",
+      "-Ibuild/performance/cone-step-v345",
+      "-DSPACEPDHCG_TEST_SOC_STEP_HEADER=\"old_step.cuh\"",
+      "-o",
+      "/home/angus/qoco-soc-step-old-v358"
+    ],
+    "returncode": 0,
+    "seconds": 1.0549967269998888
+  },
+  {
+    "name": "old-regression",
+    "command": [
+      "/home/angus/qoco-soc-step-old-v358"
+    ],
+    "returncode": 2,
+    "seconds": 0.20583116000011614
+  },
+  {
+    "name": "new",
+    "command": [
+      "/home/angus/qoco-soc-step-probe-v352"
+    ],
+    "returncode": 0,
+    "seconds": 0.1663498189998336
+  },
+  {
+    "name": "memcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "memcheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/qoco-soc-step-probe-v352"
+    ],
+    "returncode": 0,
+    "seconds": 0.26202986800012695
+  },
+  {
+    "name": "initcheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "initcheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/qoco-soc-step-probe-v352"
+    ],
+    "returncode": 0,
+    "seconds": 0.319314704999897
+  },
+  {
+    "name": "racecheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "racecheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/qoco-soc-step-probe-v352"
+    ],
+    "returncode": 0,
+    "seconds": 0.6429025729999012
+  },
+  {
+    "name": "synccheck",
+    "command": [
+      "/usr/local/cuda-12.8/bin/compute-sanitizer",
+      "--tool",
+      "synccheck",
+      "--error-exitcode",
+      "99",
+      "/home/angus/qoco-soc-step-probe-v352"
+    ],
+    "returncode": 0,
+    "seconds": 0.36858116899998095
+  }
+]

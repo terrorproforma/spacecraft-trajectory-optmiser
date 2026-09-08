@@ -197,7 +197,7 @@ console.log(`Validated ${data.trajectories.length} ${plannerExport ? "planner-ex
 console.log(`Data SHA-256 ${manifest.files["trajectories.json"].sha256}`);
 
 // Optional GTOC12 fleet dataset (data/gtoc12/ is ignored by git; see README "GTOC12 fleet dataset").
-for (const directory of ["data/gtoc12", "data/gtoc12-v200", "data/gtoc12-v209", "data/gtoc12-v213", "data/gtoc12-v235", "data/gtoc12-v269", "data/gtoc12-v332", "data/gtoc12-v342"]) {
+for (const directory of ["data/gtoc12", "data/gtoc12-v200", "data/gtoc12-v209", "data/gtoc12-v213", "data/gtoc12-v235", "data/gtoc12-v269", "data/gtoc12-v332", "data/gtoc12-v342", "data/gtoc12-v360"]) {
 let fleetBytes = null, fleetManifestBytes = null;
 try {
   [fleetBytes, fleetManifestBytes] = await Promise.all([read(`${directory}/fleet.json`), read(`${directory}/manifest.json`)]);

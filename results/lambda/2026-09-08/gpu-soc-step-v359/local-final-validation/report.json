@@ -1,0 +1,17 @@
+{
+  "checks": [
+    {
+      "name": "pytest",
+      "returncode": 0,
+      "seconds": 5.585227195000016,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "pytest",
+        "tests/test_gtoc12_gpu_scvx.py",
+        "tests/test_gtoc12_gpu_cli.py",
+        "-q"
+      ]
+    }
+  ]
+}

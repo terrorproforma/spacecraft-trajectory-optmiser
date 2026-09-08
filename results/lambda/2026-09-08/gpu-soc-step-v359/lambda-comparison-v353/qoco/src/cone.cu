@@ -1,0 +1,790 @@
+#include "qoco_cone_arithmetic.cuh"
+/**
+ * @file cone.c
+ * @author Govind M. Chari <govindchari1@gmail.com>
+ *
+ * @section LICENSE
+ *
+ * Copyright (c) 2024, Govind M. Chari
+ * This source code is licensed under the BSD 3-Clause License
+ */
+
+#include "cone.h"
+
+#define CUDA_CHECK(call)                                                       \
+  do {                                                                         \
+    cudaError_t err = call;                                                    \
+    if (err != cudaSuccess) {                                                  \
+      fprintf(stderr, "CUDA error at %s:%d: %s\n", __FILE__, __LINE__,         \
+              cudaGetErrorString(err));                                        \
+      exit(1);                                                                 \
+    }                                                                          \
+  } while (0)
+
+__device__ __forceinline__ QOCOFloat qoco_max_dev(QOCOFloat a, QOCOFloat b)
+{
+  return a > b ? a : b;
+}
+
+__device__ QOCOFloat soc_residual(const QOCOFloat* u, QOCOInt n)
+{
+  QOCOFloat sum = 0.0;
+  for (QOCOInt i = 1; i < n; ++i) {
+    sum += u[i] * u[i];
+  }
+  return sqrt(sum) - u[0];
+}
+
+__device__ QOCOFloat soc_residual2(const QOCOFloat* u, QOCOInt n)
+{
+  QOCOFloat res = u[0] * u[0];
+  for (QOCOInt i = 1; i < n; ++i) {
+    res -= u[i] * u[i];
+  }
+  return res;
+}
+
+__device__ void scale_arrayf_dev(const QOCOFloat* x, QOCOFloat* y, QOCOFloat s,
+                                 QOCOInt n)
+{
+  for (QOCOInt i = 0; i < n; ++i) {
+    y[i] = s * x[i];
+  }
+}
+
+__device__ QOCOFloat qoco_dot_dev(const QOCOFloat* u, const QOCOFloat* v,
+                                  QOCOInt n)
+{
+  QOCOFloat x = 0.0;
+  for (QOCOInt i = 0; i < n; ++i) {
+    x += u[i] * v[i];
+  }
+  return x;
+}
+
+__device__ void soc_product(const QOCOFloat* u, const QOCOFloat* v,
+                            QOCOFloat* p, QOCOInt n)
+{
+  p[0] = qoco_dot_dev(u, v, n);
+  for (QOCOInt i = 1; i < n; ++i) {
+    p[i] = u[0] * v[i] + v[0] * u[i];
+  }
+}
+
+__device__ void soc_division(const QOCOFloat* lam, const QOCOFloat* v,
+                             QOCOFloat* d, QOCOInt n)
+{
+  QOCOFloat f = lam[0] * lam[0] - qoco_dot_dev(&lam[1], &lam[1], n - 1);
+  QOCOFloat finv = safe_div(1.0, f);
+  QOCOFloat lam0inv = safe_div(1.0, lam[0]);
+  QOCOFloat lam1dv1 = qoco_dot_dev(&lam[1], &v[1], n - 1);
+
+  d[0] = finv * (lam[0] * v[0] - qoco_dot_dev(&lam[1], &v[1], n - 1));
+  for (QOCOInt i = 1; i < n; ++i) {
+    d[i] = finv *
+           (-lam[i] * v[0] + lam0inv * f * v[i] + lam0inv * lam1dv1 * lam[i]);
+  }
+}
+
+__global__ void set_nt_scaling_linear(QOCOFloat* W, QOCOInt nt_scaling_nnz,
+                                      QOCOInt l)
+{
+  QOCOInt i = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (i < nt_scaling_nnz) {
+    W[i] = 0.0;
+  }
+  if (i < l) {
+    W[i] = 1.0;
+  }
+}
+
+__global__ void set_nt_scaling_soc(QOCOFloat* W, QOCOInt* q,
+                                   QOCOInt* nt_scaling_soc_idx, QOCOInt nsoc,
+                                   QOCOInt l)
+{
+  (void)q;
+  (void)l;
+  QOCOInt soc = blockIdx.x;
+  if (soc >= nsoc)
+    return;
+
+  // Only one thread per SOC writes the compact identity scaling
+  // [eta = 1, w0 = 1, w1 = 0, ...].
+  if (threadIdx.x != 0)
+    return;
+
+  QOCOInt base = nt_scaling_soc_idx[soc];
+  W[base] = 1.0;     // eta
+  W[base + 1] = 1.0; // w0
+}
+
+__global__ void cone_residual_stage1(const QOCOFloat* u, QOCOInt l,
+                                     QOCOInt nsoc, const QOCOInt* q,
+                                     QOCOInt* soc_idx, QOCOFloat* block_out, int* special = nullptr)
+{
+  extern __shared__ QOCOFloat sdata[];
+
+  QOCOInt tid = threadIdx.x;
+  QOCOInt gid = blockIdx.x * blockDim.x + tid;
+
+  QOCOFloat val = -1e7;
+
+  if (gid < l) {
+    // LP cone
+    val = -u[gid];
+  }
+  else if (gid < l + nsoc) {
+    // SOC cone: one thread per SOC
+    QOCOInt soc = gid - l;
+    val = soc_residual(&u[soc_idx[soc]], q[soc]);
+  }
+
+  if (special && !isfinite(val)) atomicOr(special, 1);
+  sdata[tid] = val;
+  __syncthreads();
+
+  // block-level max reduction
+  for (QOCOInt stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+    if (tid < stride) {
+      sdata[tid] = qoco_max_dev(sdata[tid], sdata[tid + stride]);
+    }
+    __syncthreads();
+  }
+
+  if (tid == 0) {
+    block_out[blockIdx.x] = sdata[0];
+  }
+}
+
+__global__ void cone_residual_stage2(const QOCOFloat* in, QOCOFloat* out,
+                                     QOCOInt n)
+{
+  extern __shared__ QOCOFloat sdata[];
+
+  QOCOInt tid = threadIdx.x;
+  QOCOInt gid = tid;
+
+  QOCOFloat val = -1e7;
+  if (gid < n)
+    val = in[gid];
+
+  sdata[tid] = val;
+  __syncthreads();
+
+  for (QOCOInt stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+    if (tid < stride) {
+      sdata[tid] = qoco_max_dev(sdata[tid], sdata[tid + stride]);
+    }
+    __syncthreads();
+  }
+
+  if (tid == 0)
+    *out = sdata[0];
+}
+
+__global__ void bring2cone_kernel(QOCOFloat* u, QOCOInt* q, QOCOInt l,
+                                  QOCOInt nsoc)
+{
+  // Single-thread kernel
+  if (threadIdx.x != 0 || blockIdx.x != 0)
+    return;
+
+  QOCOFloat a = 0.0;
+  QOCOInt idx = 0;
+
+  /* ---------- LP cone ---------- */
+  for (idx = 0; idx < l; ++idx) {
+    a = qoco_max(a, -u[idx]);
+  }
+  a = qoco_max(a, (QOCOFloat)0.0);
+
+  /* ---------- SOC cones ---------- */
+  for (QOCOInt i = 0; i < nsoc; ++i) {
+    QOCOInt qi = q[i];
+    QOCOFloat soc_res = soc_residual(&u[idx], qi);
+    if (soc_res > a) {
+      a = soc_res;
+    }
+    idx += qi;
+  }
+
+  QOCOFloat shift = (QOCOFloat)(1.0) + a;
+
+  /* ---------- Update LP cone ---------- */
+  for (idx = 0; idx < l; ++idx) {
+    u[idx] += shift;
+  }
+
+  /* ---------- Update SOC cones ---------- */
+  for (QOCOInt i = 0; i < nsoc; ++i) {
+    u[idx] += shift;
+    idx += q[i];
+  }
+}
+
+__global__ void compute_nt_scaling_kernel(QOCOFloat* W, QOCOFloat* WtW,
+                                          QOCOFloat* nt_scaling,
+                                          QOCOFloat* Winv, QOCOFloat* s,
+                                          QOCOFloat* z, QOCOFloat* sbar,
+                                          QOCOFloat* zbar, QOCOInt l,
+                                          QOCOInt nsoc, const QOCOInt* q)
+{
+  QOCOInt tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+  /* ================= LP cone ================= */
+  if (tid < l) {
+    QOCOFloat val = safe_div(s[tid], z[tid]);
+    WtW[tid] = val;
+    QOCOFloat w = qoco_sqrt(val);
+
+    W[tid] = w;
+    nt_scaling[tid] = w;
+
+    QOCOFloat winv = safe_div((QOCOFloat)1.0, w);
+    Winv[tid] = winv;
+    return;
+  }
+
+  /* ================= SOC cones ================= */
+  QOCOInt soc_id = tid - l;
+  if (soc_id >= nsoc)
+    return;
+
+  /* ---- compute SOC offsets ---- */
+  QOCOInt idx = l;
+  QOCOInt nt_idx = l;
+  QOCOInt nt_idx_fast = l;
+
+  for (QOCOInt k = 0; k < soc_id; ++k) {
+    idx += q[k];
+    nt_idx += (q[k] * q[k] + q[k]) / 2;
+    nt_idx_fast += q[k] + 1;
+  }
+
+  QOCOInt qi = q[soc_id];
+
+  /* --- normalize s --- */
+  QOCOFloat s_scal = qoco_sqrt(soc_residual2(&s[idx], qi));
+  QOCOFloat f = safe_div((QOCOFloat)1.0, s_scal);
+  scale_arrayf_dev(&s[idx], &sbar[idx], f, qi);
+
+  /* --- normalize z --- */
+  QOCOFloat z_scal = qoco_sqrt(soc_residual2(&z[idx], qi));
+  f = safe_div((QOCOFloat)1.0, z_scal);
+  scale_arrayf_dev(&z[idx], &zbar[idx], f, qi);
+
+  QOCOFloat gamma =
+      qoco_sqrt((QOCOFloat)0.5 *
+                ((QOCOFloat)1.0 + qoco_dot_dev(&sbar[idx], &zbar[idx], qi)));
+
+  // For some unknown reason, when I replace the line below with
+  // safe_div(1.0, 2.0 * gamma), when gamma=1.001301, we expect f=0.499350,
+  // but we get f=0.500650, so safe_div is not used here. When safe_div is
+  // used, all SOCP unit tests fail. Likely some GPU weirdness.
+  f = 1.0 / (2.0 * gamma);
+
+  /* overwrite sbar with wbar */
+  sbar[idx + 0] = f * (sbar[idx + 0] + zbar[idx + 0]);
+  for (QOCOInt j = 1; j < qi; ++j)
+    sbar[idx + j] = f * (sbar[idx + j] - zbar[idx + j]);
+
+  /* eta = sqrt(s_scal / z_scal) */
+  QOCOFloat eta = qoco_sqrt(safe_div(s_scal, z_scal));
+  QOCOFloat finv = safe_div((QOCOFloat)1.0, eta);
+  QOCOFloat eta2 = eta * eta;
+
+  /* Store compact fast scaling parameters [eta, w0, w1[0], ..., w1[qi-2]].
+   * sbar currently holds the wbar vector. */
+  nt_scaling[nt_idx_fast] = eta;
+  nt_scaling[nt_idx_fast + 1] = sbar[idx + 0];
+  for (QOCOInt j = 1; j < qi; ++j)
+    nt_scaling[nt_idx_fast + 1 + j] = sbar[idx + j];
+
+  /* overwrite zbar with v (needed for the sparse W / Winv blocks) */
+  f = safe_div((QOCOFloat)1.0,
+               qoco_sqrt((QOCOFloat)2.0 * (sbar[idx + 0] + (QOCOFloat)1.0)));
+
+  zbar[idx + 0] = f * (sbar[idx + 0] + (QOCOFloat)1.0);
+  for (QOCOInt j = 1; j < qi; ++j)
+    zbar[idx + j] = f * sbar[idx + j];
+
+  /* --- build W, Winv (sparse upper triangular) and WtW = eta^2 (2 w w' - J)
+   * --- */
+  QOCOInt shift = 0;
+  for (QOCOInt j = 0; j < qi; ++j) {
+    for (QOCOInt k = 0; k <= j; ++k) {
+
+      QOCOFloat val = (QOCOFloat)2.0 * zbar[idx + k] * zbar[idx + j];
+      QOCOFloat winv_val = val;
+
+      if (j != 0 && k == 0)
+        winv_val = -val;
+
+      if (j == 0 && k == 0) {
+        val -= (QOCOFloat)1.0;
+        winv_val -= (QOCOFloat)1.0;
+      }
+      else if (j == k) {
+        val += (QOCOFloat)1.0;
+        winv_val += (QOCOFloat)1.0;
+      }
+
+      val *= eta;
+      winv_val *= finv;
+
+      W[nt_idx + shift] = val;
+      Winv[nt_idx + shift] = winv_val;
+
+      QOCOFloat wtw = eta2 * (QOCOFloat)2.0 * sbar[idx + j] * sbar[idx + k];
+      if (j == k && j == 0)
+        wtw -= eta2;
+      else if (j == k)
+        wtw += eta2;
+      WtW[nt_idx + shift] = wtw;
+
+      shift++;
+    }
+  }
+}
+
+__global__ void nt_multiply_kernel(const QOCOFloat* W,
+                                   const QOCOInt* nt_scaling_soc_idx,
+                                   const QOCOInt* soc_idx, const QOCOFloat* x,
+                                   QOCOFloat* z, QOCOInt l, QOCOInt m,
+                                   QOCOInt nsoc, const QOCOInt* q,
+                                   QOCOInt inverse)
+{
+  (void)m;
+  QOCOInt i = blockIdx.x * blockDim.x + threadIdx.x;
+  if (i >= l + nsoc)
+    return;
+
+  /* ================= LP cone ================= */
+  if (i < l) {
+    z[i] = inverse ? (safe_div((QOCOFloat)1.0, W[i]) * x[i]) : (W[i] * x[i]);
+    return;
+  }
+
+  /* ================= SOC cones =================
+   * Fast O(q) product using the compact scaling [eta, w0, w1...] and
+   * equations (14) and (15) in the ECOS paper. */
+  QOCOInt soc = i - l;
+  QOCOInt qi = q[soc];
+  QOCOInt nt_idx = nt_scaling_soc_idx[soc];
+  QOCOInt xi = soc_idx[soc];
+
+  QOCOFloat scale = inverse ? safe_div((QOCOFloat)1.0, W[nt_idx]) : W[nt_idx];
+  QOCOFloat w0 = W[nt_idx + 1];
+  const QOCOFloat* w1 = &W[nt_idx + 2];
+  QOCOFloat x0 = x[xi];
+  QOCOFloat zeta = qoco_dot_dev(w1, &x[xi + 1], qi - 1);
+  QOCOFloat w0p1_inv = safe_div((QOCOFloat)1.0, (QOCOFloat)1.0 + w0);
+
+  if (inverse) {
+    z[xi] = scale * (w0 * x0 - zeta);
+    QOCOFloat coeff = -x0 + zeta * w0p1_inv;
+    for (QOCOInt j = 1; j < qi; ++j)
+      z[xi + j] = scale * (x[xi + j] + coeff * w1[j - 1]);
+  }
+  else {
+    z[xi] = scale * (w0 * x0 + zeta);
+    QOCOFloat coeff = x0 + zeta * w0p1_inv;
+    for (QOCOInt j = 1; j < qi; ++j)
+      z[xi + j] = scale * (x[xi + j] + coeff * w1[j - 1]);
+  }
+}
+
+__global__ void cone_product_kernel(const QOCOFloat* u, const QOCOFloat* v,
+                                    QOCOFloat* p, QOCOInt l, QOCOInt nsoc,
+                                    const QOCOInt* q, const QOCOInt* soc_idx)
+{
+  QOCOInt tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+  /* ================= LP cone ================= */
+  if (tid < l) {
+    p[tid] = u[tid] * v[tid];
+    return;
+  }
+
+  /* ================= SOC cones ================= */
+  QOCOInt soc_tid = tid - l;
+  if (soc_tid >= nsoc)
+    return;
+
+  QOCOInt idx = soc_idx[soc_tid];
+  /* one thread computes one SOC cone product */
+  soc_product(&u[idx], &v[idx], &p[idx], q[soc_tid]);
+}
+
+__global__ void cone_division_kernel(const QOCOFloat* lambda,
+                                     const QOCOFloat* v, QOCOFloat* d,
+                                     QOCOInt l, QOCOInt nsoc, const QOCOInt* q,
+                                     const QOCOInt* soc_idx)
+{
+  QOCOInt tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+  /* ================= LP cone ================= */
+  if (tid < l) {
+    d[tid] = safe_div(v[tid], lambda[tid]);
+    return;
+  }
+
+  /* ================= SOC cones ================= */
+  QOCOInt soc_tid = tid - l;
+  if (soc_tid >= nsoc)
+    return;
+
+  QOCOInt idx = soc_idx[soc_tid];
+  /* one thread handles one SOC cone */
+  soc_division(&lambda[idx], &v[idx], &d[idx], q[soc_tid]);
+}
+
+__global__ void add_e_kernel(QOCOFloat* x, QOCOFloat a, QOCOInt l, QOCOInt nsoc,
+                             const QOCOInt* q)
+{
+  QOCOInt tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+  /* ================= LP cone ================= */
+  if (tid < l) {
+    x[tid] -= a;
+    return;
+  }
+
+  /* ================= SOC cones ================= */
+  QOCOInt soc_tid = tid - l;
+  if (soc_tid >= nsoc)
+    return;
+
+  /* compute starting index of SOC cone soc_tid */
+  QOCOInt idx = l;
+  for (QOCOInt k = 0; k < soc_tid; ++k) {
+    idx += q[k];
+  }
+
+  /* subtract a from the cone "scalar" entry */
+  x[idx] -= a;
+}
+
+void set_nt_scaling_identity(QOCOVectorf* nt_scaling, QOCOInt nt_scaling_nnz,
+                             QOCOVectori* nt_scaling_soc_idx,
+                             QOCOProblemData* data)
+{
+  CUDA_CHECK(cudaGetLastError());
+  QOCOFloat* W = get_data_vectorf(nt_scaling);
+
+  const int threads = 256;
+  const int blocks = (nt_scaling_nnz + threads - 1) / threads;
+
+  // kernel 1: zero + linear cone, including pure-SOC workspaces
+  if (nt_scaling_nnz > 0) {
+    set_nt_scaling_linear<<<blocks, threads>>>(W, nt_scaling_nnz, data->l);
+    CUDA_CHECK(cudaGetLastError());
+  }
+
+  // kernel 2: SOC blocks
+  const int blocks2 = data->nsoc;
+  if (data->nsoc > 0) {
+    set_nt_scaling_soc<<<blocks2, 256>>>(W, get_data_vectori(data->q),
+                                         get_data_vectori(nt_scaling_soc_idx),
+                                         data->nsoc, data->l);
+    CUDA_CHECK(cudaGetLastError());
+  }
+}
+
+QOCOFloat cone_residual(const QOCOFloat* d_u, QOCOInt l, QOCOInt nsoc,
+                        const QOCOInt* q, QOCOInt* soc_idx);
+
+void cone_product(const QOCOFloat* u, const QOCOFloat* v, QOCOFloat* p,
+                  QOCOInt l, QOCOInt nsoc, const QOCOInt* q,
+                  const QOCOInt* soc_idx)
+{
+  QOCOInt total_threads = l + nsoc;
+  QOCOInt block = 256;
+  QOCOInt grid = (total_threads + block - 1) / block;
+  if (l > 0 || nsoc > 0) {
+    cone_product_kernel<<<grid, block>>>(u, v, p, l, nsoc, q, soc_idx);
+    CUDA_CHECK(cudaGetLastError());
+  }
+}
+
+void cone_division(const QOCOFloat* lambda, const QOCOFloat* v, QOCOFloat* d,
+                   QOCOInt l, QOCOInt nsoc, const QOCOInt* q,
+                   const QOCOInt* soc_idx)
+{
+  QOCOInt total_threads = l + nsoc;
+  QOCOInt block = 256;
+  QOCOInt grid = (total_threads + block - 1) / block;
+  if (l > 0 || nsoc > 0) {
+    cone_division_kernel<<<grid, block>>>(lambda, v, d, l, nsoc, q, soc_idx);
+    CUDA_CHECK(cudaGetLastError());
+  }
+}
+
+void qoco_reference_bring2cone(QOCOFloat* u, QOCOInt* soc_idx, QOCOProblemData* data)
+{
+  CUDA_CHECK(cudaGetLastError());
+  QOCOFloat res =
+      cone_residual(u, data->l, data->nsoc, get_data_vectori(data->q), soc_idx);
+  if (res >= 0) {
+    bring2cone_kernel<<<1, 1>>>(u, get_data_vectori(data->q), data->l,
+                                data->nsoc);
+    CUDA_CHECK(cudaGetLastError());
+  }
+}
+
+extern "C" cudaStream_t qoco_ir_current_stream();
+
+void nt_multiply(QOCOFloat* W, QOCOInt* nt_scaling_soc_idx, QOCOInt* soc_idx,
+                 QOCOFloat* x, QOCOFloat* z, QOCOInt l, QOCOInt m, QOCOInt nsoc,
+                 QOCOInt* q)
+{
+  int threads = 256;
+  int blocks = (l + nsoc + threads - 1) / threads;
+  if (m > 0) {
+    nt_multiply_kernel<<<blocks, threads, 0, qoco_ir_current_stream()>>>(W, nt_scaling_soc_idx, soc_idx, x,
+                                            z, l, m, nsoc, q, 0);
+  }
+  CUDA_CHECK(cudaGetLastError());
+}
+
+void nt_multiply_inv(QOCOFloat* W, QOCOInt* nt_scaling_soc_idx,
+                     QOCOInt* soc_idx, QOCOFloat* x, QOCOFloat* z, QOCOInt l,
+                     QOCOInt m, QOCOInt nsoc, QOCOInt* q)
+{
+  int threads = 256;
+  int blocks = (l + nsoc + threads - 1) / threads;
+  if (m > 0) {
+    nt_multiply_kernel<<<blocks, threads, 0, qoco_ir_current_stream()>>>(W, nt_scaling_soc_idx, soc_idx, x,
+                                            z, l, m, nsoc, q, 1);
+  }
+  CUDA_CHECK(cudaGetLastError());
+}
+
+void compute_nt_scaling(QOCOWorkspace* work)
+{
+  QOCOFloat* W = get_data_vectorf(work->W);
+  QOCOFloat* WtW = get_data_vectorf(work->WtW);
+  QOCOFloat* nt_scaling = get_data_vectorf(work->nt_scaling);
+  QOCOFloat* Winv = get_data_vectorf(work->Winv);
+  QOCOInt* nt_scaling_soc_idx = get_data_vectori(work->nt_scaling_soc_idx);
+  QOCOInt* soc_idx = get_data_vectori(work->soc_idx);
+  QOCOFloat* s = get_data_vectorf(work->s);
+  QOCOFloat* z = get_data_vectorf(work->z);
+  QOCOFloat* sbar = get_data_vectorf(work->sbar);
+  QOCOFloat* zbar = get_data_vectorf(work->zbar);
+  QOCOFloat* lambda = get_data_vectorf(work->lambda);
+  QOCOInt* q = get_data_vectori(work->data->q);
+  QOCOInt l = work->data->l;
+  QOCOInt nsoc = work->data->nsoc;
+
+  QOCOInt total_threads = l + nsoc;
+  QOCOInt block = 128; // SOC threads are heavy; don't oversubscribe
+  QOCOInt grid = (total_threads + block - 1) / block;
+
+  if (work->data->m > 0) {
+    compute_nt_scaling_kernel<<<grid, block>>>(W, WtW, nt_scaling, Winv, s, z,
+                                               sbar, zbar, l, nsoc, q);
+  }
+  CUDA_CHECK(cudaGetLastError());
+
+  /* ================= lambda = W * z ================= */
+  nt_multiply(nt_scaling, nt_scaling_soc_idx, soc_idx, z, lambda, work->data->l,
+              work->data->m, work->data->nsoc, q);
+}
+
+extern "C" void qoco_reference_compute_centering(QOCOSolver* solver)
+{
+
+  QOCOWorkspace* work = solver->work;
+  QOCOFloat* xyz = get_data_vectorf(work->xyz);
+  QOCOFloat* Ds = get_data_vectorf(work->Ds);
+  QOCOFloat* ubuff1 = get_data_vectorf(work->ubuff1);
+  QOCOFloat* ubuff2 = get_data_vectorf(work->ubuff2);
+  QOCOFloat* Dzaff = &xyz[work->data->n + work->data->p];
+  QOCOFloat a =
+      qoco_min(linesearch(get_data_vectorf(work->z), Dzaff, 1.0, solver),
+               linesearch(get_data_vectorf(work->s), Ds, 1.0, solver));
+
+  // Compute rho. rho = ((s + a * Ds)'*(z + a * Dz)) / (s'*z).
+  qoco_axpy(Dzaff, get_data_vectorf(work->z), ubuff1, a, work->data->m);
+  qoco_axpy(Ds, get_data_vectorf(work->s), ubuff2, a, work->data->m);
+  QOCOFloat rho = qoco_dot(ubuff1, ubuff2, work->data->m) /
+                  qoco_dot(get_data_vectorf(work->z), get_data_vectorf(work->s),
+                           work->data->m);
+
+  // Compute sigma. sigma = max(0, min(1, rho))^3.
+  QOCOFloat sigma = qoco_min(1.0, rho);
+  sigma = qoco_max(0.0, sigma);
+  work->sigma = sigma * sigma * sigma;
+}
+
+/**
+ * @brief Compute maximum step length alpha >= 0 such that
+ * x + alpha * dx remains in the second-order cone.
+ */
+__device__ QOCOFloat soc_step_length_dev(const QOCOFloat* x,
+                                         const QOCOFloat* dx, QOCOInt n,
+                                         QOCOFloat alpha_max)
+{
+  const QOCOFloat two = 2.0;
+  const QOCOFloat four = 4.0;
+
+  QOCOFloat alpha = alpha_max;
+
+  // ----------------------------------
+  // Scalar safeguard: x0 + alpha dx0 >= 0
+  // ----------------------------------
+  if (x[0] >= 0.0 && dx[0] < 0.0) {
+    QOCOFloat a = -x[0] / dx[0];
+    if (a < alpha)
+      alpha = a;
+  }
+
+  // ----------------------------------
+  // Compute quadratic coefficients
+  // ----------------------------------
+
+  using namespace qoco_cone_arithmetic;
+  DD aa=inner(dx,dx,n),bb=mul(DD(2.0),inner(x,dx,n)),cc=inner(x,x,n);
+  QOCOFloat a=rounded(aa),b=rounded(bb),c=rounded(cc);
+  if (c < 0.0)
+    { c = 0.0; cc = DD(0.0); } // retain existing boundary safeguard
+
+  // ----------------------------------
+  // Discriminant
+  // ----------------------------------
+  QOCOFloat d = rounded(add(mul(bb,bb),neg(mul(DD(four),mul(aa,cc)))));
+
+  // ----------------------------------
+  // Case analysis (same as Clarabel)
+  // ----------------------------------
+
+  // No positive root → no restriction
+  if ((a > 0.0 && b > 0.0) || d < 0.0)
+    return alpha;
+
+  // Linear case
+  if (a == 0.0)
+    return b < 0.0 ? qoco_min(alpha, -c / b) : alpha;
+
+  // Boundary case
+  if (c == 0.0) {
+    if (b < 0.0 || (b == 0.0 && a < 0.0)) return 0.0;
+    return a < 0.0 ? qoco_min(alpha, -b / a) : alpha;
+  }
+
+  // ----------------------------------
+  // Stable quadratic root computation
+  // ----------------------------------
+  QOCOFloat sqrt_d = qoco_sqrt(d);
+
+  QOCOFloat t;
+  if (b >= 0.0)
+    t = -b - sqrt_d;
+  else
+    t = -b + sqrt_d;
+
+  QOCOFloat r1 = (two * c) / t;
+  QOCOFloat r2 = t / (two * a);
+
+  // Keep only positive roots
+  if (r1 < 0.0)
+    r1 = QOCOFloat_MAX;
+  if (r2 < 0.0)
+    r2 = QOCOFloat_MAX;
+
+  QOCOFloat r = qoco_min(r1, r2);
+
+  if (r < alpha)
+    alpha = r;
+
+  return alpha;
+}
+
+/**
+ * @brief Parallel min reduction kernel: computes min(-x[i]/dx[i]) for dx[i] < 0
+ * over the LP cone. Each block writes its local minimum to block_out.
+ */
+__global__ void lp_step_length_kernel(const QOCOFloat* x, const QOCOFloat* dx,
+                                      QOCOInt n, QOCOFloat* block_out)
+{
+  extern __shared__ QOCOFloat sdata[];
+
+  QOCOInt tid = threadIdx.x;
+  QOCOInt gid = blockIdx.x * blockDim.x + tid;
+
+  QOCOFloat val = QOCOFloat_MAX;
+  if (gid < n && dx[gid] < 0.0)
+    val = -x[gid] / dx[gid];
+
+  sdata[tid] = val;
+  __syncthreads();
+
+  for (QOCOInt s = blockDim.x >> 1; s > 0; s >>= 1) {
+    if (tid < s && sdata[tid + s] < sdata[tid])
+      sdata[tid] = sdata[tid + s];
+    __syncthreads();
+  }
+
+  if (tid == 0)
+    block_out[blockIdx.x] = sdata[0];
+}
+
+/**
+ * @brief Parallel kernel: one thread per SOC cone computes the closed-form step
+ * length, then a shared-memory min-reduction writes each block's minimum to
+ * block_out. Launch with blockDim.x == 1024.
+ */
+__global__ void soc_step_length_kernel(const QOCOFloat* u, const QOCOFloat* Du,
+                                       const QOCOInt* q, const QOCOInt* soc_idx,
+                                       QOCOInt nsoc, QOCOFloat alpha_lp,
+                                       QOCOFloat* block_out)
+{
+  extern __shared__ QOCOFloat sdata[];
+
+  QOCOInt tid = threadIdx.x;
+  QOCOInt gid = blockIdx.x * blockDim.x + tid;
+
+  QOCOFloat val = QOCOFloat_MAX;
+  if (gid < nsoc)
+    val = soc_step_length_dev(&u[soc_idx[gid]], &Du[soc_idx[gid]], q[gid],
+                              alpha_lp);
+
+  sdata[tid] = val;
+  __syncthreads();
+
+  for (QOCOInt s = blockDim.x >> 1; s > 0; s >>= 1) {
+    if (tid < s && sdata[tid + s] < sdata[tid])
+      sdata[tid] = sdata[tid + s];
+    __syncthreads();
+  }
+
+  if (tid == 0)
+    block_out[blockIdx.x] = sdata[0];
+}
+
+QOCOFloat linesearch(QOCOFloat* u, QOCOFloat* Du, QOCOFloat f,
+                     QOCOSolver* solver);
+
+void add_e(QOCOFloat* x, QOCOFloat a, QOCOInt l, QOCOInt nsoc, QOCOVectori* q)
+{
+  QOCOInt total_threads = l + nsoc;
+  QOCOInt block = 256;
+  QOCOInt grid = (total_threads + block - 1) / block;
+
+  if (l > 0 || nsoc > 0) {
+    add_e_kernel<<<grid, block>>>(x, a, l, nsoc, get_data_vectori(q));
+    CUDA_CHECK(cudaGetLastError());
+  }
+}
+
+#include "qoco_device_cone_reductions.cuh"
+
+#include "qoco_device_step_cones.cuh"
+extern "C" void qoco_gpu_compute_centering(QOCOSolver*);
+void compute_centering(QOCOSolver* solver) { qoco_gpu_compute_centering(solver); }
+
+#include "qoco_device_combined_cones.cuh"
+
+#include "qoco_initial_cones.cuh"

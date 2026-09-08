@@ -82,6 +82,17 @@ A conditional result is useful: the project will produce a reproducible crossove
 
 ## Current status — 8 September 2026
 
+**Development SOC step correction:** a live QP returned zero step where a
+100-digit calculation permits **0.55347**. Compensated GPU coefficients fix
+the captured false-zero case. Final RTX/H100 builds pass 14 boundary cases,
+four probe sanitizer modes and 38 trajectory/CLI tests each. Four matched H100
+campaigns return the same verified **548.255 kg** in median **53.01 s versus
+54.10 s**; the final packaged v360 confirmation takes **54.01 s** and is now
+downloaded and displayed. Exact-QP qualification failures remain, and the fleet
+incumbent is unchanged at **12,805.194 weighted kg**.
+[Implementation and limits](docs/GPU_SOC_STEP_ACCURACY.md) ·
+[Results and visualiser instructions](results/lambda/2026-09-08/gpu-soc-step-v359/README.md).
+
 **Development refinement fix:** the GPU no longer accepts a NaN correction as an
 improvement or overwrites its finite backup. Four matched H100 campaigns reduce
 median complete time from **59.18 to 53.08 s (10.31% less time)**, with the same

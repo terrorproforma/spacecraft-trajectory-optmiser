@@ -59,6 +59,7 @@ const FLEET_DATASETS = {
   "gtoc12-v200": { directory: "./data/gtoc12-v200", label: "GPU campaign v200 (before fix)" },
   "gtoc12-v209": { directory: "./data/gtoc12-v209", label: "GPU campaign v209 (corrected solver)" },
   "gtoc12-v213": { directory: "./data/gtoc12-v213", label: "GPU retiming v213 (524 kg certified)" },
+  "gtoc12-v360": { directory: "./data/gtoc12-v360", label: "GPU SOC step v360 (548 kg certified)" },
   "gtoc12-v342": { directory: "./data/gtoc12-v342", label: "GPU IR guard v342 (548 kg certified)" },
   "gtoc12-v332": { directory: "./data/gtoc12-v332", label: "GPU graphs v332 (548 kg certified)" },
   "gtoc12-v269": { directory: "./data/gtoc12-v269", label: "GPU campaign v269 (548 kg certified)" },
