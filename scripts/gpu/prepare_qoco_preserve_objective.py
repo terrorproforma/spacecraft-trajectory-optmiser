@@ -41,6 +41,13 @@ def prepare(root: Path) -> dict:
     if gpu.count(anchor) not in (1, 2, 3):
         raise RuntimeError("unexpected synchronous/queued Ruiz launch sites")
     gpu = gpu.replace(anchor, "(w->partial.data, w->blocks, n, w->factors.data, w->preserve_objective);")
+    gpu += '''
+// Optional capability: report the actual immutable numerical-update policy.
+extern "C" int qoco_gpu_numeric_preserves_objective(const void* opaque) {
+    const auto* context = static_cast<const qoco_device_update::Context*>(opaque);
+    return context && context->preserve_objective ? 1 : 0;
+}
+'''
     outputs = {host: cpu, device: gpu}
     manifest = {}
     for path, updated in outputs.items():

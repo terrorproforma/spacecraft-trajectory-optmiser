@@ -354,7 +354,10 @@ int gtoc12_qoco_acquire(int intervals,int hold,int free_dep,int free_arr,double 
     if(!output)return 1;
     *output=nullptr;
     try {
-        const bool enabled=pool_enabled() && ruiz==0;
+        const auto* scaled=std::getenv("SPACEPDHCG_TEST_GTOC12_SCALED_QOCO_POOL");
+        const auto* objective=std::getenv("SPACEPDHCG_TEST_QOCO_RUIZ_PRESERVE_OBJECTIVE");
+        const bool enabled=pool_enabled() && (ruiz==0 ||
+            (scaled && scaled[0]=='1' && objective && objective[0]=='1'));
         const auto configuration=enabled?pool_configuration():std::string{};
         if(qoco_pool.configuration!=configuration) {
             qoco_pool.clear();qoco_pool.configuration=configuration;
@@ -363,7 +366,8 @@ int gtoc12_qoco_acquire(int intervals,int hold,int free_dep,int free_arr,double 
         if(enabled) for(auto it=qoco_pool.entries.begin();it!=qoco_pool.entries.end();++it) {
             auto* w=*it;
             if(w->device!=device || w->intervals!=intervals || w->hold!=hold
-                || w->free_departure!=free_dep || w->free_arrival!=free_arr || w->tolerance!=tolerance)continue;
+                || w->free_departure!=free_dep || w->free_arrival!=free_arr || w->tolerance!=tolerance
+                || w->ruiz!=ruiz)continue;
             qoco_pool.entries.erase(it);
             const int rebound=gtoc12_conic_rebind(w->conic,kappa,mass_flow,times,boundary,fuel);
             if(rebound) {spacepdhcg_gtoc12_qoco_destroy(w);return rebound;}

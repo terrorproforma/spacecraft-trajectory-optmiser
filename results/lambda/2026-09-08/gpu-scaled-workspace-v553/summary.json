@@ -1,0 +1,772 @@
+{
+  "source_base_commit": "dd4f4a5adf668247fa64b840c14f846bf8b37be2",
+  "default_enabled": false,
+  "flag": "SPACEPDHCG_TEST_GTOC12_SCALED_QOCO_POOL",
+  "requires": "SPACEPDHCG_TEST_QOCO_RUIZ_PRESERVE_OBJECTIVE=1 and library capability query",
+  "local_legs": {
+    "baseline": {
+      "seconds": 138.2338813749975,
+      "converged": 205,
+      "priming": 450,
+      "workspaces": 225,
+      "statuses": {
+        "converged": 205,
+        "infeasible": 15,
+        "failed": 5
+      }
+    },
+    "candidate": {
+      "seconds": 124.86853397601953,
+      "converged": 205,
+      "priming": 450,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "failed": 7,
+        "infeasible": 13
+      }
+    },
+    "scope": "One full pass per mode with identical core and QOCO binaries, two objective-preserving Ruiz passes in both modes. Baseline rebuilds scaled workspaces; candidate reuses compatible ones. Original budgets and accuracy tolerances unchanged. Solver time excludes certification.",
+    "lost_baseline": [],
+    "max_certified_mass_delta": {
+      "index": 99,
+      "delta_kg": 1.2101372703909874e-07
+    },
+    "less_time_percent": 9.668647994279189,
+    "largest_timing_changes": [
+      {
+        "index": 44,
+        "baseline_seconds": 1.1730331630005821,
+        "candidate_seconds": 8.314431108001372,
+        "difference": 7.14139794500079,
+        "baseline_iterations": 10,
+        "candidate_iterations": 28
+      },
+      {
+        "index": 12,
+        "baseline_seconds": 6.915059766999548,
+        "candidate_seconds": 1.0626922209994518,
+        "difference": -5.852367546000096,
+        "baseline_iterations": 41,
+        "candidate_iterations": 14
+      },
+      {
+        "index": 170,
+        "baseline_seconds": 4.158258385001318,
+        "candidate_seconds": 0.6125310349998472,
+        "difference": -3.5457273500014708,
+        "baseline_iterations": 37,
+        "candidate_iterations": 10
+      },
+      {
+        "index": 195,
+        "baseline_seconds": 5.882757833998767,
+        "candidate_seconds": 2.7782334550011,
+        "difference": -3.1045243789976666,
+        "baseline_iterations": 44,
+        "candidate_iterations": 40
+      },
+      {
+        "index": 208,
+        "baseline_seconds": 6.1136998669990135,
+        "candidate_seconds": 4.366673702001208,
+        "difference": -1.7470261649978056,
+        "baseline_iterations": 38,
+        "candidate_iterations": 32
+      },
+      {
+        "index": 209,
+        "baseline_seconds": 4.404668793000383,
+        "candidate_seconds": 6.049941600000238,
+        "difference": 1.6452728069998557,
+        "baseline_iterations": 31,
+        "candidate_iterations": 28
+      },
+      {
+        "index": 201,
+        "baseline_seconds": 1.6553344719995948,
+        "candidate_seconds": 2.6625923559986404,
+        "difference": 1.0072578839990456,
+        "baseline_iterations": 25,
+        "candidate_iterations": 37
+      },
+      {
+        "index": 129,
+        "baseline_seconds": 10.947584420999192,
+        "candidate_seconds": 11.799347014000887,
+        "difference": 0.8517625930016948,
+        "baseline_iterations": 29,
+        "candidate_iterations": 30
+      },
+      {
+        "index": 60,
+        "baseline_seconds": 11.01103724099994,
+        "candidate_seconds": 10.268667288999495,
+        "difference": -0.7423699520004448,
+        "baseline_iterations": 36,
+        "candidate_iterations": 32
+      },
+      {
+        "index": 98,
+        "baseline_seconds": 3.5050420919997123,
+        "candidate_seconds": 2.8461608500001603,
+        "difference": -0.658881241999552,
+        "baseline_iterations": 42,
+        "candidate_iterations": 34
+      }
+    ]
+  },
+  "lambda_legs": {
+    "baseline": {
+      "seconds": 166.99101606645854,
+      "converged": 205,
+      "priming": 450,
+      "workspaces": 225,
+      "statuses": {
+        "converged": 205,
+        "infeasible": 16,
+        "failed": 4
+      }
+    },
+    "candidate": {
+      "seconds": 158.90784302336397,
+      "converged": 205,
+      "priming": 450,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "infeasible": 14,
+        "failed": 6
+      }
+    },
+    "scope": "One full pass per mode with identical core and QOCO binaries, two objective-preserving Ruiz passes in both modes. Baseline rebuilds scaled workspaces; candidate reuses compatible ones. Original budgets and accuracy tolerances unchanged. Solver time excludes certification.",
+    "lost_baseline": [],
+    "max_certified_mass_delta": {
+      "index": 57,
+      "delta_kg": 6.876803126942832e-08
+    },
+    "less_time_percent": 4.840483777808535,
+    "largest_timing_changes": [
+      {
+        "index": 175,
+        "baseline_seconds": 5.775200458010659,
+        "candidate_seconds": 1.2582104799803346,
+        "difference": -4.516989978030324,
+        "baseline_iterations": 44,
+        "candidate_iterations": 16
+      },
+      {
+        "index": 207,
+        "baseline_seconds": 3.568827895040158,
+        "candidate_seconds": 6.75040167896077,
+        "difference": 3.181573783920612,
+        "baseline_iterations": 42,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 198,
+        "baseline_seconds": 4.093372225004714,
+        "candidate_seconds": 6.404882604023442,
+        "difference": 2.3115103790187277,
+        "baseline_iterations": 44,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 98,
+        "baseline_seconds": 6.675960769993253,
+        "candidate_seconds": 4.463223267986905,
+        "difference": -2.2127375020063482,
+        "baseline_iterations": 44,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 195,
+        "baseline_seconds": 4.880534939991776,
+        "candidate_seconds": 6.779138105979655,
+        "difference": 1.898603165987879,
+        "baseline_iterations": 41,
+        "candidate_iterations": 37
+      },
+      {
+        "index": 129,
+        "baseline_seconds": 15.428795418003574,
+        "candidate_seconds": 13.915494693967048,
+        "difference": -1.513300724036526,
+        "baseline_iterations": 32,
+        "candidate_iterations": 30
+      },
+      {
+        "index": 209,
+        "baseline_seconds": 5.128095150052104,
+        "candidate_seconds": 6.610171115025878,
+        "difference": 1.4820759649737738,
+        "baseline_iterations": 30,
+        "candidate_iterations": 43
+      },
+      {
+        "index": 165,
+        "baseline_seconds": 6.152440303994808,
+        "candidate_seconds": 4.702372491010465,
+        "difference": -1.4500678129843436,
+        "baseline_iterations": 26,
+        "candidate_iterations": 28
+      },
+      {
+        "index": 204,
+        "baseline_seconds": 3.9014759789570235,
+        "candidate_seconds": 4.891173632000573,
+        "difference": 0.9896976530435495,
+        "baseline_iterations": 44,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 134,
+        "baseline_seconds": 0.8835846279980615,
+        "candidate_seconds": 1.8594180349609815,
+        "difference": 0.97583340696292,
+        "baseline_iterations": 12,
+        "candidate_iterations": 23
+      }
+    ]
+  },
+  "local_campaign": {
+    "scope": "ABBA two runs per mode, identical binary. Zero Ruiz versus two Ruiz passes with objective magnitude preserved; candidate enables compatible scaled workspace reuse; zero-Ruiz baseline uses existing reuse. All runs pass both mission checkers.",
+    "baseline_process_median": 30.063758253500055,
+    "candidate_process_median": 29.674305278998872,
+    "less_process_time_percent": 1.2954234504458317,
+    "rows": [
+      {
+        "name": "baseline0",
+        "candidate": false,
+        "process_seconds": 27.58723976500005,
+        "cli_seconds": 26.569241503999365,
+        "score": 548.2546201233001,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 9.213622974002647,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "candidate0",
+        "candidate": true,
+        "process_seconds": 28.68305579999833,
+        "cli_seconds": 27.77560242400068,
+        "score": 548.2546201232999,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 10.407629079003527,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "candidate1",
+        "candidate": true,
+        "process_seconds": 30.665554757999416,
+        "cli_seconds": 29.78217260799829,
+        "score": 548.2546201235009,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 12.4151913319929,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "baseline1",
+        "candidate": false,
+        "process_seconds": 32.54027674200006,
+        "cli_seconds": 31.596372962001624,
+        "score": 548.2546201231999,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 14.238925993995508,
+        "converged": 46,
+        "workspace_creations": 17
+      }
+    ]
+  },
+  "lambda_campaign": {
+    "scope": "ABBA two runs per mode, identical binary. Zero Ruiz versus two Ruiz passes with objective magnitude preserved; candidate enables compatible scaled workspace reuse; zero-Ruiz baseline uses existing reuse. All runs pass both mission checkers.",
+    "baseline_process_median": 29.154567757999757,
+    "candidate_process_median": 29.379434192494955,
+    "less_process_time_percent": -0.7712905791014357,
+    "rows": [
+      {
+        "name": "baseline0",
+        "candidate": false,
+        "process_seconds": 29.60610007197829,
+        "cli_seconds": 28.777501292002853,
+        "score": 548.2546201232001,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 11.720164680911694,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "candidate0",
+        "candidate": true,
+        "process_seconds": 29.354071362002287,
+        "cli_seconds": 28.511698731046636,
+        "score": 548.2546201231,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 11.477010829024948,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "candidate1",
+        "candidate": true,
+        "process_seconds": 29.404797022987623,
+        "cli_seconds": 28.583400128991343,
+        "score": 548.2546201231996,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 11.116967471898533,
+        "converged": 46,
+        "workspace_creations": 17
+      },
+      {
+        "name": "baseline1",
+        "candidate": false,
+        "process_seconds": 28.703035444021225,
+        "cli_seconds": 27.889541956014,
+        "score": 548.254620123,
+        "same_initial_plans": true,
+        "same_logical_counts": true,
+        "calls": 47,
+        "solver_seconds": 10.93865960947005,
+        "converged": 46,
+        "workspace_creations": 17
+      }
+    ]
+  },
+  "preparation": {
+    "flag": "SPACEPDHCG_TEST_QOCO_RUIZ_PRESERVE_OBJECTIVE",
+    "default_enabled": false,
+    "files": {
+      "src/equilibration.c": {
+        "before_sha256": "ea3b1102e592ccc7824988b0538b283db63fdf4189f6323178e7310530963d5e",
+        "after_sha256": "04ab77326ced2e497fb5a08733a9269d8b95370c86f9ca7ca5ea3665183fc2d6"
+      },
+      "algebra/cuda/qoco_device_update.cuh": {
+        "before_sha256": "5c81fdf4652431c29a78697cd0feb163d16e42f98b925fb1be13b4d4d56ba987",
+        "after_sha256": "ca866c4396620e7a3616f2e2303a7b658ca494c3c32d403fd3294abc65582ab5"
+      }
+    },
+    "final_preparer_sha256": "8218f2385fefea541a7b625b47057886c88ff2585be9b91fcfb879198fbfe69d",
+    "compiled_outputs_match": true
+  },
+  "tests_per_gpu": 117,
+  "sanitizers": {
+    "local_full": [
+      {
+        "name": "pytest",
+        "returncode": 0,
+        "seconds": 152.66966052399948,
+        "command": [
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_scaled_workspace_pool.py",
+          "tests/test_gtoc12_gpu_retained_replay.py",
+          "tests/test_gtoc12_gpu_workspace_pool.py",
+          "tests/test_gtoc12_verifier_knots.py",
+          "tests/test_gtoc12_verifier.py",
+          "tests/test_gtoc12_gpu_verifier.py",
+          "tests/test_gtoc12_gpu_resident_options.py",
+          "tests/test_gtoc12_gpu_collection.py",
+          "tests/test_gtoc12_gpu_elements.py",
+          "tests/test_gtoc12_gpu_scvx.py",
+          "tests/test_gtoc12_gpu_cli.py",
+          "tests/test_gtoc12_run_final_verification.py",
+          "-x",
+          "-s",
+          "-q"
+        ]
+      },
+      {
+        "name": "memcheck",
+        "returncode": 99,
+        "seconds": 1.926157615998818,
+        "command": [
+          "/usr/local/cuda-12.8/bin/compute-sanitizer",
+          "--tool",
+          "memcheck",
+          "--error-exitcode",
+          "99",
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+          "-x",
+          "-s",
+          "-q"
+        ]
+      }
+    ],
+    "local_previous_and_candidate": {
+      "pid": 1937,
+      "complete": true,
+      "cases": [
+        {
+          "name": "previous",
+          "returncode": 99,
+          "seconds": 1.9833384030007437,
+          "command": [
+            "/usr/local/cuda-12.8/bin/compute-sanitizer",
+            "--tool",
+            "memcheck",
+            "--error-exitcode",
+            "99",
+            "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": true
+        },
+        {
+          "name": "candidate",
+          "returncode": 99,
+          "seconds": 1.9338586409994605,
+          "command": [
+            "/usr/local/cuda-12.8/bin/compute-sanitizer",
+            "--tool",
+            "memcheck",
+            "--error-exitcode",
+            "99",
+            "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": true
+        }
+      ],
+      "stage": "candidate",
+      "child_pid": 1956
+    },
+    "local_scoped": {
+      "pid": 1004,
+      "complete": true,
+      "scope": "cuDSS kernels excluded from instrumentation; this is not a full solver sanitizer pass",
+      "cases": [
+        {
+          "name": "memcheck",
+          "returncode": 99,
+          "seconds": 2.5328272390015627,
+          "command": [
+            "/usr/local/cuda-12.8/bin/compute-sanitizer",
+            "--tool",
+            "memcheck",
+            "--kernel-name-exclude",
+            "kns=cudss",
+            "--error-exitcode",
+            "99",
+            "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": true
+        },
+        {
+          "name": "synccheck",
+          "returncode": 1,
+          "seconds": 2.228010720000384,
+          "command": [
+            "/usr/local/cuda-12.8/bin/compute-sanitizer",
+            "--tool",
+            "synccheck",
+            "--kernel-name-exclude",
+            "kns=cudss",
+            "--error-exitcode",
+            "99",
+            "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": false
+        },
+        {
+          "name": "racecheck",
+          "returncode": 11,
+          "seconds": 14.777791313001217,
+          "command": [
+            "/usr/local/cuda-12.8/bin/compute-sanitizer",
+            "--tool",
+            "racecheck",
+            "--kernel-name-exclude",
+            "kns=cudss",
+            "--error-exitcode",
+            "99",
+            "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": false
+        }
+      ],
+      "stage": "racecheck",
+      "child_pid": 1287
+    },
+    "lambda_full": [
+      {
+        "name": "pytest",
+        "returncode": 0,
+        "seconds": 269.07851376599865,
+        "command": [
+          "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_scaled_workspace_pool.py",
+          "tests/test_gtoc12_gpu_retained_replay.py",
+          "tests/test_gtoc12_gpu_workspace_pool.py",
+          "tests/test_gtoc12_verifier_knots.py",
+          "tests/test_gtoc12_verifier.py",
+          "tests/test_gtoc12_gpu_verifier.py",
+          "tests/test_gtoc12_gpu_resident_options.py",
+          "tests/test_gtoc12_gpu_collection.py",
+          "tests/test_gtoc12_gpu_elements.py",
+          "tests/test_gtoc12_gpu_scvx.py",
+          "tests/test_gtoc12_gpu_cli.py",
+          "tests/test_gtoc12_run_final_verification.py",
+          "-x",
+          "-s",
+          "-q"
+        ]
+      },
+      {
+        "name": "memcheck",
+        "returncode": 0,
+        "seconds": 32.407025557011366,
+        "command": [
+          "/usr/local/cuda/bin/compute-sanitizer",
+          "--tool",
+          "memcheck",
+          "--error-exitcode",
+          "99",
+          "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+          "-x",
+          "-s",
+          "-q"
+        ]
+      },
+      {
+        "name": "synccheck",
+        "returncode": 99,
+        "seconds": 14.633863384020515,
+        "command": [
+          "/usr/local/cuda/bin/compute-sanitizer",
+          "--tool",
+          "synccheck",
+          "--error-exitcode",
+          "99",
+          "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+          "-x",
+          "-s",
+          "-q"
+        ]
+      }
+    ],
+    "lambda_previous_and_candidate": {
+      "pid": 203272,
+      "complete": true,
+      "cases": [
+        {
+          "name": "previous",
+          "returncode": 99,
+          "seconds": 14.584177753014956,
+          "command": [
+            "/usr/local/cuda/bin/compute-sanitizer",
+            "--tool",
+            "synccheck",
+            "--error-exitcode",
+            "99",
+            "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": false
+        },
+        {
+          "name": "candidate",
+          "returncode": 6,
+          "seconds": 8.430811765952967,
+          "command": [
+            "/usr/local/cuda/bin/compute-sanitizer",
+            "--tool",
+            "racecheck",
+            "--error-exitcode",
+            "99",
+            "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": false
+        }
+      ],
+      "stage": "candidate",
+      "child_pid": 203687
+    },
+    "lambda_baseline_race": {
+      "pid": 203945,
+      "complete": true,
+      "cases": [
+        {
+          "name": "previous",
+          "returncode": 6,
+          "seconds": 8.5291282380349,
+          "command": [
+            "/usr/local/cuda/bin/compute-sanitizer",
+            "--tool",
+            "racecheck",
+            "--error-exitcode",
+            "99",
+            "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": false
+        }
+      ],
+      "stage": "previous",
+      "child_pid": 203946
+    },
+    "lambda_scoped": {
+      "pid": 203401,
+      "complete": true,
+      "scope": "Requested cuDSS exclusion did not isolate cuDSS conditional-graph kernels: synccheck still reports cuDSS barriers; memory check passes, racecheck crashes. Not a full solver sanitizer pass.",
+      "cases": [
+        {
+          "name": "memcheck",
+          "returncode": 0,
+          "seconds": 32.10758698201971,
+          "command": [
+            "/usr/local/cuda/bin/compute-sanitizer",
+            "--tool",
+            "memcheck",
+            "--kernel-name-exclude",
+            "kns=cudss",
+            "--error-exitcode",
+            "99",
+            "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": false
+        },
+        {
+          "name": "synccheck",
+          "returncode": 99,
+          "seconds": 14.48369050299516,
+          "command": [
+            "/usr/local/cuda/bin/compute-sanitizer",
+            "--tool",
+            "synccheck",
+            "--kernel-name-exclude",
+            "kns=cudss",
+            "--error-exitcode",
+            "99",
+            "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": false
+        },
+        {
+          "name": "racecheck",
+          "returncode": 11,
+          "seconds": 6.623001319007017,
+          "command": [
+            "/usr/local/cuda/bin/compute-sanitizer",
+            "--tool",
+            "racecheck",
+            "--kernel-name-exclude",
+            "kns=cudss",
+            "--error-exitcode",
+            "99",
+            "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+            "-c",
+            "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+            "tests/test_gtoc12_gpu_scaled_workspace_pool.py::test_scaled_pool_refreshes_and_discards_failed_leg[1-lagrange-1]",
+            "-x",
+            "-s",
+            "-q"
+          ],
+          "unknown_error_999": false
+        }
+      ],
+      "stage": "racecheck",
+      "child_pid": 203836
+    }
+  },
+  "limitations": [
+    "Experimental scaled reuse remains disabled by default.",
+    "Full solver sanitizer validation is not clean; detailed failures are retained, including baseline reproductions.",
+    "One 225-leg pass per mode does not establish a universal speedup. Complete campaigns compare production zero Ruiz with two preserved-objective Ruiz passes plus reuse.",
+    "No new fleet record; best remains 12805.194102488575 weighted kg. CPU route and fleet orchestration still remains."
+  ],
+  "viewer": {
+    "dataset": "gtoc12-v548",
+    "source": "campaign-v548/candidate0/output/fleet",
+    "weighted_score_kg": 548.2546201231,
+    "ships": 1,
+    "mined_asteroids": 8,
+    "exact_replay_samples": 509,
+    "kepler_context_points": 3010,
+    "url": "http://127.0.0.1:4173/?dataset=gtoc12-v548&epoch=69807&preset=oblique&z=1"
+  }
+}

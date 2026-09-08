@@ -47,12 +47,17 @@ No previously certified leg is lost. The unqualified attempts remain rejected.
 The local candidate changes three unsuccessful classifications from failure to
 infeasible; that does not create three additional valid trajectories.
 
-Current pooling admits only zero-Ruiz workspaces: it creates 72 workspaces in
+The builds measured here admit only zero-Ruiz workspaces: they create 72 workspaces in
 this replay, whereas the candidate creates 225. Preserving objective magnitude
 has not changed this eligibility rule. Local solve time rises 13.87%; the single
 H100 observation is 1.23% lower. Neither establishes a general speedup. Reusing
 scaled workspaces needs separate correctness and timing evidence before it can
 be enabled.
+
+The subsequent [scaled workspace experiment](GPU_SCALED_WORKSPACE_REUSE.md)
+adds capability-checked reuse and records its separate measurements and
+full-solver sanitizer limitations. The measurements above retain their original
+configuration.
 
 ## Complete campaigns
 

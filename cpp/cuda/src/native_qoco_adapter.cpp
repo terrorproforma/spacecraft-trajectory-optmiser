@@ -188,6 +188,7 @@ using CreateNumericUpdateFn = int (*)(SolverAbi*, int, int, int, void**);
 using DeviceNumericUpdateFn = int (*)(void*, const double*, cudaStream_t);
 using QueuedNumericUpdateFn = int (*)(void*, const double*, cudaStream_t, const double**);
 using FinishNumericUpdateFn = int (*)(void*, int);
+using NumericPreservesObjectiveFn = int (*)(const void*);
 using DestroyNumericUpdateFn = void (*)(void*);
 using SetTrajectoryFn = int (*)(int, int, int, const int*, const int*, const int*, cudaStream_t);
 
@@ -438,6 +439,7 @@ struct spacepdhcg_native_qoco {
     QueuedNumericUpdateFn queued_numeric_update{};
     QueuedNumericUpdateFn capture_numeric_update{};
     FinishNumericUpdateFn finish_numeric_update{};
+    NumericPreservesObjectiveFn numeric_preserves_objective{};
     const double* queued_numeric_result{};
     bool numeric_update_invalid{};
     bool queue_validation_allowed{}, validation_pending{};
@@ -1522,6 +1524,7 @@ spacepdhcg_cuda_status native_qoco_create_impl(
     symbol(result->library, "qoco_gpu_update_numeric_device", &result->queued_numeric_update);
     symbol(result->library, "qoco_gpu_capture_numeric_update", &result->capture_numeric_update);
     symbol(result->library, "qoco_gpu_finish_numeric_update", &result->finish_numeric_update);
+    symbol(result->library, "qoco_gpu_numeric_preserves_objective", &result->numeric_preserves_objective);
     symbol(result->library, "qoco_gpu_destroy_numeric_update", &result->destroy_numeric_update);
     symbol(result->library, "qoco_gpu_set_trajectory", &result->set_trajectory);
     if (result->set_trajectory && problem->intervals > 0
@@ -2434,9 +2437,15 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_restart_leg(spacepdhcg_native_qoco
     if(!w || w->deferred_active || w->graph_active || w->destroy_after_graph
         || std::this_thread::get_id()!=w->creation_owner || cudaGetDevice(&device)!=cudaSuccess
         || device!=w->creation_device) return SPACEPDHCG_CUDA_INVALID_STATE;
-    // Initial prototype excludes scaled restarts: numerical updates otherwise
-    // reuse the preceding leg's Ruiz packet. Qualifying that policy is separate.
-    if(!w->solver || w->configured_settings.ruiz_iters || !w->numeric_update_context
+    // Scaled reuse requires the actual workspace policy, not merely an env flag
+    // that an older library may ignore. Unit objective scaling removes the old
+    // objective's influence on the next leg's Ruiz cost normalization.
+    const auto* scaled=std::getenv("SPACEPDHCG_TEST_GTOC12_SCALED_QOCO_POOL");
+    if(w->configured_settings.ruiz_iters &&
+        (!scaled || scaled[0]!='1' || !w->numeric_preserves_objective
+         || !w->numeric_update_context || w->numeric_preserves_objective(w->numeric_update_context)!=1))
+        return SPACEPDHCG_CUDA_UNSUPPORTED;
+    if(!w->solver || !w->numeric_update_context
         || !w->finish_replay || !w->finish_numeric_update || !w->update_settings
         || !w->primal_start || !w->emit_graph) return SPACEPDHCG_CUDA_UNSUPPORTED;
     if(w->finish_replay(w->solver) || w->finish_numeric_update(w->numeric_update_context,1)

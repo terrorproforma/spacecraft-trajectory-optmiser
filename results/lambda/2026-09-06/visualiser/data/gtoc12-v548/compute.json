@@ -1,0 +1,25 @@
+{
+  "run_id": "scaled548",
+  "fleet_run_id": "scaled548_fleet",
+  "commit": "618d8bdfe20aaaef1a50a1877d9ad5dc994e1356",
+  "source_revision_note": "Frozen source overlay and binary hashes are archived in gpu-scaled-workspace-v553; experimental scaled reuse, not a new fleet record.",
+  "weighted_score_fixed_bonus_kg": 548.2546201231,
+  "raw_kg_per_ship": 548.2546201231,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB",
+    "upstream_search": "45,188,558 logical CUDA transfer branches; 2,782,091 collection options"
+  },
+  "timing": {
+    "wall_seconds_total": 29.354071362002287,
+    "wall_human": "29.35 s complete one-ship benchmark process"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 low-thrust dynamics; both mission checkers pass",
+    "local_refine": "CUDA SCvx and QOCO graph loops, two objective-preserving Ruiz passes and workspace reuse"
+  },
+  "optimisation": {
+    "strategy": "Fixed one-ship performance benchmark; best fleet remains 12,805.194 weighted kg. CPU orchestration remains. Scaled reuse is opt-in; sanitizer failures remain unresolved.",
+    "proven_optimal": false
+  },
+  "source_base_commit": "dd4f4a5adf668247fa64b840c14f846bf8b37be2"
+}

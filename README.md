@@ -42,6 +42,14 @@ both GPUs. All 107 broader tests and three native sanitizer modes pass on each.
 It has not established an overall speedup, so zero Ruiz remains the default.
 [Implementation, accuracy checks and complete-workload measurements](docs/GPU_OBJECTIVE_PRESERVING_RUIZ.md).
 
+An opt-in extension now reuses compatible objective-preserving scaled workspaces.
+The fixed 225-leg replay takes **9.67% less solver time locally / 4.84% less on
+H100**, retaining all 205 certified legs while reducing workspace creations from
+225 to 72. All 117 tests pass on each GPU. Complete campaign timings remain flat
+against production settings; full-solver sanitizer failures also reproduce in
+preceding builds and remain unresolved. The extension stays disabled by default.
+[Measurements, validation limits and retrieved results](docs/GPU_SCALED_WORKSPACE_REUSE.md).
+
 Compatible trajectory legs now reuse GPU QOCO workspaces, sparse conversion and
 vendor graphs. Complete-process one-ship medians fall **5.40% on RTX 5090** and
 **5.03% on H100**, with unchanged verified score. The fixed 225-leg replay takes
