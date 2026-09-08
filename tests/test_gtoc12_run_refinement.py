@@ -63,6 +63,7 @@ def test_failed_leg_does_not_suppress_later_candidates(
     def refine(plan, *args, **kwargs):
         attempted.append(plan)
         return SimpleNamespace(
+            plan=plan,
             certified=checker_rejects,
             refined_arc_count=1,
             legs=[SimpleNamespace(planned=plan.legs[0], certified=False)],

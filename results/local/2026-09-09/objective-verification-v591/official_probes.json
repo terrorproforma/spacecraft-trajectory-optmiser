@@ -1,0 +1,74 @@
+{
+  "purpose": "Synthetic classifier evidence; these are not accepted mission fleets.",
+  "official_binary_sha256": "d4e4bc81129266420b27c9bde038bce9eda1960e7de9c695772fbfdb1cc82cd6",
+  "probes": [
+    {
+      "name": "ship_rule_only",
+      "solution": "build/performance/objective-verification-v591/ship_rule_only.txt",
+      "independent": {
+        "ok": false,
+        "ships": 3,
+        "mined_asteroids": 0,
+        "total_mass_kg": 0,
+        "weighted_score_fixed_bonus_kg": null,
+        "weighted_score_dynamic_kg": null,
+        "ship_limit": 2.0,
+        "max_position_error_km": 1.2293458025632495e-07,
+        "max_velocity_error_km_s": 1.6687357498877213e-14,
+        "max_mass_error_kg": 0.0,
+        "violations": [
+          "Error301: 3 ships exceed the allowable maximum 2.000000"
+        ]
+      },
+      "independent_codes": [
+        "Error301"
+      ],
+      "official": {
+        "ok": false,
+        "ships": null,
+        "mined_asteroids": null,
+        "total_mass_kg": null,
+        "return_code": 3,
+        "wall_seconds": 0.03896866299987778,
+        "message": "Error301. Mining Ship Number Error: The number of Mining Ships is 3, greater than the appropriable maximum number 2."
+      },
+      "official_stdout": "Error301. Mining Ship Number Error: The number of Mining Ships is 3, greater than the appropriable maximum number 2.\n",
+      "official_stderr": ""
+    },
+    {
+      "name": "ship_rule_and_mass_error",
+      "solution": "build/performance/objective-verification-v591/ship_rule_and_mass_error.txt",
+      "independent": {
+        "ok": false,
+        "ships": 3,
+        "mined_asteroids": 0,
+        "total_mass_kg": 0,
+        "weighted_score_fixed_bonus_kg": null,
+        "weighted_score_dynamic_kg": null,
+        "ship_limit": 2.0,
+        "max_position_error_km": 1.2293458025632495e-07,
+        "max_velocity_error_km_s": 1.6687357498877213e-14,
+        "max_mass_error_kg": 1.0,
+        "violations": [
+          "Error203 ship 3 line 0: mass error 1.000000 kg > 0.001 kg",
+          "Error301: 3 ships exceed the allowable maximum 2.000000"
+        ]
+      },
+      "independent_codes": [
+        "Error203",
+        "Error301"
+      ],
+      "official": {
+        "ok": false,
+        "ships": null,
+        "mined_asteroids": null,
+        "total_mass_kg": null,
+        "return_code": 1,
+        "wall_seconds": 0.037882566999996925,
+        "message": "Error203. Mass Error on the line 11: The mass error between the integral state from the previous event and the state shown in the file is 1 kg, greater than the constraint 0.001 kg."
+      },
+      "official_stdout": "Error203. Mass Error on the line 11: The mass error between the integral state from the previous event and the state shown in the file is 1 kg, greater than the constraint 0.001 kg.\n",
+      "official_stderr": ""
+    }
+  ]
+}

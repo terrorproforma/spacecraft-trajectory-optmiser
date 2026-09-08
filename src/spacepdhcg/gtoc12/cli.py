@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
+import re
 import subprocess
 import time
 from functools import wraps
@@ -16,6 +18,65 @@ from spacepdhcg import resources
 
 def _json(value: Any) -> str:
     return json.dumps(value, indent=2, sort_keys=True, default=float)
+
+
+def _verification_score(
+    independent, official: dict[str, Any] | None = None, *, bonus_weights: bool
+) -> dict[str, Any]:
+    """Select the configured objective from verified masses, retaining raw diagnostics."""
+
+    summary = independent.summary()
+    score_kind = "weighted_score_fixed_bonus_kg" if bonus_weights else "total_mass_kg"
+    entry: dict[str, Any] = {
+        "independent": summary,
+        "total_mass_kg": independent.total_mass_kg,
+        "weighted_score_fixed_bonus_kg": summary.get("weighted_score_fixed_bonus_kg"),
+        "score_kind": score_kind,
+        "verification_scope": "whole_solution",
+        "objective_scope": "whole_solution_returned_mass",
+        "ok": bool(summary["ok"]) and (official is None or bool(official["ok"])),
+    }
+    if official is not None:
+        entry["official"] = official
+    # The offline official checker prints unweighted cargo. Its raw mass must
+    # never replace a missing weighted objective or a rejected score.
+    score = entry[score_kind]
+    if score is None or not math.isfinite(score):
+        entry["ok"] = False
+        entry["score_error"] = f"No finite independently verified {score_kind}"
+    entry["score_kg"] = score if entry["ok"] else None
+    return entry
+
+
+def _candidate_support_routes(previous: list, candidate) -> tuple[list, list[dict[str, Any]]]:
+    """Smallest dependency closure within the greedy prefix, matching deploy epochs."""
+
+    from .cooperative import EPOCH_TOLERANCE_DAYS
+
+    routes = [*previous, candidate]
+    suppliers: dict[int, list[tuple[int, float]]] = {}
+    for index, route in enumerate(previous):
+        for asteroid, epoch in route.plan.deploy_epochs.items():
+            suppliers.setdefault(asteroid, []).append((index, epoch))
+    selected = {len(previous)}
+    pending = [len(previous)]
+    missing = []
+    while pending:
+        for asteroid, epoch in routes[pending.pop()].plan.foreign_deploy_epochs.items():
+            supplier = next(
+                (
+                    index
+                    for index, deployed_at in suppliers.get(asteroid, [])
+                    if abs(deployed_at - epoch) <= EPOCH_TOLERANCE_DAYS
+                ),
+                None,
+            )
+            if supplier is None:
+                missing.append({"asteroid": asteroid, "deploy_epoch": epoch})
+            elif supplier not in selected:
+                selected.add(supplier)
+                pending.append(supplier)
+    return [routes[index] for index in sorted(selected)], missing
 
 
 def _with_screening_backend(function):
@@ -295,7 +356,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     from .data import load_bonus_table, load_catalogue
     from .fleet import FleetPlan, assemble_fleet
     from .official import official_verifier_available, run_official_verifier
-    from .pipeline import refine_route, write_route_artifacts
+    from .pipeline import emit_solution, refine_route, write_route_artifacts
     from .reduced_instance import build_reduced_instance
     from .retiming import Retimer, improve_and_certify
     from .search import RouteSearch, SearchSettings
@@ -365,6 +426,9 @@ def cmd_run(args: argparse.Namespace) -> int:
     pool = MinerPool()  # shared miners: later ships may collect earlier ships' orphans
     columns: list[FleetColumn] = []  # every certified itinerary, for the master
     verifier = Gtoc12Verifier(catalogue, bonus=bonus_table)
+    report["score_kind"] = (
+        "weighted_score_fixed_bonus_kg" if weights is not None else "total_mass_kg"
+    )
 
     def add_column(slot: int, label: str, refined) -> None:
         columns.append(
@@ -398,19 +462,103 @@ def cmd_run(args: argparse.Namespace) -> int:
         checker = (
             verifier
             if histories is None
-            else Gtoc12Verifier(
-                catalogue, bonus=_optional_bonus(load_bonus_table), history=histories
-            )
+            else Gtoc12Verifier(catalogue, bonus=bonus_table, history=histories)
         )
         independent = checker.verify_file(solution_path)
-        entry: dict[str, Any] = {"independent": independent.summary()}
+        official = run_official_verifier(solution_path) if official_verifier_available() else None
+        entry = _verification_score(
+            independent,
+            None if official is None else official.summary(),
+            bonus_weights=weights is not None,
+        )
         entry["independent"]["scored_masses"] = independent.scored_masses
-        if official_verifier_available():
-            official = run_official_verifier(solution_path)
-            entry["official"] = official.summary()
+        entry["independent_violation_codes"] = [
+            violation.code for violation in getattr(independent, "violations", [])
+        ]
+        if official is not None:
             entry["official"]["score_data"] = official.score_data
-        score = entry.get("official", {}).get("total_mass_kg")
-        entry["score_kg"] = independent.total_mass_kg if score is None else score
+            entry["official_error_codes"] = sorted(
+                set(
+                    re.findall(
+                        r"Error\d+",
+                        getattr(official, "stdout", "") + "\n" + getattr(official, "stderr", ""),
+                    )
+                )
+            )
+        return entry
+
+    def verify_route(refined, solution_path: Path, histories: dict | None = None) -> dict[str, Any]:
+        dependent = bool(getattr(refined.plan, "foreign_deploy_epochs", {}))
+        verification_path = solution_path
+        missing = []
+        context_routes = [refined]
+        if dependent:
+            verification_path = solution_path.parent / "verification_context" / "Result.txt"
+            verification_path.parent.mkdir(parents=True, exist_ok=True)
+            context_routes, missing = _candidate_support_routes(fleet.routes, refined)
+            # Unrelated greedy ships cannot help certify these trajectories or
+            # mining events. Both verifiers still enforce the context's fleet rule.
+            context = Solution([])
+            for index, route in enumerate(context_routes, start=1):
+                context.ships.extend(emit_solution(route, catalogue, ship_id=index).ships)
+            context.write(verification_path)
+        entry = verify(verification_path, histories)
+        entry["verification_scope"] = "fleet_with_candidate" if dependent else "single_route"
+        entry["verification_artifacts"] = {"solution": str(verification_path)}
+        entry["verification_context_ships"] = len(context_routes)
+        entry["missing_context_deployers"] = missing
+        entry["objective_scope"] = "candidate_returned_mass"
+        if dependent:
+            # The verification report remains about the whole fleet context.
+            # Only this candidate's collected asteroids contribute to its rank.
+            masses = entry["independent"]["scored_masses"]
+            collected = {
+                asteroid: mass
+                for asteroid, mass in masses.items()
+                if asteroid in refined.plan.collect_epochs
+            }
+            entry["candidate_scored_masses"] = collected
+            entry["total_mass_kg"] = sum(collected.values())
+            entry["weighted_score_fixed_bonus_kg"] = (
+                None
+                if bonus_table is None
+                else sum(
+                    float(bonus_table.coefficient[asteroid - 1]) * mass
+                    for asteroid, mass in collected.items()
+                )
+            )
+            entry["score_kg"] = entry[entry["score_kind"]] if entry["ok"] else None
+        # Error301 is a rule about the final fleet's mean cargo and ship count.
+        # A complete independent physics/mining check may therefore certify a
+        # reusable column even when its small support context is not a scored
+        # fleet. The master must still produce a fleet passing both full checks.
+        rule_only = (
+            set(entry["independent_violation_codes"]) == {"Error301"}
+            and "score_error" not in entry
+            and not missing
+            and (
+                "official" not in entry
+                or entry["official"]["ok"]
+                or (
+                    entry["official_error_codes"] == ["Error301"]
+                    and entry["official"].get("return_code") == 3
+                )
+            )
+        )
+        eligible = (entry["ok"] or rule_only) and not missing
+        if missing:
+            entry["ok"] = False
+            entry["score_kg"] = None
+        entry["candidate_eligible"] = eligible
+        entry["candidate_score_kg"] = entry[entry["score_kind"]] if eligible else None
+        entry["candidate_certification"] = (
+            "verified_in_context"
+            if entry["ok"] and not missing
+            else "independent_physics_pending_fleet"
+            if rule_only
+            else "rejected"
+        )
+        entry["requires_final_fleet_verification"] = True
         return entry
 
     for ship_index in range(1, args.ships + 1):
@@ -491,16 +639,17 @@ def cmd_run(args: argparse.Namespace) -> int:
                 artifacts = write_route_artifacts(refined, catalogue, directory)
                 solution_path = Path(artifacts["solution"])
                 histories: dict = {}
-                entry.update(verify(solution_path, histories))
+                entry.update(verify_route(refined, solution_path, histories))
+                verification_path = Path(entry["verification_artifacts"]["solution"])
                 viewer = write_viewer_dataset(
                     directory / "viewer",
-                    Solution.read(solution_path),
+                    Solution.read(verification_path),
                     histories,
                     catalogue,
                     run_id=f"{args.run_id}_s{ship_index:02d}_c{rank:02d}",
                     commit=report["commit"],
                     verification=entry["independent"],
-                    solution_path=solution_path,
+                    solution_path=verification_path,
                     instance_id=str(instance_summary["instance_id"]),
                 )
                 entry["viewer_manifest"] = viewer
@@ -508,14 +657,13 @@ def cmd_run(args: argparse.Namespace) -> int:
                     "solution": str(solution_path),
                     "viewer": str(directory / "viewer" / "trajectories.json"),
                 }
-                entry["accepted"] = entry["independent"]["ok"] and entry.get(
-                    "official", {"ok": True}
-                )["ok"]
-                if entry["accepted"] and (
-                    best_entry is None or entry["score_kg"] > best_entry[0]["score_kg"]
+                entry["accepted"] = entry["ok"]
+                if entry["candidate_eligible"] and (
+                    best_entry is None
+                    or entry["candidate_score_kg"] > best_entry[0]["candidate_score_kg"]
                 ):
                     best_entry = (entry, refined)
-                if entry["accepted"]:
+                if entry["candidate_eligible"]:
                     add_column(ship_index, f"s{ship_index:02d}_c{rank:02d}", refined)
             refinements.append(entry)
             (ship_dir / "refinements.json").write_text(_json(refinements) + "\n", encoding="utf-8")
@@ -526,6 +674,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                         "rank": rank,
                         "certified": refined.certified,
                         "score_kg": entry.get("score_kg"),
+                        "candidate_score_kg": entry.get("candidate_score_kg"),
                         "refined_arcs": refined.refined_arc_count,
                     }
                 ),
@@ -566,29 +715,55 @@ def cmd_run(args: argparse.Namespace) -> int:
                 time_budget_seconds=args.retime_budget_seconds,
                 pool=None if args.no_cooperative else pool,
             )
-            for index, variant in enumerate(improvement.certified_routes):
-                add_column(ship_index, f"s{ship_index:02d}_retimed{index}", variant)
             improvement_summary = improvement.summary()
             improvement_summary["before"] = {
                 "score_kg": best_entry[0]["score_kg"],
+                "candidate_score_kg": best_entry[0]["candidate_score_kg"],
+                "score_kind": best_entry[0]["score_kind"],
+                "total_mass_kg": best_entry[0]["total_mass_kg"],
+                "weighted_score_fixed_bonus_kg": best_entry[0]["weighted_score_fixed_bonus_kg"],
                 "asteroids": len(best_entry[1].plan.asteroids),
                 "final_mass_kg": best_entry[1].final_mass_kg,
             }
-            if improvement.route is not None:
-                directory = ship_dir / "retimed"
-                artifacts = write_route_artifacts(improvement.route, catalogue, directory)
+            variants = list(improvement.certified_routes)
+            if improvement.route is not None and not any(
+                variant is improvement.route for variant in variants
+            ):
+                variants.append(improvement.route)
+            improvement_summary["verifications"] = []
+            best_retimed = None
+            for index, variant in enumerate(variants):
+                directory = ship_dir / (
+                    "retimed" if variant is improvement.route else f"retimed_variant_{index:02d}"
+                )
+                artifacts = write_route_artifacts(variant, catalogue, directory)
                 solution_path = Path(artifacts["solution"])
-                entry = {"rank": "retimed", "plan": improvement.route.plan.summary()}
-                entry["refined"] = improvement.route.summary()
-                entry.update(verify(solution_path))
+                entry = {"rank": "retimed", "variant": index, "plan": variant.plan.summary()}
+                entry["refined"] = variant.summary()
+                entry.update(verify_route(variant, solution_path))
+                entry["accepted"] = entry["ok"]
                 entry["artifacts"] = {"solution": str(solution_path)}
+                improvement_summary["verifications"].append(entry)
+                if not entry["candidate_eligible"]:
+                    continue
+                add_column(ship_index, f"s{ship_index:02d}_retimed{index}", variant)
+                if best_retimed is None or (
+                    entry["candidate_score_kg"] > best_retimed[0]["candidate_score_kg"]
+                ):
+                    best_retimed = (entry, variant)
+                if entry["candidate_score_kg"] > best_entry[0]["candidate_score_kg"]:
+                    best_entry = (entry, variant)
+            if best_retimed is not None:
+                entry, variant = best_retimed
                 improvement_summary["after"] = {
                     "score_kg": entry["score_kg"],
-                    "asteroids": len(improvement.route.plan.asteroids),
-                    "final_mass_kg": improvement.route.final_mass_kg,
+                    "candidate_score_kg": entry["candidate_score_kg"],
+                    "score_kind": entry["score_kind"],
+                    "total_mass_kg": entry["total_mass_kg"],
+                    "weighted_score_fixed_bonus_kg": entry["weighted_score_fixed_bonus_kg"],
+                    "asteroids": len(variant.plan.asteroids),
+                    "final_mass_kg": variant.final_mass_kg,
                 }
-                if entry["score_kg"] > best_entry[0]["score_kg"]:
-                    best_entry = (entry, improvement.route)
             ship_report["retiming"] = improvement_summary
             (ship_dir / "retiming.json").write_text(
                 _json(improvement_summary) + "\n", encoding="utf-8"
@@ -608,7 +783,9 @@ def cmd_run(args: argparse.Namespace) -> int:
                 flush=True,
             )
         ship_report["best"] = best_entry[0]
-        ship_report["status"] = "scored"
+        ship_report["status"] = (
+            "scored" if best_entry[0]["accepted"] else "route_certified_pending_fleet"
+        )
         fleet.routes.append(best_entry[1])
         pool.register(best_entry[1].plan, ship_index)
         master = run_master()
@@ -625,10 +802,10 @@ def cmd_run(args: argparse.Namespace) -> int:
         )
         checkpoint()
     report["fleet"] = fleet.summary()
-    if fleet.routes:
-        # the master picks the fleet from every certified column (the greedy fleet is one of
-        # its feasible subsets, so it never scores lower)
-        master = run_master()
+    master = run_master() if fleet.routes else None
+    if master is not None and master.selected:
+        # The master selects a rule-feasible fleet from all eligible columns;
+        # a provisional greedy prefix need not itself satisfy the fleet rule.
         selected = FleetPlan(master.routes())
         report["fleet"] = selected.summary()
         report["fleet"]["greedy"] = fleet.summary()
@@ -657,18 +834,18 @@ def cmd_run(args: argparse.Namespace) -> int:
         )
         fleet_entry["viewer_manifest"] = viewer
         fleet_entry["artifacts"]["viewer"] = str(fleet_dir / "viewer" / "trajectories.json")
-        fleet_entry["accepted"] = fleet_entry["independent"]["ok"] and fleet_entry.get(
-            "official", {"ok": True}
-        )["ok"]
-        if not fleet_entry["accepted"]:
-            # Keep raw checker diagnostics and the rejected artifact, but never
-            # export its mass as a successful score.
-            fleet_entry["score_kg"] = None
+        fleet_entry["accepted"] = fleet_entry["ok"]
         report["best"] = fleet_entry
         report["status"] = "scored" if fleet_entry["accepted"] else "fleet_failed_verification"
     else:
         report["best"] = None
-        report["status"] = "no_certified_route" if not args.search_only else "search_only"
+        report["status"] = (
+            "no_verified_fleet"
+            if fleet.routes
+            else "search_only"
+            if args.search_only
+            else "no_certified_route"
+        )
     report["wall_seconds_total"] = time.perf_counter() - started
     report["peak_rss_mb"] = _peak_rss_mb()
     (output_dir / "run_report.json").write_text(_json(report) + "\n", encoding="utf-8")
@@ -680,6 +857,11 @@ def cmd_run(args: argparse.Namespace) -> int:
                 "status": report["status"],
                 "fleet": report["fleet"],
                 "score_kg": None if best is None else best["score_kg"],
+                "score_kind": report["score_kind"],
+                "total_mass_kg": None if best is None else best["total_mass_kg"],
+                "weighted_score_fixed_bonus_kg": None
+                if best is None
+                else best["weighted_score_fixed_bonus_kg"],
                 "official": None if best is None else best.get("official"),
                 "wall_seconds_total": report["wall_seconds_total"],
                 "peak_rss_mb": report["peak_rss_mb"],
@@ -894,6 +1076,8 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     columns: list[FleetColumn] = []
     incumbent: dict[str, Any] | None = None
     worker_rss: list[float] = []
+    score_kind = "weighted_score_fixed_bonus_kg" if weights is not None else "total_mass_kg"
+    report["score_kind"] = score_kind
 
     def verify(solution_path: Path, histories: dict | None = None) -> dict[str, Any]:
         checker = (
@@ -902,14 +1086,12 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
             else Gtoc12Verifier(catalogue, bonus=bonus_table, history=histories)
         )
         independent = checker.verify_file(solution_path)
-        entry: dict[str, Any] = {"independent": independent.summary()}
-        if official_verifier_available():
-            official = run_official_verifier(solution_path)
-            entry["official"] = official.summary()
-        score = entry.get("official", {}).get("total_mass_kg")
-        entry["score_kg"] = independent.total_mass_kg if score is None else score
-        entry["ok"] = bool(independent.ok) and entry.get("official", {}).get("ok", True)
-        return entry
+        official = run_official_verifier(solution_path) if official_verifier_available() else None
+        return _verification_score(
+            independent,
+            None if official is None else official.summary(),
+            bonus_weights=weights is not None,
+        )
 
     memory = _MemorySampler().start()
 
@@ -1047,6 +1229,9 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
                     "ships": entry["fleet"]["ships"],
                     "asteroids": len(entry["fleet"]["asteroids"]),
                     "score_kg": entry["score_kg"],
+                    "score_kind": entry["score_kind"],
+                    "total_mass_kg": entry["total_mass_kg"],
+                    "weighted_score_fixed_bonus_kg": entry["weighted_score_fixed_bonus_kg"],
                     "average_collected_kg": entry["fleet"]["average_collected_kg"],
                     "path": str(path),
                 }
@@ -1091,6 +1276,10 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
                 "master_objective_kg": master.objective,
                 "master_exhaustive": master.exhaustive,
                 "verified_score_kg": None if entry is None else entry["score_kg"],
+                "verified_total_mass_kg": None if entry is None else entry["total_mass_kg"],
+                "verified_weighted_score_fixed_bonus_kg": None
+                if entry is None
+                else entry["weighted_score_fixed_bonus_kg"],
                 "verified_ok": None if entry is None else entry["ok"],
                 "incumbent_score_kg": None if incumbent is None else incumbent["score_kg"],
                 "peak_rss_mb": _peak_rss_mb(),
@@ -1135,9 +1324,14 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
     if columns:
         master = run_master()
         final = try_fleet(master, final=True)
-        report["best"] = incumbent if final is None or not final["ok"] else final
+        # try_fleet promotes only a verified improvement, including on the final
+        # pass. A worse or failed final candidate must not replace that incumbent.
+        report["best"] = incumbent
         report["final_fleet"] = final
-        report["status"] = "scored" if incumbent is not None else "no_verified_fleet"
+        if final is not None and not final["ok"]:
+            report["status"] = "fleet_failed_verification"
+        else:
+            report["status"] = "scored" if incumbent is not None else "no_verified_fleet"
     else:
         report["best"] = None
         report["status"] = "no_certified_route"
@@ -1158,6 +1352,11 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
                 "run_id": args.run_id,
                 "status": report["status"],
                 "score_kg": None if best is None else best["score_kg"],
+                "score_kind": score_kind,
+                "total_mass_kg": None if best is None else best["total_mass_kg"],
+                "weighted_score_fixed_bonus_kg": None
+                if best is None
+                else best["weighted_score_fixed_bonus_kg"],
                 "ships": None if best is None else best["fleet"]["ships"],
                 "asteroids": None if best is None else len(best["fleet"]["asteroids"]),
                 "average_collected_kg": None
@@ -1174,7 +1373,7 @@ def cmd_cluster_fleet(args: argparse.Namespace) -> int:
             }
         )
     )
-    return 0
+    return 1 if report["status"] == "fleet_failed_verification" else 0
 
 
 @_with_screening_backend
@@ -1295,12 +1494,13 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
     assemble_fleet(plan, catalogue).write(path)
     histories: dict = {}
     independent = Gtoc12Verifier(catalogue, bonus=bonus_table, history=histories).verify_file(path)
-    entry: dict[str, Any] = {"independent": independent.summary()}
-    if official_verifier_available():
-        entry["official"] = run_official_verifier(path).summary()
-    score = entry.get("official", {}).get("total_mass_kg")
-    entry["score_kg"] = independent.total_mass_kg if score is None else score
-    entry["ok"] = bool(independent.ok) and entry.get("official", {}).get("ok", True)
+    official = run_official_verifier(path) if official_verifier_available() else None
+    entry = _verification_score(
+        independent,
+        None if official is None else official.summary(),
+        bonus_weights=weights is not None,
+    )
+    report["score_kind"] = entry["score_kind"]
     entry["fleet"] = plan.summary()
     entry["artifacts"] = {"solution": str(path)}
     entry["master"] = {
@@ -1330,6 +1530,9 @@ def cmd_fleet_master(args: argparse.Namespace) -> int:
                 "run_id": args.run_id,
                 "status": report["status"],
                 "score_kg": entry["score_kg"],
+                "score_kind": entry["score_kind"],
+                "total_mass_kg": entry["total_mass_kg"],
+                "weighted_score_fixed_bonus_kg": entry["weighted_score_fixed_bonus_kg"],
                 "ships": entry["fleet"]["ships"],
                 "asteroids": len(entry["fleet"]["asteroids"]),
                 "average_collected_kg": entry["fleet"]["average_collected_kg"],

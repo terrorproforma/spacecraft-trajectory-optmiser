@@ -1,0 +1,53 @@
+{
+  "started_utc": "2026-09-08T14:04:03Z",
+  "python": "3.12.13 (main, Jun 23 2026, 15:18:55) [Clang 22.1.3 ]",
+  "platform": "Linux-6.18.33.1-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "gpu_work_launched": false,
+  "checks": {
+    "pytest": {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys; from pathlib import Path; sys.path.insert(0, str(Path('src').resolve())); from spacepdhcg.gtoc12 import cli; assert Path(cli.__file__).resolve() == Path('src/spacepdhcg/gtoc12/cli.py').resolve(); print('CLI source:', cli.__file__); import pytest; raise SystemExit(pytest.main(['-q', 'tests/test_gtoc12_run_objective.py', 'tests/test_gtoc12_fleet_master_objective.py', 'tests/test_gtoc12_cluster_objective.py', 'tests/test_gtoc12_run_final_verification.py', 'tests/test_gtoc12_run_refinement.py', 'tests/test_gtoc12_certified_objective.py', 'tests/test_gtoc12_gpu_cli.py']))"
+      ],
+      "return_code": 0,
+      "wall_seconds": 3.5226811730001373
+    },
+    "ruff": {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/ruff",
+        "check",
+        "src/spacepdhcg/gtoc12/cli.py",
+        "tests/test_gtoc12_run_objective.py",
+        "tests/test_gtoc12_fleet_master_objective.py",
+        "tests/test_gtoc12_cluster_objective.py",
+        "tests/test_gtoc12_run_final_verification.py",
+        "tests/test_gtoc12_run_refinement.py",
+        "tests/test_gtoc12_certified_objective.py",
+        "tests/test_gtoc12_gpu_cli.py"
+      ],
+      "return_code": 0,
+      "wall_seconds": 0.04759371699992698
+    }
+  },
+  "sources_unchanged_during_validation": true,
+  "source_sha256": {
+    "src/spacepdhcg/gtoc12/cli.py": "da4206af48d8076ef693aa7fb2f89bdc7cafc1f0601d6bb80504ee290d58431c",
+    "src/spacepdhcg/gtoc12/cooperative.py": "460af7f69811c668cc5cc3443b576013ac30b1b3836d02b1c99fec8b4689a05b",
+    "src/spacepdhcg/gtoc12/constants.py": "02a47133a5d709fe81d1cc28807edcdb790b1325e4c2fb12d046db8c5029a00e",
+    "src/spacepdhcg/gtoc12/verifier.py": "56148828b0c0bed3e52263f54f1ad189019cf250b15008a75d8d5f3ea3b658cd",
+    "src/spacepdhcg/gtoc12/official.py": "bfba9ee22a9819b1f5bf5d225d399dcd85e7a7745143447e25d62a700d5d0412",
+    "src/spacepdhcg/gtoc12/fleet.py": "68506f32ea10c9ef65e10b7aa9830983fa2b6d9ca44f877a775bddcdd05dd9c4",
+    "src/spacepdhcg/gtoc12/pipeline.py": "62dab69643cd644efafe82044f1dc2de5ca77023513b5ddb8f7d2ce2b9330732",
+    "src/spacepdhcg/gtoc12/solution.py": "25ac567dc8fc9af4146adb620bf433ca3e318c98bc0bf0a818b6f9753a289108",
+    "tests/test_gtoc12_run_objective.py": "d4960714feb7875e50ce7d46bd5bb7ae39c388c4842775fb382fa9237ac44390",
+    "tests/test_gtoc12_fleet_master_objective.py": "dba6a7e64c0ed1a42d3cf2d144badb8a25b1405795a8a98fff64da0bd0ee2710",
+    "tests/test_gtoc12_cluster_objective.py": "431e2edc0bb8d506476102b7258ad68b9dba169867fa5d9f77ad6c94acd42ac9",
+    "tests/test_gtoc12_run_final_verification.py": "baaf0b8d2f80d97584c5dc991a6bedc2366e75010623dd953d42539b0f30a76d",
+    "tests/test_gtoc12_run_refinement.py": "09ffb458cfbe354f9ba7f0c7e32093dc2168e5e09b694a8ef9fc321cd1be56a5",
+    "tests/test_gtoc12_certified_objective.py": "4110717b38f76913121a986080a64528e537fc53f4057e70f33691e7383b6119",
+    "tests/test_gtoc12_gpu_cli.py": "b4fd4a08ce5d81ff0f8067578dc41963dc6d7e964cdca829047f01046330e986",
+    "tests/test_gtoc12_verifier.py": "e811f1ce3dd7b1c0e9ef1337fb14cb80e71cf2d3433946ab13c2ceea75415961",
+    "build/performance/objective-verification-v591/validate.py": "e83baf10d7af4c883d7a592f8ea42afec1558d8524e3eb35884b7c53e9da26c9"
+  }
+}
