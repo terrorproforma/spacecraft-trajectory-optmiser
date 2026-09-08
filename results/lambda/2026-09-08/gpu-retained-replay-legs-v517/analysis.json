@@ -1,0 +1,133 @@
+{
+  "baseline": {
+    "seconds": 158.47976946359267,
+    "converged": 205,
+    "priming": 522,
+    "workspaces": 72,
+    "statuses": {
+      "converged": 205,
+      "infeasible": 15,
+      "failed": 5
+    }
+  },
+  "candidate": {
+    "seconds": 146.14201530383434,
+    "converged": 205,
+    "priming": 369,
+    "workspaces": 72,
+    "statuses": {
+      "converged": 205,
+      "failed": 8,
+      "infeasible": 12
+    }
+  },
+  "scope": "One full pass per mode with the same binary; cumulative solver time excludes certification. All trajectory acceptance tolerances are unchanged.",
+  "lost_baseline": [],
+  "max_certified_mass_delta": {
+    "index": 77,
+    "delta_kg": 2.6328052626922727e-08
+  },
+  "less_time_percent": 7.785065691045611,
+  "largest_timing_changes": [
+    {
+      "index": 60,
+      "baseline_seconds": 12.393973804020789,
+      "candidate_seconds": 2.333227908995468,
+      "difference": -10.06074589502532,
+      "baseline_iterations": 32,
+      "candidate_iterations": 16
+    },
+    {
+      "index": 44,
+      "baseline_seconds": 1.9826119019999169,
+      "candidate_seconds": 9.487196457979735,
+      "difference": 7.504584555979818,
+      "baseline_iterations": 12,
+      "candidate_iterations": 29
+    },
+    {
+      "index": 12,
+      "baseline_seconds": 7.24848731799284,
+      "candidate_seconds": 1.3073674790211953,
+      "difference": -5.941119838971645,
+      "baseline_iterations": 28,
+      "candidate_iterations": 14
+    },
+    {
+      "index": 204,
+      "baseline_seconds": 7.402309399971273,
+      "candidate_seconds": 3.6559829500038177,
+      "difference": -3.746326449967455,
+      "baseline_iterations": 44,
+      "candidate_iterations": 42
+    },
+    {
+      "index": 98,
+      "baseline_seconds": 7.515640006982721,
+      "candidate_seconds": 3.8442891009617597,
+      "difference": -3.6713509060209617,
+      "baseline_iterations": 44,
+      "candidate_iterations": 37
+    },
+    {
+      "index": 198,
+      "baseline_seconds": 3.521892710006796,
+      "candidate_seconds": 5.498861736967228,
+      "difference": 1.9769690269604325,
+      "baseline_iterations": 41,
+      "candidate_iterations": 44
+    },
+    {
+      "index": 201,
+      "baseline_seconds": 4.273118851997424,
+      "candidate_seconds": 5.327742394991219,
+      "difference": 1.0546235429937951,
+      "baseline_iterations": 43,
+      "candidate_iterations": 41
+    },
+    {
+      "index": 170,
+      "baseline_seconds": 1.951923227054067,
+      "candidate_seconds": 2.6378531270311214,
+      "difference": 0.6859298999770544,
+      "baseline_iterations": 24,
+      "candidate_iterations": 33
+    },
+    {
+      "index": 126,
+      "baseline_seconds": 1.0079888959880918,
+      "candidate_seconds": 0.4844184700050391,
+      "difference": -0.5235704259830527,
+      "baseline_iterations": 10,
+      "candidate_iterations": 5
+    },
+    {
+      "index": 205,
+      "baseline_seconds": 0.8650938250357285,
+      "candidate_seconds": 0.414969592995476,
+      "difference": -0.45012423204025254,
+      "baseline_iterations": 9,
+      "candidate_iterations": 6
+    }
+  ],
+  "diagnostic_subsets": {
+    "reused_in_both": {
+      "cases": 153,
+      "baseline_seconds": 70.06710299215047,
+      "candidate_seconds": 71.26576621975983,
+      "less_time_percent": -1.710736103565802
+    },
+    "fresh_in_both": {
+      "cases": 72,
+      "baseline_seconds": 88.41266647144221,
+      "candidate_seconds": 74.87624908407452,
+      "less_time_percent": 15.310495574454851
+    },
+    "converged_in_both": {
+      "cases": 205,
+      "baseline_seconds": 50.855612350511365,
+      "candidate_seconds": 49.99319696810562,
+      "less_time_percent": 1.695811617529508
+    }
+  }
+}

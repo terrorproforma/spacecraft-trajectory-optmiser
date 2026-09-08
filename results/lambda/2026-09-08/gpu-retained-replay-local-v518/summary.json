@@ -1,0 +1,510 @@
+{
+  "default_enabled": false,
+  "source_base_commit": "dd9917d12a2e7d3c4b5bab4be2d417cf4f64aa60",
+  "local_campaign": {
+    "scope": "ABBA two observations per mode, same native binary. Process time includes teardown. Exact initial plans and listed logical counts; both final checkers pass. Traces add diagnostic overhead to both modes.",
+    "baseline_process_median": 28.08394420500008,
+    "candidate_process_median": 27.80274993949979,
+    "less_process_time_percent": 1.0012634388093744,
+    "logical_counts": {
+      "completed_branch_requests": 45188558,
+      "completed_element_hops": 22345089,
+      "completed_compact_options": 1131935,
+      "completed_collection_options": 2782091,
+      "completed_collection_queries": 5930,
+      "completed_batches": 5663,
+      "completed_collection_dp_passes": 378,
+      "completed_retime_dp_calls": 293,
+      "completed_retime_driver_calls": 50,
+      "completed_earth_beam_rows": 582
+    },
+    "rows": [
+      {
+        "name": "baseline0",
+        "candidate": false,
+        "process_seconds": 28.682311681999636,
+        "cli_seconds": 27.754988007000065,
+        "score": 548.2546201232999,
+        "option_download_bytes": 9068,
+        "option_upload_bytes": 0,
+        "host_table_read_bytes": 0,
+        "resident_builds": 2267,
+        "return_pruning_queries": 132,
+        "reported_selection_download_bytes": 242480,
+        "phase_seconds": {
+          "setup": 0.16378124500000005,
+          "priming": 5.365149404000001,
+          "graph_build": 0.104819199,
+          "graph_run": 4.5732038899999985,
+          "graph_close": 0.03088562200000001,
+          "download": 0.013353728000000002,
+          "cleanup": 0.063533759
+        },
+        "retained_replays": 0,
+        "solver_calls": 47
+      },
+      {
+        "name": "candidate0",
+        "candidate": true,
+        "process_seconds": 27.67726217999916,
+        "cli_seconds": 26.787587997000628,
+        "score": 548.2546201231,
+        "option_download_bytes": 9068,
+        "option_upload_bytes": 0,
+        "host_table_read_bytes": 0,
+        "resident_builds": 2267,
+        "return_pruning_queries": 132,
+        "reported_selection_download_bytes": 242480,
+        "phase_seconds": {
+          "setup": 0.16351091599999995,
+          "priming": 4.372695238,
+          "graph_build": 0.10698548499999999,
+          "graph_run": 4.6789993559999985,
+          "graph_close": 0.030881884000000002,
+          "download": 0.013442184000000001,
+          "cleanup": 0.06310408399999999
+        },
+        "retained_replays": 30,
+        "solver_calls": 47
+      },
+      {
+        "name": "candidate1",
+        "candidate": true,
+        "process_seconds": 27.92823769900042,
+        "cli_seconds": 27.045830518000002,
+        "score": 548.2546201231996,
+        "option_download_bytes": 9068,
+        "option_upload_bytes": 0,
+        "host_table_read_bytes": 0,
+        "resident_builds": 2267,
+        "return_pruning_queries": 132,
+        "reported_selection_download_bytes": 242480,
+        "phase_seconds": {
+          "setup": 0.16831686499999995,
+          "priming": 4.364079061,
+          "graph_build": 0.10882529199999998,
+          "graph_run": 5.012960620000001,
+          "graph_close": 0.030510038000000007,
+          "download": 0.015191361000000002,
+          "cleanup": 0.068536577
+        },
+        "retained_replays": 30,
+        "solver_calls": 47
+      },
+      {
+        "name": "baseline1",
+        "candidate": false,
+        "process_seconds": 27.485576728000524,
+        "cli_seconds": 26.5646471630007,
+        "score": 548.2546201231996,
+        "option_download_bytes": 9068,
+        "option_upload_bytes": 0,
+        "host_table_read_bytes": 0,
+        "resident_builds": 2267,
+        "return_pruning_queries": 132,
+        "reported_selection_download_bytes": 242480,
+        "phase_seconds": {
+          "setup": 0.16198077199999997,
+          "priming": 5.453978843999999,
+          "graph_build": 0.11017781899999997,
+          "graph_run": 3.2965084709999997,
+          "graph_close": 0.032599077,
+          "download": 0.013415371999999998,
+          "cleanup": 0.064768526
+        },
+        "retained_replays": 0,
+        "solver_calls": 47
+      }
+    ],
+    "telemetry_note": "Adapter transfer fields include cumulative counters from retained audit/conversion objects. Do not treat them as a per-leg byte ledger."
+  },
+  "lambda_campaign": {
+    "scope": "ABBA two observations per mode, same native binary. Process time includes teardown. Exact initial plans and listed logical counts; both final checkers pass. Traces add diagnostic overhead to both modes.",
+    "baseline_process_median": 29.533693987497827,
+    "candidate_process_median": 29.384048071020516,
+    "less_process_time_percent": 0.5066955611467305,
+    "logical_counts": {
+      "completed_branch_requests": 45188558,
+      "completed_element_hops": 22345089,
+      "completed_compact_options": 1131935,
+      "completed_collection_options": 2782091,
+      "completed_collection_queries": 5930,
+      "completed_batches": 5663,
+      "completed_collection_dp_passes": 378,
+      "completed_retime_dp_calls": 293,
+      "completed_retime_driver_calls": 50,
+      "completed_earth_beam_rows": 582
+    },
+    "rows": [
+      {
+        "name": "baseline0",
+        "candidate": false,
+        "process_seconds": 29.812012828013394,
+        "cli_seconds": 28.9810752189951,
+        "score": 548.2546201231,
+        "option_download_bytes": 9068,
+        "option_upload_bytes": 0,
+        "host_table_read_bytes": 0,
+        "resident_builds": 2267,
+        "return_pruning_queries": 132,
+        "reported_selection_download_bytes": 242480,
+        "phase_seconds": {
+          "setup": 0.12883173000000003,
+          "priming": 6.269353299000001,
+          "graph_build": 0.079080079,
+          "graph_run": 5.356179732999999,
+          "graph_close": 0.016474937,
+          "download": 0.0024113850000000003,
+          "cleanup": 0.049808781
+        },
+        "retained_replays": 0,
+        "solver_calls": 47
+      },
+      {
+        "name": "candidate0",
+        "candidate": true,
+        "process_seconds": 28.761303214007057,
+        "cli_seconds": 27.912722494045738,
+        "score": 548.2546201230002,
+        "option_download_bytes": 9068,
+        "option_upload_bytes": 0,
+        "host_table_read_bytes": 0,
+        "resident_builds": 2267,
+        "return_pruning_queries": 132,
+        "reported_selection_download_bytes": 242480,
+        "phase_seconds": {
+          "setup": 0.12934008000000002,
+          "priming": 5.112313708,
+          "graph_build": 0.08031110500000002,
+          "graph_run": 5.475155476,
+          "graph_close": 0.016314193999999997,
+          "download": 0.0024601239999999993,
+          "cleanup": 0.04939968399999999
+        },
+        "retained_replays": 30,
+        "solver_calls": 47
+      },
+      {
+        "name": "candidate1",
+        "candidate": true,
+        "process_seconds": 30.006792928033974,
+        "cli_seconds": 29.174859033024404,
+        "score": 548.2546201229995,
+        "option_download_bytes": 9068,
+        "option_upload_bytes": 0,
+        "host_table_read_bytes": 0,
+        "resident_builds": 2267,
+        "return_pruning_queries": 132,
+        "reported_selection_download_bytes": 242480,
+        "phase_seconds": {
+          "setup": 0.12993506099999994,
+          "priming": 5.161925861999999,
+          "graph_build": 0.08014264899999998,
+          "graph_run": 6.152666343,
+          "graph_close": 0.016512874999999996,
+          "download": 0.0023877620000000003,
+          "cleanup": 0.050111009000000005
+        },
+        "retained_replays": 30,
+        "solver_calls": 47
+      },
+      {
+        "name": "baseline1",
+        "candidate": false,
+        "process_seconds": 29.25537514698226,
+        "cli_seconds": 28.41607847297564,
+        "score": 548.2546201233001,
+        "option_download_bytes": 9068,
+        "option_upload_bytes": 0,
+        "host_table_read_bytes": 0,
+        "resident_builds": 2267,
+        "return_pruning_queries": 132,
+        "reported_selection_download_bytes": 242480,
+        "phase_seconds": {
+          "setup": 0.128649842,
+          "priming": 6.295727178999999,
+          "graph_build": 0.07889689599999998,
+          "graph_run": 4.318105157,
+          "graph_close": 0.016489153,
+          "download": 0.0024463250000000005,
+          "cleanup": 0.050474498000000007
+        },
+        "retained_replays": 0,
+        "solver_calls": 47
+      }
+    ],
+    "telemetry_note": "Adapter transfer fields include cumulative counters from retained audit/conversion objects. Do not treat them as a per-leg byte ledger."
+  },
+  "local_legs": {
+    "baseline": {
+      "seconds": 127.9127154429998,
+      "converged": 205,
+      "priming": 522,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "failed": 5,
+        "infeasible": 15
+      }
+    },
+    "candidate": {
+      "seconds": 128.28622791099497,
+      "converged": 205,
+      "priming": 369,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "failed": 6,
+        "infeasible": 14
+      }
+    },
+    "scope": "One full pass per mode with the same binary; cumulative solver time excludes certification. All trajectory acceptance tolerances are unchanged.",
+    "lost_baseline": [],
+    "max_certified_mass_delta": {
+      "index": 156,
+      "delta_kg": 6.237792149477173e-08
+    },
+    "less_time_percent": -0.2920057374292906,
+    "largest_timing_changes": [
+      {
+        "index": 87,
+        "baseline_seconds": 3.790350956000111,
+        "candidate_seconds": 7.541210082999896,
+        "difference": 3.750859126999785,
+        "baseline_iterations": 44,
+        "candidate_iterations": 41
+      },
+      {
+        "index": 175,
+        "baseline_seconds": 4.4184543960000155,
+        "candidate_seconds": 2.0438842799994745,
+        "difference": -2.374570116000541,
+        "baseline_iterations": 42,
+        "candidate_iterations": 31
+      },
+      {
+        "index": 170,
+        "baseline_seconds": 0.32780215900038456,
+        "candidate_seconds": 1.271611817000121,
+        "difference": 0.9438096579997364,
+        "baseline_iterations": 5,
+        "candidate_iterations": 20
+      },
+      {
+        "index": 213,
+        "baseline_seconds": 3.8486598669996965,
+        "candidate_seconds": 3.0641695530002835,
+        "difference": -0.784490313999413,
+        "baseline_iterations": 44,
+        "candidate_iterations": 42
+      },
+      {
+        "index": 224,
+        "baseline_seconds": 6.178477706000194,
+        "candidate_seconds": 5.495216916999198,
+        "difference": -0.6832607890009967,
+        "baseline_iterations": 27,
+        "candidate_iterations": 25
+      },
+      {
+        "index": 134,
+        "baseline_seconds": 0.773817839000003,
+        "candidate_seconds": 1.296808566999971,
+        "difference": 0.5229907279999679,
+        "baseline_iterations": 13,
+        "candidate_iterations": 21
+      },
+      {
+        "index": 204,
+        "baseline_seconds": 3.0761754579998524,
+        "candidate_seconds": 2.695206682999924,
+        "difference": -0.38096877499992843,
+        "baseline_iterations": 42,
+        "candidate_iterations": 40
+      },
+      {
+        "index": 29,
+        "baseline_seconds": 0.3311890509994555,
+        "candidate_seconds": 0.696237918999941,
+        "difference": 0.3650488680004855,
+        "baseline_iterations": 5,
+        "candidate_iterations": 9
+      },
+      {
+        "index": 60,
+        "baseline_seconds": 10.613818932999493,
+        "candidate_seconds": 10.261923704000765,
+        "difference": -0.35189522899872827,
+        "baseline_iterations": 33,
+        "candidate_iterations": 32
+      },
+      {
+        "index": 195,
+        "baseline_seconds": 3.044986216000325,
+        "candidate_seconds": 2.7099759169996105,
+        "difference": -0.33501029900071444,
+        "baseline_iterations": 43,
+        "candidate_iterations": 40
+      }
+    ],
+    "diagnostic_subsets": {
+      "reused_in_both": {
+        "cases": 153,
+        "baseline_seconds": 54.02988270900187,
+        "candidate_seconds": 57.06655993399454,
+        "less_time_percent": -5.62036612470147
+      },
+      "fresh_in_both": {
+        "cases": 72,
+        "baseline_seconds": 73.88283273399793,
+        "candidate_seconds": 71.21966797700043,
+        "less_time_percent": 3.604578571839223
+      },
+      "converged_in_both": {
+        "cases": 205,
+        "baseline_seconds": 43.16173044900097,
+        "candidate_seconds": 43.87071935199583,
+        "less_time_percent": -1.6426331743871758
+      }
+    }
+  },
+  "lambda_legs": {
+    "baseline": {
+      "seconds": 158.47976946359267,
+      "converged": 205,
+      "priming": 522,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "infeasible": 15,
+        "failed": 5
+      }
+    },
+    "candidate": {
+      "seconds": 146.14201530383434,
+      "converged": 205,
+      "priming": 369,
+      "workspaces": 72,
+      "statuses": {
+        "converged": 205,
+        "failed": 8,
+        "infeasible": 12
+      }
+    },
+    "scope": "One full pass per mode with the same binary; cumulative solver time excludes certification. All trajectory acceptance tolerances are unchanged.",
+    "lost_baseline": [],
+    "max_certified_mass_delta": {
+      "index": 77,
+      "delta_kg": 2.6328052626922727e-08
+    },
+    "less_time_percent": 7.785065691045611,
+    "largest_timing_changes": [
+      {
+        "index": 60,
+        "baseline_seconds": 12.393973804020789,
+        "candidate_seconds": 2.333227908995468,
+        "difference": -10.06074589502532,
+        "baseline_iterations": 32,
+        "candidate_iterations": 16
+      },
+      {
+        "index": 44,
+        "baseline_seconds": 1.9826119019999169,
+        "candidate_seconds": 9.487196457979735,
+        "difference": 7.504584555979818,
+        "baseline_iterations": 12,
+        "candidate_iterations": 29
+      },
+      {
+        "index": 12,
+        "baseline_seconds": 7.24848731799284,
+        "candidate_seconds": 1.3073674790211953,
+        "difference": -5.941119838971645,
+        "baseline_iterations": 28,
+        "candidate_iterations": 14
+      },
+      {
+        "index": 204,
+        "baseline_seconds": 7.402309399971273,
+        "candidate_seconds": 3.6559829500038177,
+        "difference": -3.746326449967455,
+        "baseline_iterations": 44,
+        "candidate_iterations": 42
+      },
+      {
+        "index": 98,
+        "baseline_seconds": 7.515640006982721,
+        "candidate_seconds": 3.8442891009617597,
+        "difference": -3.6713509060209617,
+        "baseline_iterations": 44,
+        "candidate_iterations": 37
+      },
+      {
+        "index": 198,
+        "baseline_seconds": 3.521892710006796,
+        "candidate_seconds": 5.498861736967228,
+        "difference": 1.9769690269604325,
+        "baseline_iterations": 41,
+        "candidate_iterations": 44
+      },
+      {
+        "index": 201,
+        "baseline_seconds": 4.273118851997424,
+        "candidate_seconds": 5.327742394991219,
+        "difference": 1.0546235429937951,
+        "baseline_iterations": 43,
+        "candidate_iterations": 41
+      },
+      {
+        "index": 170,
+        "baseline_seconds": 1.951923227054067,
+        "candidate_seconds": 2.6378531270311214,
+        "difference": 0.6859298999770544,
+        "baseline_iterations": 24,
+        "candidate_iterations": 33
+      },
+      {
+        "index": 126,
+        "baseline_seconds": 1.0079888959880918,
+        "candidate_seconds": 0.4844184700050391,
+        "difference": -0.5235704259830527,
+        "baseline_iterations": 10,
+        "candidate_iterations": 5
+      },
+      {
+        "index": 205,
+        "baseline_seconds": 0.8650938250357285,
+        "candidate_seconds": 0.414969592995476,
+        "difference": -0.45012423204025254,
+        "baseline_iterations": 9,
+        "candidate_iterations": 6
+      }
+    ],
+    "diagnostic_subsets": {
+      "reused_in_both": {
+        "cases": 153,
+        "baseline_seconds": 70.06710299215047,
+        "candidate_seconds": 71.26576621975983,
+        "less_time_percent": -1.710736103565802
+      },
+      "fresh_in_both": {
+        "cases": 72,
+        "baseline_seconds": 88.41266647144221,
+        "candidate_seconds": 74.87624908407452,
+        "less_time_percent": 15.310495574454851
+      },
+      "converged_in_both": {
+        "cases": 205,
+        "baseline_seconds": 50.855612350511365,
+        "candidate_seconds": 49.99319696810562,
+        "less_time_percent": 1.695811617529508
+      }
+    }
+  },
+  "limitations": [
+    "Opt-in only; small complete-campaign differences have overlapping observations.",
+    "Adapter transfer fields include lifetime counters from retained subobjects. They are not per-leg byte totals.",
+    "v511 failed an incorrect byte-counter assertion; v516 failed before solving while reading a report being written. Both are retained.",
+    "All acceptance tolerances are unchanged; this does not establish full GPU control or a new fleet score."
+  ]
+}

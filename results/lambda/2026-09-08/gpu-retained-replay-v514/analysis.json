@@ -1,0 +1,117 @@
+{
+  "scope": "ABBA two observations per mode, same native binary. Process time includes teardown. Exact initial plans and listed logical counts; both final checkers pass. Traces add diagnostic overhead to both modes.",
+  "baseline_process_median": 29.533693987497827,
+  "candidate_process_median": 29.384048071020516,
+  "less_process_time_percent": 0.5066955611467305,
+  "logical_counts": {
+    "completed_branch_requests": 45188558,
+    "completed_element_hops": 22345089,
+    "completed_compact_options": 1131935,
+    "completed_collection_options": 2782091,
+    "completed_collection_queries": 5930,
+    "completed_batches": 5663,
+    "completed_collection_dp_passes": 378,
+    "completed_retime_dp_calls": 293,
+    "completed_retime_driver_calls": 50,
+    "completed_earth_beam_rows": 582
+  },
+  "rows": [
+    {
+      "name": "baseline0",
+      "candidate": false,
+      "process_seconds": 29.812012828013394,
+      "cli_seconds": 28.9810752189951,
+      "score": 548.2546201231,
+      "option_download_bytes": 9068,
+      "option_upload_bytes": 0,
+      "host_table_read_bytes": 0,
+      "resident_builds": 2267,
+      "return_pruning_queries": 132,
+      "reported_selection_download_bytes": 242480,
+      "phase_seconds": {
+        "setup": 0.12883173000000003,
+        "priming": 6.269353299000001,
+        "graph_build": 0.079080079,
+        "graph_run": 5.356179732999999,
+        "graph_close": 0.016474937,
+        "download": 0.0024113850000000003,
+        "cleanup": 0.049808781
+      },
+      "retained_replays": 0,
+      "solver_calls": 47
+    },
+    {
+      "name": "candidate0",
+      "candidate": true,
+      "process_seconds": 28.761303214007057,
+      "cli_seconds": 27.912722494045738,
+      "score": 548.2546201230002,
+      "option_download_bytes": 9068,
+      "option_upload_bytes": 0,
+      "host_table_read_bytes": 0,
+      "resident_builds": 2267,
+      "return_pruning_queries": 132,
+      "reported_selection_download_bytes": 242480,
+      "phase_seconds": {
+        "setup": 0.12934008000000002,
+        "priming": 5.112313708,
+        "graph_build": 0.08031110500000002,
+        "graph_run": 5.475155476,
+        "graph_close": 0.016314193999999997,
+        "download": 0.0024601239999999993,
+        "cleanup": 0.04939968399999999
+      },
+      "retained_replays": 30,
+      "solver_calls": 47
+    },
+    {
+      "name": "candidate1",
+      "candidate": true,
+      "process_seconds": 30.006792928033974,
+      "cli_seconds": 29.174859033024404,
+      "score": 548.2546201229995,
+      "option_download_bytes": 9068,
+      "option_upload_bytes": 0,
+      "host_table_read_bytes": 0,
+      "resident_builds": 2267,
+      "return_pruning_queries": 132,
+      "reported_selection_download_bytes": 242480,
+      "phase_seconds": {
+        "setup": 0.12993506099999994,
+        "priming": 5.161925861999999,
+        "graph_build": 0.08014264899999998,
+        "graph_run": 6.152666343,
+        "graph_close": 0.016512874999999996,
+        "download": 0.0023877620000000003,
+        "cleanup": 0.050111009000000005
+      },
+      "retained_replays": 30,
+      "solver_calls": 47
+    },
+    {
+      "name": "baseline1",
+      "candidate": false,
+      "process_seconds": 29.25537514698226,
+      "cli_seconds": 28.41607847297564,
+      "score": 548.2546201233001,
+      "option_download_bytes": 9068,
+      "option_upload_bytes": 0,
+      "host_table_read_bytes": 0,
+      "resident_builds": 2267,
+      "return_pruning_queries": 132,
+      "reported_selection_download_bytes": 242480,
+      "phase_seconds": {
+        "setup": 0.128649842,
+        "priming": 6.295727178999999,
+        "graph_build": 0.07889689599999998,
+        "graph_run": 4.318105157,
+        "graph_close": 0.016489153,
+        "download": 0.0024463250000000005,
+        "cleanup": 0.050474498000000007
+      },
+      "retained_replays": 0,
+      "solver_calls": 47
+    }
+  ],
+  "telemetry_note": "Adapter transfer fields include cumulative counters from retained audit/conversion objects. Do not treat them as a per-leg byte ledger."
+}

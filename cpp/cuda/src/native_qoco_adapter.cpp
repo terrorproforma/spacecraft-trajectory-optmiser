@@ -422,6 +422,7 @@ struct spacepdhcg_native_qoco {
     bool deferred_active{};
     bool deferred_ready{};
     bool numeric_scale_primed{};
+    bool retained_replay_ready{};
     bool origin_mode{}, origin_applied{};
     cudaStream_t deferred_stream{};
     const QocoReplayStatus* deferred_status{};
@@ -627,8 +628,12 @@ bool solve_with_device_audit(spacepdhcg_native_qoco* w, cudaStream_t stream,
     const char* enabled=std::getenv("SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY");
     if (!enabled || enabled[0]!='1') return prime();
     if (!w->replay || !w->finish_replay || !w->set_device_io) return false;
-    // The first solve, or a newly rebuilt workspace, must prime the vendor graph.
-    if (!w->report.solves) return prime();
+    // Per-leg counters reset when a compatible workspace is retained. Its
+    // already-built vendor graph can consume the newly queued numeric packet.
+    // A genuinely cold/rebuilt workspace still needs synchronous priming.
+    const bool retained=w->retained_replay_ready;
+    w->retained_replay_ready=false;
+    if (!w->report.solves && !retained) return prime();
     for (auto& event : w->replay_events)
         if (!event && cudaEventCreate(&event)!=cudaSuccess) return false;
     if (cudaEventRecord(w->replay_events[0],stream)!=cudaSuccess) return false;
@@ -640,6 +645,8 @@ bool solve_with_device_audit(spacepdhcg_native_qoco* w, cudaStream_t stream,
     const int submitted=updated
         ? w->replay_updated(w->solver,stream,numeric,&output)
         : w->replay(w->solver,stream,&output);
+    if(retained && std::getenv("SPACEPDHCG_TEST_QOCO_NATIVE_REPLAY_TRACE"))
+        std::fprintf(stderr,"RETAINED_REPLAY submitted=%d updated=%d\n",submitted,int(updated));
     if (submitted==2) return prime();
     struct Pending {
         spacepdhcg_native_qoco* w;
@@ -2033,6 +2040,7 @@ spacepdhcg_cuda_status native_qoco_update_solve_impl(
         if (workspace->needs_fresh_solver) {
             workspace->deferred_ready=false;
             workspace->numeric_scale_primed=false;
+            workspace->retained_replay_ready=false;
             // The previous solve failed. QOCO carries its best-iterate tracker and
             // the stall-escalated kkt_dynamic_reg across solves, so a numeric update
             // would not give an independent attempt (observed: 101, 62, then 1
@@ -2438,6 +2446,8 @@ spacepdhcg_cuda_status spacepdhcg_native_qoco_restart_leg(spacepdhcg_native_qoco
     // iteration counters before solving. Do not carry an accepted warm start.
     w->needs_fresh_solver=false;w->refresh_new_leg=true;w->has_accepted=false;
     w->deferred_ready=false;w->numeric_scale_primed=false;w->origin_applied=false;
+    const auto* retained=std::getenv("SPACEPDHCG_TEST_QOCO_RETAINED_REPLAY");
+    w->retained_replay_ready=retained && retained[0]=='1';
     w->queued_numeric_result=nullptr;w->numeric_update_invalid=false;
     w->validation_pending=false;w->device_validation=nullptr;w->validation_flags=0;
     w->report={};w->report.status_code=-1;

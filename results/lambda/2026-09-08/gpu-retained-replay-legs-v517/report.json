@@ -1,0 +1,42 @@
+{
+  "pid": 196217,
+  "complete": true,
+  "stages": [
+    {
+      "name": "baseline",
+      "returncode": 0,
+      "seconds": 186.8217317200033,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_workspace_pool.py',run_name='__main__')",
+        "1",
+        "/home/ubuntu/spacepdhcg-retained-replay-legs-v517/baseline"
+      ]
+    },
+    {
+      "name": "candidate",
+      "returncode": 0,
+      "seconds": 174.15839593298733,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];runpy.run_path('build/performance/replay_workspace_pool.py',run_name='__main__')",
+        "1",
+        "/home/ubuntu/spacepdhcg-retained-replay-legs-v517/candidate"
+      ]
+    }
+  ],
+  "campaigns": [],
+  "stage": "candidate",
+  "source_sha256": {
+    "build/performance/replay_workspace_pool.py": "f393cd0ac4778116a143cc03fe56584accce4dbd6a68ecbe41922f09363cadad",
+    "build/performance/grid-cache-fleet-v403/scvx-calls.json": "09da720e7eca6481e9504ffa02840b5f35b9c2398ed229098c574c885510c846"
+  },
+  "frozen_source_commit": "e82d28a053e50102eb0ae50e9a52f227e42a8a88",
+  "runtime_sha256": {
+    "libspacepdhcg_cuda.so": "1ddc574b18c3ba6dc4ded3faedfcf146cd92d67feba9ddb8db024965e0901d2d",
+    "libqoco.so": "2317f607a403b141cb32a492260c2f30a63a02a94b54f08ff2afdaabd888c45a"
+  },
+  "child_pid": 196670
+}

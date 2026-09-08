@@ -24,6 +24,12 @@ in cubic thrust interpolation; no solver or physics tolerance was relaxed.
 The reverified incumbent remains **12,805.194 weighted kg**.
 [Implementation, verifier diagnosis and reproducible results](docs/GPU_RESIDENT_OPTIONS.md).
 
+An opt-in retained-graph experiment moves the first solve of reused trajectory
+workspaces into GPU replay. All 107 validation tests pass on both GPUs. Complete
+campaign timings overlap; the local 225-leg replay preserves all 205 certified
+legs but is essentially flat in total solver time. The experiment remains
+disabled by default. [Measurements and limitations](docs/GPU_RETAINED_REPLAY.md).
+
 Compatible trajectory legs now reuse GPU QOCO workspaces, sparse conversion and
 vendor graphs. Complete-process one-ship medians fall **5.40% on RTX 5090** and
 **5.03% on H100**, with unchanged verified score. The fixed 225-leg replay takes
