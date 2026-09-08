@@ -22,6 +22,13 @@ paired H100 complete-campaign comparison fell from **43.14 to 38.66 seconds**
 The wider local confirmation retained four ships and 2,088.669 weighted kg in
 247.18 seconds. [Stopping rule, accuracy evidence and reproducible results](docs/GPU_STATIONARY_FAILURE.md).
 
+Return-window and collection-hop search now also computes body ephemerides on
+CUDA, moving another **1.13 million transfer requests per one-ship run** off CPU
+ephemeris calculations. Verified scores and logical search counts are unchanged.
+Two runs per mode show overlapping timings, so this is a GPU-residency improvement
+without an established overall speedup. Option ordering and orchestration remain
+on the CPU. [Implementation, profiles and accuracy evidence](docs/GPU_SEARCH_EPHEMERIDES.md).
+
 A larger H100 campaign generated **32 individual routes** in
 **56 min 59 sec**, evaluating **1.417 billion transfer branches** and **137.35
 million collection options**. Fleet selection returned **15 ships, 105 mined

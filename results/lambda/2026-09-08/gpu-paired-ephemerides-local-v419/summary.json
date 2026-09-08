@@ -1,0 +1,1327 @@
+{
+  "campaigns": [
+    {
+      "name": "baseline0",
+      "candidate": false,
+      "seconds": 33.034232301000884,
+      "score": 548.2546201231999,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316220014,
+          "25792": 85.83162217659992,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.04428385199935292
+      },
+      "independent": {
+        "max_mass_error_kg": 7.048583938740194e-11,
+        "max_position_error_km": 0.6322638026810373,
+        "max_velocity_error_km_s": 1.10622605810538e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316220014,
+          "25792": 85.83162217659992,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ship_limit": 17.924449255075547,
+        "ships": 1,
+        "total_mass_kg": 548.2546201231999,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201231999
+      }
+    },
+    {
+      "name": "candidate0",
+      "candidate": true,
+      "seconds": 31.985972976002813,
+      "score": 548.2546201231999,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 18896189,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778200104,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316229996,
+          "25792": 85.83162217649988,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638610002
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.04486406499927398
+      },
+      "independent": {
+        "max_mass_error_kg": 8.731149137020111e-11,
+        "max_position_error_km": 0.6354628753227627,
+        "max_velocity_error_km_s": 1.1120689313733817e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778200104,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316229996,
+          "25792": 85.83162217649988,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638610002
+        },
+        "ship_limit": 17.924449255075547,
+        "ships": 1,
+        "total_mass_kg": 548.2546201231999,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201231999
+      }
+    },
+    {
+      "name": "candidate1",
+      "candidate": true,
+      "seconds": 31.87187019400153,
+      "score": 548.2546201231003,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 18896189,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778200104,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316220014,
+          "25792": 85.83162217660015,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.04348488499817904
+      },
+      "independent": {
+        "max_mass_error_kg": 8.458300726488233e-11,
+        "max_position_error_km": 0.6302772745001505,
+        "max_velocity_error_km_s": 1.1024212993908495e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778200104,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316220014,
+          "25792": 85.83162217660015,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ship_limit": 17.92444925506841,
+        "ships": 1,
+        "total_mass_kg": 548.2546201231003,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201231003
+      }
+    },
+    {
+      "name": "baseline1",
+      "candidate": false,
+      "seconds": 31.777240339000855,
+      "score": 548.2546201231999,
+      "screening": {
+        "backend": "cuda",
+        "collect_resident_builds": 1122,
+        "collect_resident_dp_builds": 248,
+        "collect_window_download_bytes": 5536,
+        "collect_window_geometry_upload_bytes": 0,
+        "collect_window_queries": 692,
+        "completed_batches": 5663,
+        "completed_branch_requests": 45188558,
+        "completed_collection_dp_passes": 378,
+        "completed_collection_options": 2782091,
+        "completed_collection_queries": 5930,
+        "completed_element_hops": 17763810,
+        "completed_neighbour_queries": 523,
+        "completed_retime_dp_calls": 293,
+        "completed_retime_driver_calls": 50,
+        "completed_retime_forward_calls": 293,
+        "gpu_used": true,
+        "retime_resident_builds": 50,
+        "retime_resident_cells": 13119270,
+        "retime_sweep_samples": 0,
+        "retime_sweep_updates": 0,
+        "retime_table_uploads": 0
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 8,
+        "ok": true,
+        "return_code": 0,
+        "score_data": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316220014,
+          "25792": 85.83162217659992,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ships": 1,
+        "total_mass_kg": 548.255,
+        "wall_seconds": 0.044699178000882966
+      },
+      "independent": {
+        "max_mass_error_kg": 7.73070496506989e-11,
+        "max_position_error_km": 0.6334031115270373,
+        "max_velocity_error_km_s": 1.1078934112096407e-07,
+        "mined_asteroids": 8,
+        "ok": true,
+        "scored_masses": {
+          "4928": 32.85420944559996,
+          "9595": 71.45790554409996,
+          "10664": 13.141683778299921,
+          "16118": 81.72484599590007,
+          "23760": 71.86858316220014,
+          "25792": 85.83162217659992,
+          "53410": 73.5112936344999,
+          "57530": 117.86447638599998
+        },
+        "ship_limit": 17.924449255075547,
+        "ships": 1,
+        "total_mass_kg": 548.2546201231999,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 548.2546201231999
+      }
+    }
+  ],
+  "baseline_median_seconds": 32.40573632000087,
+  "candidate_median_seconds": 31.928921585002172,
+  "speedup": 1.0149336310570123,
+  "less_time_percent": 1.4713899116200801,
+  "additional_gpu_ephemeris_hops": 1132379,
+  "scope": "ABBA, two complete CLI runs per mode; overlapping timing ranges do not establish a significant overall speedup. All logical counts match except the expected increase in GPU-built element hops.",
+  "hardware": "RTX 5090",
+  "source_base_commit": "2bea87387abc488297553413578daab895621aa6",
+  "wider": {
+    "name": "",
+    "candidate": true,
+    "seconds": 230.3898085990004,
+    "score": 2088.6685921552726,
+    "screening": {
+      "backend": "cuda",
+      "collect_resident_builds": 6427,
+      "collect_resident_dp_builds": 1904,
+      "collect_window_download_bytes": 21456,
+      "collect_window_geometry_upload_bytes": 0,
+      "collect_window_queries": 2682,
+      "completed_batches": 29984,
+      "completed_branch_requests": 169753864,
+      "completed_collection_dp_passes": 2900,
+      "completed_collection_options": 18250121,
+      "completed_collection_queries": 38630,
+      "completed_element_hops": 69487972,
+      "completed_neighbour_queries": 3362,
+      "completed_retime_dp_calls": 770,
+      "completed_retime_driver_calls": 139,
+      "completed_retime_forward_calls": 770,
+      "gpu_used": true,
+      "refinement_recovery_download_bytes": 772,
+      "refinement_recovery_order_calls": 1,
+      "refinement_recovery_upload_bytes": 20592,
+      "retime_resident_builds": 139,
+      "retime_resident_cells": 34900662,
+      "retime_sweep_samples": 0,
+      "retime_sweep_updates": 0,
+      "retime_table_uploads": 0
+    },
+    "official": {
+      "message": "Check successfully!",
+      "mined_asteroids": 29,
+      "ok": true,
+      "return_code": 0,
+      "score_data": {
+        "806": 25.73579739899992,
+        "1122": 78.30253251199997,
+        "4928": 32.85420944559996,
+        "7885": 20.123203285399995,
+        "8123": 68.44626967830004,
+        "8846": 102.94318959609996,
+        "9595": 71.4579055442,
+        "9644": 111.704312115,
+        "10664": 13.141683778199877,
+        "11147": 79.67145790550012,
+        "12706": 42.71047227919985,
+        "16118": 81.72484599589984,
+        "16459": 119.780971937,
+        "18336": 82.8199863108,
+        "18870": 120.73921971250002,
+        "20550": 49.96577686520004,
+        "22878": 50.10266940450015,
+        "23760": 71.86858316229996,
+        "25792": 85.83162217649988,
+        "27861": 100.47912388779991,
+        "32153": 57.08418891170004,
+        "36389": 63.928815879599824,
+        "37385": 71.73169062290003,
+        "44653": 102.53251197810005,
+        "49900": 100.47912388780014,
+        "51359": 51.33470225869996,
+        "53410": 73.51129363450013,
+        "57530": 117.8644763860998,
+        "57949": 47.0910335387
+      },
+      "ships": 4,
+      "total_mass_kg": 2095.96,
+      "wall_seconds": 0.06286852999983239
+    },
+    "independent": {
+      "max_mass_error_kg": 8.571987564209849e-11,
+      "max_position_error_km": 1.2750197286984697,
+      "max_velocity_error_km_s": 2.1092745668824625e-07,
+      "mined_asteroids": 29,
+      "ok": true,
+      "scored_masses": {
+        "806": 25.73579739899992,
+        "1122": 78.30253251199997,
+        "4928": 32.85420944559996,
+        "7885": 20.123203285399995,
+        "8123": 68.44626967830004,
+        "8846": 102.94318959609996,
+        "9595": 71.4579055442,
+        "9644": 111.704312115,
+        "10664": 13.141683778199877,
+        "11147": 79.67145790550012,
+        "12706": 42.71047227919985,
+        "16118": 81.72484599589984,
+        "16459": 119.780971937,
+        "18336": 82.8199863108,
+        "18870": 120.73921971250002,
+        "20550": 49.96577686520004,
+        "22878": 50.10266940450015,
+        "23760": 71.86858316229996,
+        "25792": 85.83162217649988,
+        "27861": 100.47912388779991,
+        "32153": 57.08418891170004,
+        "36389": 63.928815879599824,
+        "37385": 71.73169062290003,
+        "44653": 102.53251197810005,
+        "49900": 100.47912388780014,
+        "51359": 51.33470225869996,
+        "53410": 73.51129363450013,
+        "57530": 117.8644763860998,
+        "57949": 47.0910335387
+      },
+      "ship_limit": 16.26651744440211,
+      "ships": 4,
+      "total_mass_kg": 2095.9616700890992,
+      "violations": [],
+      "weighted_score_dynamic_kg": null,
+      "weighted_score_fixed_bonus_kg": 2088.6685921552726
+    }
+  },
+  "default": {
+    "name": "",
+    "candidate": true,
+    "seconds": 36.12192864499957,
+    "score": 548.2546201232003,
+    "screening": {
+      "backend": "cuda",
+      "collect_resident_builds": 1122,
+      "collect_resident_dp_builds": 248,
+      "collect_window_download_bytes": 5536,
+      "collect_window_geometry_upload_bytes": 0,
+      "collect_window_queries": 692,
+      "completed_batches": 5663,
+      "completed_branch_requests": 45188558,
+      "completed_collection_dp_passes": 378,
+      "completed_collection_options": 2782091,
+      "completed_collection_queries": 5930,
+      "completed_element_hops": 18896189,
+      "completed_neighbour_queries": 523,
+      "completed_retime_dp_calls": 293,
+      "completed_retime_driver_calls": 50,
+      "completed_retime_forward_calls": 293,
+      "gpu_used": true,
+      "retime_resident_builds": 50,
+      "retime_resident_cells": 13119270,
+      "retime_sweep_samples": 0,
+      "retime_sweep_updates": 0,
+      "retime_table_uploads": 0
+    },
+    "official": {
+      "message": "Check successfully!",
+      "mined_asteroids": 8,
+      "ok": true,
+      "return_code": 0,
+      "score_data": {
+        "4928": 32.85420944560019,
+        "9595": 71.45790554409996,
+        "10664": 13.141683778200104,
+        "16118": 81.72484599590007,
+        "23760": 71.86858316219991,
+        "25792": 85.83162217660015,
+        "53410": 73.5112936344999,
+        "57530": 117.86447638610002
+      },
+      "ships": 1,
+      "total_mass_kg": 548.255,
+      "wall_seconds": 0.04484795900134486
+    },
+    "independent": {
+      "max_mass_error_kg": 8.026290743146092e-11,
+      "max_position_error_km": 0.6326405027742439,
+      "max_velocity_error_km_s": 1.1065171542779543e-07,
+      "mined_asteroids": 8,
+      "ok": true,
+      "scored_masses": {
+        "4928": 32.85420944560019,
+        "9595": 71.45790554409996,
+        "10664": 13.141683778200104,
+        "16118": 81.72484599590007,
+        "23760": 71.86858316219991,
+        "25792": 85.83162217660015,
+        "53410": 73.5112936344999,
+        "57530": 117.86447638610002
+      },
+      "ship_limit": 17.92444925507558,
+      "ships": 1,
+      "total_mass_kg": 548.2546201232003,
+      "violations": [],
+      "weighted_score_dynamic_kg": null,
+      "weighted_score_fixed_bonus_kg": 548.2546201232003
+    }
+  },
+  "profile_v414": {
+    "seconds": 33.62399553599971,
+    "scope": "Direct nested wall timers. Exclusive time subtracts only instrumented children; native time includes synchronization. Grid trace hashes immutable elements and axes, excluding the subsequent end-date mask.",
+    "timers": {
+      "SCvx.solve_native": {
+        "calls": 47,
+        "inclusive_seconds": 11.18998166700112,
+        "exclusive_seconds": 11.18998166700112,
+        "max_seconds": 0.7575681339985749
+      },
+      "GpuLambert.screen_hops": {
+        "calls": 2794,
+        "inclusive_seconds": 4.043784796020191,
+        "exclusive_seconds": 3.84880572410475,
+        "max_seconds": 0.5042319710009906
+      },
+      "GpuCollectTable.__init__": {
+        "calls": 1122,
+        "inclusive_seconds": 2.8739611300479737,
+        "exclusive_seconds": 2.8731108660722384,
+        "max_seconds": 0.005220486000325764
+      },
+      "RouteSearch._return_options": {
+        "calls": 1341,
+        "inclusive_seconds": 2.4084912119542423,
+        "exclusive_seconds": 1.606974823964265,
+        "max_seconds": 0.006386905999534065
+      },
+      "RouteSearch._first_level": {
+        "calls": 1,
+        "inclusive_seconds": 3.7339878150014556,
+        "exclusive_seconds": 1.3511126149969641,
+        "max_seconds": 3.7339878150014556
+      },
+      "GpuCollection.select": {
+        "calls": 5930,
+        "inclusive_seconds": 1.2512166799933766,
+        "exclusive_seconds": 1.2489152611015015,
+        "max_seconds": 0.0015296670026145875
+      },
+      "RouteSearch._collect_hop_options": {
+        "calls": 4602,
+        "inclusive_seconds": 1.4211444810753164,
+        "exclusive_seconds": 0.8723002980404999,
+        "max_seconds": 0.02600527300091926
+      },
+      "RouteSearch.candidates": {
+        "calls": 523,
+        "inclusive_seconds": 0.41359309399922495,
+        "exclusive_seconds": 0.41359309399922495,
+        "max_seconds": 0.013293416999658803
+      },
+      "RouteSearch._feasible": {
+        "calls": 246229,
+        "inclusive_seconds": 0.4239470166321553,
+        "exclusive_seconds": 0.36158339710891596,
+        "max_seconds": 0.019124880996969296
+      },
+      "GpuCollectDP.solve": {
+        "calls": 378,
+        "inclusive_seconds": 0.2948054359694652,
+        "exclusive_seconds": 0.2946216859818378,
+        "max_seconds": 0.001974285998585401
+      },
+      "RouteSearch._expand": {
+        "calls": 132,
+        "inclusive_seconds": 1.452907675975439,
+        "exclusive_seconds": 0.28565491881454363,
+        "max_seconds": 0.03260399700229755
+      },
+      "GpuCollectDP.__init__": {
+        "calls": 248,
+        "inclusive_seconds": 1.6667036869912408,
+        "exclusive_seconds": 0.23556886195001425,
+        "max_seconds": 0.046632654000859475
+      },
+      "GpuLambert._prepare": {
+        "calls": 3966,
+        "inclusive_seconds": 0.19592489589558681,
+        "exclusive_seconds": 0.19592489589558681,
+        "max_seconds": 0.192312351999135
+      },
+      "RouteSearch.hops_from": {
+        "calls": 1326,
+        "inclusive_seconds": 0.9015117810995434,
+        "exclusive_seconds": 0.18048230210479232,
+        "max_seconds": 0.01435859800039907
+      },
+      "GpuCollectDP.close": {
+        "calls": 248,
+        "inclusive_seconds": 0.11035134800840751,
+        "exclusive_seconds": 0.1101101620006375,
+        "max_seconds": 0.0016134910001710523
+      },
+      "RouteSearch._select": {
+        "calls": 10,
+        "inclusive_seconds": 0.18150338599298266,
+        "exclusive_seconds": 0.09100089615822071,
+        "max_seconds": 0.029311563997907797
+      },
+      "GpuCollectTable.minimum_propellant": {
+        "calls": 692,
+        "inclusive_seconds": 0.07870460403501056,
+        "exclusive_seconds": 0.07870460403501056,
+        "max_seconds": 0.0007611590008309577
+      },
+      "RouteSearch._propellant": {
+        "calls": 57698,
+        "inclusive_seconds": 0.06316286410583416,
+        "exclusive_seconds": 0.06316286410583416,
+        "max_seconds": 0.0001244489976670593
+      },
+      "RouteSearch.limits": {
+        "calls": 246230,
+        "inclusive_seconds": 0.062365262525418075,
+        "exclusive_seconds": 0.062365262525418075,
+        "max_seconds": 0.019081423000898212
+      },
+      "RouteSearch._schedule": {
+        "calls": 1392,
+        "inclusive_seconds": 5.16361818297446,
+        "exclusive_seconds": 0.05584694229401066,
+        "max_seconds": 0.05587105400263681
+      },
+      "RouteSearch._schedule_dp": {
+        "calls": 124,
+        "inclusive_seconds": 2.143376623014774,
+        "exclusive_seconds": 0.046986356064735446,
+        "max_seconds": 0.05959586500102887
+      },
+      "RouteSearch._ordered": {
+        "calls": 10,
+        "inclusive_seconds": 0.041976193995651556,
+        "exclusive_seconds": 0.041976193995651556,
+        "max_seconds": 0.01409732200045255
+      },
+      "RouteSearch._best_collect_hop": {
+        "calls": 4602,
+        "inclusive_seconds": 2.402658559847623,
+        "exclusive_seconds": 0.02756826979384641,
+        "max_seconds": 0.02642521899906569
+      },
+      "CollectPairTable._resident_table": {
+        "calls": 8412,
+        "inclusive_seconds": 2.892144185894722,
+        "exclusive_seconds": 0.018183055846748175,
+        "max_seconds": 0.005227514000580413
+      },
+      "RouteSearch.return_inflation_for": {
+        "calls": 786,
+        "inclusive_seconds": 0.01782638295844663,
+        "exclusive_seconds": 0.01782638295844663,
+        "max_seconds": 0.00010437499804538675
+      },
+      "RouteSearch.run": {
+        "calls": 1,
+        "inclusive_seconds": 14.483763451000414,
+        "exclusive_seconds": 0.014657125033409102,
+        "max_seconds": 14.483763451000414
+      },
+      "GpuCollectTable.close": {
+        "calls": 1122,
+        "inclusive_seconds": 0.014552995922713308,
+        "exclusive_seconds": 0.014552995922713308,
+        "max_seconds": 0.0005674450003425591
+      },
+      "RouteSearch._filter": {
+        "calls": 10,
+        "inclusive_seconds": 0.038544718005141476,
+        "exclusive_seconds": 0.011155847270856611,
+        "max_seconds": 0.02446669200071483
+      },
+      "RouteSearch._cheapest_deploy_hop": {
+        "calls": 748,
+        "inclusive_seconds": 0.20870118903258117,
+        "exclusive_seconds": 0.008798795155598782,
+        "max_seconds": 0.002201770999818109
+      },
+      "CollectPairTable.return_inflation": {
+        "calls": 236,
+        "inclusive_seconds": 0.008133186987834051,
+        "exclusive_seconds": 0.008133186987834051,
+        "max_seconds": 0.00011029000233975239
+      },
+      "RouteSearch._complete": {
+        "calls": 140,
+        "inclusive_seconds": 7.315776482992078,
+        "exclusive_seconds": 0.007357349924859591,
+        "max_seconds": 0.17842730299889809
+      },
+      "RouteSearch.hop_inflation_for": {
+        "calls": 60320,
+        "inclusive_seconds": 0.006199655261298176,
+        "exclusive_seconds": 0.006199655261298176,
+        "max_seconds": 5.65269983781036e-05
+      },
+      "RouteSearch._finish": {
+        "calls": 414,
+        "inclusive_seconds": 0.014007242996740388,
+        "exclusive_seconds": 0.005882619912881637,
+        "max_seconds": 0.00037463000262505375
+      },
+      "RouteSearch._cluster_potential_kg": {
+        "calls": 54126,
+        "inclusive_seconds": 0.005507939920789795,
+        "exclusive_seconds": 0.005507939920789795,
+        "max_seconds": 4.9783997383201495e-05
+      },
+      "CollectPairTable.harvest_window_cost": {
+        "calls": 346,
+        "inclusive_seconds": 1.5473626259408775,
+        "exclusive_seconds": 0.005236930905084591,
+        "max_seconds": 0.007650173000001814
+      },
+      "RouteSearch._price_of": {
+        "calls": 54126,
+        "inclusive_seconds": 0.004473637913179118,
+        "exclusive_seconds": 0.004473637913179118,
+        "max_seconds": 7.325299884541892e-05
+      },
+      "RouteSearch.harvest_window_costs": {
+        "calls": 438,
+        "inclusive_seconds": 1.5515852249627642,
+        "exclusive_seconds": 0.004222599021886708,
+        "max_seconds": 0.011563102998479735
+      },
+      "RouteSearch._plan_from_tour": {
+        "calls": 236,
+        "inclusive_seconds": 0.0231047919660341,
+        "exclusive_seconds": 0.0038473739732580725,
+        "max_seconds": 0.0003083379997406155
+      },
+      "CollectPairTable.index_at_or_after": {
+        "calls": 940,
+        "inclusive_seconds": 0.003348735044710338,
+        "exclusive_seconds": 0.003348735044710338,
+        "max_seconds": 2.403899998171255e-05
+      },
+      "RouteSearch._reserve": {
+        "calls": 24369,
+        "inclusive_seconds": 0.002483294745616149,
+        "exclusive_seconds": 0.002483294745616149,
+        "max_seconds": 8.642000466352329e-06
+      },
+      "GpuCollection._check": {
+        "calls": 5932,
+        "inclusive_seconds": 0.0023011948906059843,
+        "exclusive_seconds": 0.0023011948906059843,
+        "max_seconds": 1.1763000657083467e-05
+      },
+      "RouteSearch._harvest_sum": {
+        "calls": 438,
+        "inclusive_seconds": 1.5535906919976696,
+        "exclusive_seconds": 0.0020054670349054504,
+        "max_seconds": 0.011572171999432612
+      },
+      "RouteSearch._deploy_delta": {
+        "calls": 438,
+        "inclusive_seconds": 0.21239076101846877,
+        "exclusive_seconds": 0.0017357519282086287,
+        "max_seconds": 0.0023200319992611185
+      },
+      "RouteSearch._substitute_once": {
+        "calls": 4,
+        "inclusive_seconds": 2.4368504289996054,
+        "exclusive_seconds": 0.0014075500039325561,
+        "max_seconds": 1.1057207960002415
+      },
+      "RouteSearch.weighted": {
+        "calls": 890,
+        "inclusive_seconds": 0.0011613699862209614,
+        "exclusive_seconds": 0.0011613699862209614,
+        "max_seconds": 7.49950013414491e-05
+      },
+      "RouteSearch._dp_hop_inflation": {
+        "calls": 1039,
+        "inclusive_seconds": 0.0011768930198741145,
+        "exclusive_seconds": 0.0010105290930368938,
+        "max_seconds": 1.0235999070573598e-05
+      },
+      "RouteSearch.__init__": {
+        "calls": 1,
+        "inclusive_seconds": 0.0009461139998165891,
+        "exclusive_seconds": 0.0009461139998165891,
+        "max_seconds": 0.0009461139998165891
+      },
+      "CollectPairTable.return_inflation_at": {
+        "calls": 236,
+        "inclusive_seconds": 0.008994505984446732,
+        "exclusive_seconds": 0.0007633549903403036,
+        "max_seconds": 0.00011906999861821532
+      },
+      "RouteSearch._rebuild_chain": {
+        "calls": 8,
+        "inclusive_seconds": 0.01680301299711573,
+        "exclusive_seconds": 0.0007038899530016351,
+        "max_seconds": 0.0052898879985150415
+      },
+      "RouteSearch.plan_score": {
+        "calls": 890,
+        "inclusive_seconds": 0.0018468720772943925,
+        "exclusive_seconds": 0.0006855020910734311,
+        "max_seconds": 7.616899893037044e-05
+      },
+      "GpuCollectDP.check": {
+        "calls": 874,
+        "inclusive_seconds": 0.0006809299920860212,
+        "exclusive_seconds": 0.0006809299920860212,
+        "max_seconds": 7.020997145446017e-06
+      },
+      "CollectPairTable.return_override": {
+        "calls": 1524,
+        "inclusive_seconds": 0.0005177811253815889,
+        "exclusive_seconds": 0.0005177811253815889,
+        "max_seconds": 2.8860013117082417e-06
+      },
+      "RouteSearch._return_feasible": {
+        "calls": 132,
+        "inclusive_seconds": 0.024905575988668716,
+        "exclusive_seconds": 0.00023111393966246396,
+        "max_seconds": 0.0020959850007784553
+      },
+      "RouteSearch._substitution_pass": {
+        "calls": 1,
+        "inclusive_seconds": 2.4369286759974784,
+        "exclusive_seconds": 7.824699787306599e-05,
+        "max_seconds": 2.4369286759974784
+      },
+      "GpuCollection.__init__": {
+        "calls": 1,
+        "inclusive_seconds": 5.8157002058578655e-05,
+        "exclusive_seconds": 5.8157002058578655e-05,
+        "max_seconds": 5.8157002058578655e-05
+      },
+      "RouteSearch._paid_for": {
+        "calls": 10,
+        "inclusive_seconds": 5.574399619945325e-05,
+        "exclusive_seconds": 5.574399619945325e-05,
+        "max_seconds": 1.4817000192124397e-05
+      },
+      "RouteSearch._chain_masses": {
+        "calls": 10,
+        "inclusive_seconds": 0.00010828800077433698,
+        "exclusive_seconds": 4.287599949748255e-05,
+        "max_seconds": 2.6711997634265572e-05
+      },
+      "GpuCollection.close": {
+        "calls": 2,
+        "inclusive_seconds": 3.4553002478787675e-05,
+        "exclusive_seconds": 3.392400321899913e-05,
+        "max_seconds": 3.3700001949910074e-05
+      },
+      "CollectPairTable.__init__": {
+        "calls": 1,
+        "inclusive_seconds": 1.871000131359324e-05,
+        "exclusive_seconds": 1.871000131359324e-05,
+        "max_seconds": 1.871000131359324e-05
+      },
+      "RouteSearch.tour_neighbours": {
+        "calls": 10,
+        "inclusive_seconds": 1.4463999832514673e-05,
+        "exclusive_seconds": 1.4463999832514673e-05,
+        "max_seconds": 2.406999556114897e-06
+      },
+      "RouteSearch.dear_collect_hops": {
+        "calls": 4,
+        "inclusive_seconds": 1.2638996850000694e-05,
+        "exclusive_seconds": 1.2638996850000694e-05,
+        "max_seconds": 4.062996595166624e-06
+      },
+      "RouteSearch._deploy_departure": {
+        "calls": 10,
+        "inclusive_seconds": 9.494993719272316e-06,
+        "exclusive_seconds": 9.494993719272316e-06,
+        "max_seconds": 1.7559978005010635e-06
+      },
+      "RouteSearch.seeded_mask": {
+        "calls": 1,
+        "inclusive_seconds": 1.0220028343610466e-06,
+        "exclusive_seconds": 1.0220028343610466e-06,
+        "max_seconds": 1.0220028343610466e-06
+      }
+    }
+  },
+  "profile_v419": {
+    "seconds": 36.48263806099931,
+    "scope": "Direct nested wall timers. Exclusive time subtracts only instrumented children; native time includes synchronization. Grid trace hashes immutable elements and axes, excluding the subsequent end-date mask.",
+    "timers": {
+      "SCvx.solve_native": {
+        "calls": 47,
+        "inclusive_seconds": 15.009533570009808,
+        "exclusive_seconds": 15.009533570009808,
+        "max_seconds": 4.928290416999516
+      },
+      "GpuCollectTable.__init__": {
+        "calls": 1122,
+        "inclusive_seconds": 2.8352891929280304,
+        "exclusive_seconds": 2.8344246879169077,
+        "max_seconds": 0.005476825001096586
+      },
+      "GpuLambert.screen_hops": {
+        "calls": 527,
+        "inclusive_seconds": 2.6571654879917332,
+        "exclusive_seconds": 2.46175161701467,
+        "max_seconds": 0.4987089809983445
+      },
+      "RouteSearch._first_level": {
+        "calls": 1,
+        "inclusive_seconds": 3.690607099997578,
+        "exclusive_seconds": 1.3371566440000606,
+        "max_seconds": 3.690607099997578
+      },
+      "GpuLambert.paired_hops": {
+        "calls": 2267,
+        "inclusive_seconds": 1.3261375260663044,
+        "exclusive_seconds": 1.3243763371829118,
+        "max_seconds": 0.0015477320011996198
+      },
+      "RouteSearch._return_options": {
+        "calls": 1341,
+        "inclusive_seconds": 1.9956628190702759,
+        "exclusive_seconds": 1.2119036630683695,
+        "max_seconds": 0.0024130580022756476
+      },
+      "GpuCollection.select": {
+        "calls": 5930,
+        "inclusive_seconds": 1.2056721047338215,
+        "exclusive_seconds": 1.2033656376588624,
+        "max_seconds": 0.004190199997538002
+      },
+      "RouteSearch._collect_hop_options": {
+        "calls": 4602,
+        "inclusive_seconds": 1.193427123285801,
+        "exclusive_seconds": 0.6510487532214029,
+        "max_seconds": 0.024870193999959156
+      },
+      "RouteSearch.candidates": {
+        "calls": 523,
+        "inclusive_seconds": 0.3907741019720561,
+        "exclusive_seconds": 0.3907741019720561,
+        "max_seconds": 0.009464607999689179
+      },
+      "RouteSearch._feasible": {
+        "calls": 246229,
+        "inclusive_seconds": 0.45292033283840283,
+        "exclusive_seconds": 0.3677220644312911,
+        "max_seconds": 0.024990558002173202
+      },
+      "GpuCollectDP.solve": {
+        "calls": 378,
+        "inclusive_seconds": 0.2986891790169466,
+        "exclusive_seconds": 0.29850774401347735,
+        "max_seconds": 0.0070099629992910195
+      },
+      "RouteSearch._expand": {
+        "calls": 132,
+        "inclusive_seconds": 1.4431954749743454,
+        "exclusive_seconds": 0.2692877567606047,
+        "max_seconds": 0.03779802099961671
+      },
+      "GpuCollectDP.__init__": {
+        "calls": 248,
+        "inclusive_seconds": 1.6334877439985576,
+        "exclusive_seconds": 0.22722191317006946,
+        "max_seconds": 0.04655030899812118
+      },
+      "GpuLambert._prepare": {
+        "calls": 3966,
+        "inclusive_seconds": 0.1981388728854654,
+        "exclusive_seconds": 0.1981388728854654,
+        "max_seconds": 0.19484149199706735
+      },
+      "RouteSearch.hops_from": {
+        "calls": 1326,
+        "inclusive_seconds": 0.8724469141234295,
+        "exclusive_seconds": 0.18107128215706325,
+        "max_seconds": 0.010536975001741666
+      },
+      "GpuCollectDP.close": {
+        "calls": 248,
+        "inclusive_seconds": 0.10504372600917122,
+        "exclusive_seconds": 0.10481151400745148,
+        "max_seconds": 0.0015085570012161043
+      },
+      "RouteSearch._select": {
+        "calls": 10,
+        "inclusive_seconds": 0.1895648150020861,
+        "exclusive_seconds": 0.09227097752591362,
+        "max_seconds": 0.0316556159996253
+      },
+      "RouteSearch.limits": {
+        "calls": 246230,
+        "inclusive_seconds": 0.0851997354075138,
+        "exclusive_seconds": 0.0851997354075138,
+        "max_seconds": 0.0249464269982127
+      },
+      "GpuCollectTable.minimum_propellant": {
+        "calls": 692,
+        "inclusive_seconds": 0.07715619800728746,
+        "exclusive_seconds": 0.07715619800728746,
+        "max_seconds": 0.0004067490008310415
+      },
+      "RouteSearch._propellant": {
+        "calls": 57698,
+        "inclusive_seconds": 0.06449210564460373,
+        "exclusive_seconds": 0.06449210564460373,
+        "max_seconds": 0.00024217600002884865
+      },
+      "RouteSearch._schedule": {
+        "calls": 1392,
+        "inclusive_seconds": 4.479185842050356,
+        "exclusive_seconds": 0.05394525226802216,
+        "max_seconds": 0.05046868600038579
+      },
+      "RouteSearch._ordered": {
+        "calls": 10,
+        "inclusive_seconds": 0.05130277900752844,
+        "exclusive_seconds": 0.05130277900752844,
+        "max_seconds": 0.015487881999433739
+      },
+      "RouteSearch._schedule_dp": {
+        "calls": 124,
+        "inclusive_seconds": 2.102358883003035,
+        "exclusive_seconds": 0.041205291912774555,
+        "max_seconds": 0.058710867997433525
+      },
+      "RouteSearch._best_collect_hop": {
+        "calls": 4602,
+        "inclusive_seconds": 2.150023776841408,
+        "exclusive_seconds": 0.027926334805670194,
+        "max_seconds": 0.025340592001157347
+      },
+      "CollectPairTable._resident_table": {
+        "calls": 8412,
+        "inclusive_seconds": 2.8538347058820364,
+        "exclusive_seconds": 0.01854551295400597,
+        "max_seconds": 0.005485694000526564
+      },
+      "RouteSearch.return_inflation_for": {
+        "calls": 786,
+        "inclusive_seconds": 0.01703965792330564,
+        "exclusive_seconds": 0.01703965792330564,
+        "max_seconds": 5.953599975327961e-05
+      },
+      "GpuCollectTable.close": {
+        "calls": 1122,
+        "inclusive_seconds": 0.015499925917538349,
+        "exclusive_seconds": 0.015499925917538349,
+        "max_seconds": 0.0005994669991196133
+      },
+      "RouteSearch.run": {
+        "calls": 1,
+        "inclusive_seconds": 13.692297388999577,
+        "exclusive_seconds": 0.015173888012213865,
+        "max_seconds": 13.692297388999577
+      },
+      "RouteSearch._filter": {
+        "calls": 10,
+        "inclusive_seconds": 0.035982269004307454,
+        "exclusive_seconds": 0.012594274834555108,
+        "max_seconds": 0.01993891399979475
+      },
+      "RouteSearch._cheapest_deploy_hop": {
+        "calls": 748,
+        "inclusive_seconds": 0.20383516195215634,
+        "exclusive_seconds": 0.008755250673857518,
+        "max_seconds": 0.002185230998293264
+      },
+      "CollectPairTable.return_inflation": {
+        "calls": 236,
+        "inclusive_seconds": 0.007834262003598269,
+        "exclusive_seconds": 0.007834262003598269,
+        "max_seconds": 8.288599929073825e-05
+      },
+      "RouteSearch._complete": {
+        "calls": 140,
+        "inclusive_seconds": 6.589794500996504,
+        "exclusive_seconds": 0.006871373941976344,
+        "max_seconds": 0.16428067900051246
+      },
+      "RouteSearch.hop_inflation_for": {
+        "calls": 60320,
+        "inclusive_seconds": 0.0062373937835218385,
+        "exclusive_seconds": 0.0062373937835218385,
+        "max_seconds": 5.514700023923069e-05
+      },
+      "RouteSearch._cluster_potential_kg": {
+        "calls": 54126,
+        "inclusive_seconds": 0.005526973403902957,
+        "exclusive_seconds": 0.005526973403902957,
+        "max_seconds": 3.20229992212262e-05
+      },
+      "RouteSearch._finish": {
+        "calls": 414,
+        "inclusive_seconds": 0.013534107984014554,
+        "exclusive_seconds": 0.005525675958779175,
+        "max_seconds": 0.00016373600010410883
+      },
+      "CollectPairTable.harvest_window_cost": {
+        "calls": 346,
+        "inclusive_seconds": 1.5321682939320453,
+        "exclusive_seconds": 0.005151582874532323,
+        "max_seconds": 0.006413896997401025
+      },
+      "RouteSearch._price_of": {
+        "calls": 54126,
+        "inclusive_seconds": 0.00448181606043363,
+        "exclusive_seconds": 0.00448181606043363,
+        "max_seconds": 3.0100000003585592e-05
+      },
+      "RouteSearch.harvest_window_costs": {
+        "calls": 438,
+        "inclusive_seconds": 1.5362808370555285,
+        "exclusive_seconds": 0.004112543123483192,
+        "max_seconds": 0.01143743899956462
+      },
+      "RouteSearch._plan_from_tour": {
+        "calls": 236,
+        "inclusive_seconds": 0.022537158049090067,
+        "exclusive_seconds": 0.003636051045759814,
+        "max_seconds": 0.00022679800167679787
+      },
+      "CollectPairTable.index_at_or_after": {
+        "calls": 940,
+        "inclusive_seconds": 0.0031868400510575157,
+        "exclusive_seconds": 0.0031868400510575157,
+        "max_seconds": 2.9155002266634256e-05
+      },
+      "RouteSearch._reserve": {
+        "calls": 24369,
+        "inclusive_seconds": 0.0028636591414397117,
+        "exclusive_seconds": 0.0028636591414397117,
+        "max_seconds": 0.00011167299817316234
+      },
+      "GpuCollection._check": {
+        "calls": 5932,
+        "inclusive_seconds": 0.002306442074768711,
+        "exclusive_seconds": 0.002306442074768711,
+        "max_seconds": 6.827300239820033e-05
+      },
+      "RouteSearch._harvest_sum": {
+        "calls": 438,
+        "inclusive_seconds": 1.538141199023812,
+        "exclusive_seconds": 0.0018603619682835415,
+        "max_seconds": 0.011444142000982538
+      },
+      "RouteSearch._deploy_delta": {
+        "calls": 438,
+        "inclusive_seconds": 0.20727303800958907,
+        "exclusive_seconds": 0.001665638068516273,
+        "max_seconds": 0.0022382509996532463
+      },
+      "RouteSearch._substitute_once": {
+        "calls": 4,
+        "inclusive_seconds": 2.345416780997766,
+        "exclusive_seconds": 0.0013568129652412608,
+        "max_seconds": 1.0717961259979347
+      },
+      "RouteSearch.weighted": {
+        "calls": 890,
+        "inclusive_seconds": 0.0011271309995208867,
+        "exclusive_seconds": 0.0011271309995208867,
+        "max_seconds": 5.1489001634763554e-05
+      },
+      "RouteSearch._dp_hop_inflation": {
+        "calls": 1039,
+        "inclusive_seconds": 0.0011447920151113067,
+        "exclusive_seconds": 0.0009746230134624057,
+        "max_seconds": 1.1557000107131898e-05
+      },
+      "RouteSearch.__init__": {
+        "calls": 1,
+        "inclusive_seconds": 0.0008810500003164634,
+        "exclusive_seconds": 0.0008810500003164634,
+        "max_seconds": 0.0008810500003164634
+      },
+      "RouteSearch._rebuild_chain": {
+        "calls": 8,
+        "inclusive_seconds": 0.016447571986645926,
+        "exclusive_seconds": 0.0007168700249167159,
+        "max_seconds": 0.004874163998465519
+      },
+      "CollectPairTable.return_inflation_at": {
+        "calls": 236,
+        "inclusive_seconds": 0.008635442001832416,
+        "exclusive_seconds": 0.0006973839772399515,
+        "max_seconds": 9.043200043379329e-05
+      },
+      "RouteSearch.plan_score": {
+        "calls": 890,
+        "inclusive_seconds": 0.0018035680150205735,
+        "exclusive_seconds": 0.0006764370154996868,
+        "max_seconds": 5.580300057772547e-05
+      },
+      "GpuCollectDP.check": {
+        "calls": 874,
+        "inclusive_seconds": 0.0006436570038204081,
+        "exclusive_seconds": 0.0006436570038204081,
+        "max_seconds": 8.007998985704035e-06
+      },
+      "CollectPairTable.return_override": {
+        "calls": 1524,
+        "inclusive_seconds": 0.0005396699889388401,
+        "exclusive_seconds": 0.0005396699889388401,
+        "max_seconds": 9.018000127980486e-06
+      },
+      "RouteSearch._return_feasible": {
+        "calls": 132,
+        "inclusive_seconds": 0.020524335028312635,
+        "exclusive_seconds": 0.0002341290564800147,
+        "max_seconds": 0.0018547069994383492
+      },
+      "RouteSearch._substitution_pass": {
+        "calls": 1,
+        "inclusive_seconds": 2.345506027002557,
+        "exclusive_seconds": 8.924600479076616e-05,
+        "max_seconds": 2.345506027002557
+      },
+      "RouteSearch._paid_for": {
+        "calls": 10,
+        "inclusive_seconds": 5.669799793395214e-05,
+        "exclusive_seconds": 5.669799793395214e-05,
+        "max_seconds": 1.2212000001454726e-05
+      },
+      "GpuCollection.__init__": {
+        "calls": 1,
+        "inclusive_seconds": 5.493400021805428e-05,
+        "exclusive_seconds": 5.493400021805428e-05,
+        "max_seconds": 5.493400021805428e-05
+      },
+      "RouteSearch._chain_masses": {
+        "calls": 10,
+        "inclusive_seconds": 9.408900223206729e-05,
+        "exclusive_seconds": 4.1020022763404995e-05,
+        "max_seconds": 1.1138999980175868e-05
+      },
+      "GpuCollection.close": {
+        "calls": 2,
+        "inclusive_seconds": 3.448800271144137e-05,
+        "exclusive_seconds": 3.370800186530687e-05,
+        "max_seconds": 3.3683001674944535e-05
+      },
+      "CollectPairTable.__init__": {
+        "calls": 1,
+        "inclusive_seconds": 2.1001997083658352e-05,
+        "exclusive_seconds": 2.1001997083658352e-05,
+        "max_seconds": 2.1001997083658352e-05
+      },
+      "RouteSearch.tour_neighbours": {
+        "calls": 10,
+        "inclusive_seconds": 1.540100493002683e-05,
+        "exclusive_seconds": 1.540100493002683e-05,
+        "max_seconds": 2.5720000849105418e-06
+      },
+      "RouteSearch.dear_collect_hops": {
+        "calls": 4,
+        "inclusive_seconds": 1.2330001482041553e-05,
+        "exclusive_seconds": 1.2330001482041553e-05,
+        "max_seconds": 3.4090007829945534e-06
+      },
+      "RouteSearch._deploy_departure": {
+        "calls": 10,
+        "inclusive_seconds": 1.0138002835446969e-05,
+        "exclusive_seconds": 1.0138002835446969e-05,
+        "max_seconds": 1.6509984561707824e-06
+      },
+      "RouteSearch.seeded_mask": {
+        "calls": 1,
+        "inclusive_seconds": 1.0870026017073542e-06,
+        "exclusive_seconds": 1.0870026017073542e-06,
+        "max_seconds": 1.0870026017073542e-06
+      }
+    }
+  },
+  "default_validation": {
+    "pid": 1663,
+    "complete": true,
+    "stages": [
+      {
+        "name": "pytest",
+        "code": 0,
+        "seconds": 2.172441743998206,
+        "command": [
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_elements.py",
+          "tests/test_gtoc12_gpu_hops.py",
+          "tests/test_gtoc12_search2.py",
+          "-q"
+        ]
+      },
+      {
+        "name": "memcheck",
+        "code": 0,
+        "seconds": 1.6809487440004887,
+        "command": [
+          "/usr/local/cuda-12.8/bin/compute-sanitizer",
+          "--tool",
+          "memcheck",
+          "--error-exitcode",
+          "99",
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_elements.py",
+          "-q"
+        ]
+      },
+      {
+        "name": "synccheck",
+        "code": 0,
+        "seconds": 1.4311502359996666,
+        "command": [
+          "/usr/local/cuda-12.8/bin/compute-sanitizer",
+          "--tool",
+          "synccheck",
+          "--error-exitcode",
+          "99",
+          "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+          "-c",
+          "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+          "tests/test_gtoc12_gpu_elements.py",
+          "-q"
+        ]
+      }
+    ],
+    "core_sha256": "b00ec9efa47ea56215580725c14530e07f71bd64ea7c911a0b15c1270a65d604",
+    "qoco_sha256": "d97e1bc4e332f9d7a8e7623c86729cf4b85649433e52ba788c52004d5328b723",
+    "source_sha256": {
+      "src/spacepdhcg/gtoc12/gpu_lambert.py": "1dac0123df7200957bec79a6b777ac1fae7ced951dc18463c51f9546ca6d12f4",
+      "src/spacepdhcg/gtoc12/lambert.py": "debf874e90c0202213ffc210637b90c91f25746e314a118761a92d6947818758",
+      "src/spacepdhcg/gtoc12/search.py": "4d0266c6611d0ef768f1b37f0f9c004916b7b6314860b2f07286865a575ff476",
+      "tests/test_gtoc12_gpu_elements.py": "d7bac504f72613843ec99524017c7d78d75b824a2a7b0c321ef3905a30a96986"
+    },
+    "stage": "synccheck",
+    "child_pid": 1853
+  }
+}

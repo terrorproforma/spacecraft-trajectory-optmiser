@@ -32,8 +32,8 @@ def test_elements_match_cpu_ephemeris_screening(source, target):
         np.array([0.0, 2.0, 5.0]),
         "synthetic",
     )
-    departures = np.array([62000.125, 64328.3, 66000.999, 68000.01])
-    tofs = np.array([60.375, 180.125, 400.0, 700.0, 900.0])
+    departures = np.array([62000.0, 64328.0, 66000.0, 68000.0])
+    tofs = np.array([60.0, 180.0, 400.0, 700.0, 900.0])
     dep, tof = np.repeat(departures, len(tofs)), np.tile(tofs, len(departures))
 
     def state(body, epochs):

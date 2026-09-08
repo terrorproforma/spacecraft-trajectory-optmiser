@@ -79,7 +79,7 @@ def cuda_leg_table(*args, **kwargs):
 
 def cuda_paired_hops(*args, **kwargs):
     gpu = _GPU_BACKEND.get()
-    enabled = os.environ.get("SPACEPDHCG_TEST_GTOC12_PAIRED_EPHEMERIDES") != "0"
+    enabled = os.environ.get("SPACEPDHCG_TEST_GTOC12_PAIRED_EPHEMERIDES") == "1"
     return gpu.paired_hops(*args, **kwargs) if gpu is not None and enabled else None
 
 
