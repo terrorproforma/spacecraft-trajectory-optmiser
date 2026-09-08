@@ -13,6 +13,17 @@ one mission experiment that sends promising proxy rejections through fixed-cargo
 refinement. Keep their outcomes separate: a faster proxy is not a qualified
 trajectory, and a QOCO-refined fleet gain is not a PDHCG convergence result.
 
+The [v623 warm-transfer experiment](PDHCG_WARM_START_AND_PROJECTION.md)
+tests changed adjacent SCvx inputs with a qualified predecessor iterate.
+All four GPU results remain unqualified at the fixed 10,000-update cap; the
+near-converged exact-L1 case isolates the remaining global-gap failure.
+Separate CPU equality-projection tests on the two cold captures also remain
+unqualified. This is new convergence evidence, not an improvement in verified throughput.
+The separate native mission control also fails to regenerate a known feasible
+departure leg from a cold start, despite a qualified final conic subproblem.
+It stops before the two candidate refinements. Reliable initialization from the
+verified trajectory is now the next mission gate; keep all physical tolerances.
+
 This plan began with an audit of published commit
 `3091c716714c8bdec364d54c5e7357f2b5d85730`. The frozen v622 mission baseline below
 includes the separately published v733 fleet-exchange result at `2ccb93c1`.

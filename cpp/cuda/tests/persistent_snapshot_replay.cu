@@ -2,6 +2,7 @@
 #include "persistent_snapshot.hpp"
 #include "persistent_l1_snapshot.hpp"
 #include "persistent_mass_snapshot.hpp"
+#include "persistent_warm_snapshot.hpp"
 #include "cuda_test_support.hpp"
 
 #include <atomic>
@@ -64,7 +65,7 @@ void audit_json(const s::Quality& q) {
     std::cout<<",\"finite\":"<<(q.finite?"true":"false")<<'}';
 }
 struct Arguments {
-    std::string path,mode="cold",initial_point,halpern="off";
+    std::string path,mode="cold",initial_point,warm_start_source,halpern="off";
     double tolerance{},deadline{},audit_tolerance=1e-9,cone_tolerance=1e-8,l1_weight=1.0;
     std::uint64_t iterations{};
     int repeats=1,execution_blocks=-1,l1_weight_mode=SPACEPDHCG_CUDA_L1_WEIGHT_UNIT;
@@ -106,10 +107,16 @@ Arguments arguments(int argc,char** argv) {
         else if(name=="--halpern") {s::require(value=="off"||value=="plain"||value=="adaptive","unsupported Halpern mode");out.halpern=value;}
         else if(name=="--mode") {s::require(value=="cold"||value=="reuse"||value=="full-retained","unsupported repeat mode");out.mode=value;}
         else if(name=="--initial-point") {s::require(!value.empty(),"empty initial-point path");out.initial_point=value;}
+        else if(name=="--warm-start-source") {s::require(!value.empty(),"empty warm-start source path");out.warm_start_source=value;}
         else throw std::runtime_error("unknown option: "+name);
     }
     s::require(out.validate_only || (out.tolerance>0 && out.iterations>0 && out.deadline>0),"solve requires explicit tolerance, iteration cap and deadline");
-    s::require(out.deadline<=3600,"deadline exceeds one-hour diagnostic limit");return out;
+    s::require(out.deadline<=3600,"deadline exceeds one-hour diagnostic limit");
+    s::require(out.warm_start_source.empty() || (!out.initial_point.empty() && out.common_kkt_stop
+        && !out.fold_singleton_bounds && out.execution_blocks>0 && out.mode=="cold" && out.repeats==1
+        && out.halpern=="off" && !out.mass_eliminate && !out.l1_weight_explicit),
+        "warm-source replay requires a predecessor point, common-KKT, positive blocks, one fresh workspace and no optional weighting, mass elimination or Halpern");
+    return out;
 }
 void api(spacepdhcg_cuda_status status,const char* operation,spacepdhcg_cuda_workspace* workspace=nullptr) {
     if(status==SPACEPDHCG_CUDA_SUCCESS)return;
@@ -219,7 +226,12 @@ int main(int argc,char** argv) try {
     if(args.mass_eliminate)mass_nodes=s::mass::detect(snapshot,canonical,*l1_map);
     const double conversion_seconds=elapsed(prepare);
     const auto initial_begin=Clock::now();std::optional<s::InitialPoint> initial;
-    if(!args.initial_point.empty())initial=s::initial_point(s::file_bytes(args.initial_point,128ULL*1024*1024),snapshot,canonical);
+    std::optional<s::WarmSnapshotPoint> warm;
+    if(!args.warm_start_source.empty()) {
+        const auto predecessor=s::read(s::file_bytes(args.warm_start_source,128ULL*1024*1024));
+        warm=s::warm_snapshot_point(s::file_bytes(args.initial_point,128ULL*1024*1024),predecessor,snapshot,canonical);
+        initial=warm->successor;
+    } else if(!args.initial_point.empty())initial=s::initial_point(s::file_bytes(args.initial_point,128ULL*1024*1024),snapshot,canonical);
     const double initial_validation_seconds=initial?elapsed(initial_begin):0;
     const auto library=args.validate_only?std::string{}:library_path();
     const auto library_sha=args.validate_only?std::string{}:s::sha256(s::file_bytes(library));
@@ -233,6 +245,7 @@ int main(int argc,char** argv) try {
         std::cout<<",\"base_commit\":";json_string(SPACEPDHCG_SOURCE_BASE_COMMIT);
     }
     std::cout<<",\"source_sha256\":";json_string(SPACEPDHCG_SNAPSHOT_SOURCE_SHA256);
+    std::cout<<",\"initial_point_role\":";json_string(warm?"qualified_predecessor_iterate":initial?"qualified_target_point":"none");
     std::cout<<",\"coordinate_system\":\"original\",\"slack_source\":\"reconstructed_h_minus_Gx\",\"shifted\":"<<snapshot.shifted;
     std::cout<<",\"native_objective_coordinates\":";json_string(snapshot.shifted?"translated":"original");metric("objective_offset",snapshot.offset);
     std::cout<<",\"stopping_policy\":";json_string(args.common_kkt_stop?"gpu_common_kkt_original_equations":"native_absolute_natural_residual");
@@ -308,6 +321,18 @@ int main(int argc,char** argv) try {
         std::cout<<",\"library_sha256\":";json_string(library_sha);
     }
     std::cout<<"}\n";
+    if(warm) {
+        std::cout<<"PERSISTENT_REPLAY_WARM_SOURCE {\"predecessor_sha256\":";json_string(warm->predecessor_sha256);
+        std::cout<<",\"predecessor_point_sha256\":";json_string(warm->predecessor.file_sha256);
+        std::cout<<",\"successor_sha256\":";json_string(snapshot.input_sha256);
+        std::cout<<",\"scope\":\"fresh_successor_workspace_with_predecessor_iterate\",\"retained_numeric_update_measured\":false";
+        std::cout<<",\"same_topology\":true,\"same_variable_and_row_meanings_required_from_caller\":true,\"changed_coefficients\":true";
+        std::cout<<",\"original_xyz_bits_preserved\":true,\"successor_slack_source\":\"reconstructed_h_minus_Gx\"";
+        std::cout<<",\"predecessor_audit\":";audit_json(warm->predecessor.supplied_audit);
+        std::cout<<",\"predecessor_qualified\":"<<warm->predecessor.roundtrip_audit.qualified;
+        std::cout<<",\"successor_initial_audit\":";audit_json(initial->reconstructed_audit);
+        std::cout<<",\"successor_initial_qualified\":"<<initial->reconstructed_audit.qualified<<"}\n";
+    }
     if(initial) {
         std::cout<<"PERSISTENT_REPLAY_INITIAL_POINT {\"point_sha256\":";json_string(initial->file_sha256);
         std::cout<<",\"coordinate_system\":\"original\",\"phase\":\"cpu_initial_point_validation\",\"native_residual_measured_in_this_phase\":false,\"strict_reconstruction_is_import_gate\":false";
@@ -387,7 +412,7 @@ int main(int argc,char** argv) try {
             api(spacepdhcg_cuda_workspace_wait(w),"wait for full reset",w);
             const double reset_seconds=elapsed(reset_begin);const auto seed_begin=Clock::now();
             p.primal.upload(initial->primal,p.stream);p.dual.upload(initial->dual,p.stream);
-            api(spacepdhcg_cuda_workspace_warm_start_async(w,SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL,&p.exchange.iterates,p.exchange.consumer_stream),"import qualified primal-dual start",w);
+            api(spacepdhcg_cuda_workspace_warm_start_async(w,SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL,&p.exchange.iterates,p.exchange.consumer_stream),"import validated primal-dual start",w);
             api(spacepdhcg_cuda_workspace_wait(w),"wait for imported start",w);
             seed_seconds=elapsed(seed_begin);
             spacepdhcg_cuda_pointer_snapshot pointers{};

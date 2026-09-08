@@ -1,5 +1,6 @@
 #include "persistent_snapshot.hpp"
 #include "persistent_l1_snapshot.hpp"
+#include "persistent_warm_snapshot.hpp"
 #include "spacepdhcg/cuda/l1_epigraph_arithmetic.hpp"
 #include "spacepdhcg/cuda/common_kkt_arithmetic.hpp"
 #include "spacepdhcg/cuda/halpern_arithmetic.hpp"
@@ -56,6 +57,44 @@ void reject_point(const s::Snapshot& q,const s::Canonical& c,std::string bytes,c
     s::require(rejected,"malformed or unqualified initial point was accepted");
 }
 void checks() {
+    {
+        const auto source=s::read(fixture(false));
+        auto target=source;target.h[0]=.5;target.c[1]=-5;
+        target.input_sha256=s::sha256("changed warm fixture");
+        const s::Vectors optimum{{1,0},{3},{1,1,-1,0},{0,1,1,0}};
+        const auto bytes=point_fixture(source,optimum);
+        const auto warm=s::warm_snapshot_point(bytes,source,target,s::canonical(target));
+        s::require(warm.predecessor.roundtrip_audit.qualified
+            && !warm.successor.reconstructed_audit.qualified,"warm transfer confused source and target qualification");
+        equal(warm.successor.primal,{1,0});equal(warm.successor.dual,{3,1,1,0,-1});
+        equal(warm.successor.reference.z,optimum.z);equal(warm.successor.reference.s,{-.5,1,1,0});
+        s::require(warm.successor.file_sha256==s::sha256(bytes)
+            && warm.predecessor_sha256==source.input_sha256,"warm transfer lost source identities");
+        auto rejects=[](auto operation) {
+            bool rejected=false;try {operation();}catch(const std::exception&) {rejected=true;}
+            s::require(rejected,"invalid warm transfer accepted");
+        };
+        // Neither rebinding the point nor using it without the explicit source
+        // may weaken the existing target qualification gate.
+        rejects([&]{s::initial_point(bytes,target,s::canonical(target));});
+        rejects([&]{s::initial_point(point_fixture(target,optimum),target,s::canonical(target));});
+        rejects([&]{s::warm_snapshot_point(bytes,source,source,s::canonical(source));});
+        rejects([&]{s::warm_snapshot_point(bytes,source,target,s::canonical(target,true));});
+        auto changed=target;changed.G.indices[0]=1;
+        rejects([&]{s::warm_snapshot_point(bytes,source,changed,s::canonical(changed));});
+        changed=target;changed.soc={2,2};
+        rejects([&]{s::warm_snapshot_point(bytes,source,changed,s::canonical(target));});
+        changed=target;changed.shifted=true;
+        rejects([&]{s::warm_snapshot_point(bytes,source,changed,s::canonical(target));});
+        auto bad=optimum;bad.y[0]=-3;
+        rejects([&]{s::warm_snapshot_point(point_fixture(source,bad),source,target,s::canonical(target));});
+        bad=optimum;bad.x[0]=std::numeric_limits<double>::infinity();
+        rejects([&]{s::warm_snapshot_point(point_fixture(source,bad),source,target,s::canonical(target));});
+        // Finite supplied iterates can still overflow the successor's equations.
+        changed=target;changed.G.values[0]=std::numeric_limits<double>::max();
+        changed.h[0]=-std::numeric_limits<double>::max();
+        rejects([&]{s::warm_snapshot_point(bytes,source,changed,s::canonical(changed));});
+    }
     // Exact epigraph elimination and original-QP dual completion. Structural
     // zeros do not couple a column, but every represented nonzero does.
     namespace lp=spacepdhcg::cuda::l1;
