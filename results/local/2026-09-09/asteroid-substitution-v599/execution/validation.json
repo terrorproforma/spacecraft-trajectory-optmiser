@@ -1,0 +1,81 @@
+{
+  "kind": "CPU_only_no_GPU_execution",
+  "passed": true,
+  "checks": [
+    {
+      "name": "pytest",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/test_driver.py",
+        "--junitxml=/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/pytest.xml"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "cpu-audit",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/cpu_audit.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "ruff-check",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/run.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/prepare.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/attach_audit.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/cpu_audit.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/launch.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/test_driver.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/validate.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/finalize.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "ruff-format",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/run.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/prepare.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/attach_audit.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/cpu_audit.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/launch.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/test_driver.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/validate.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/finalize.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "launch-recipe",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/asteroid-substitution-v599/launch.py"
+      ],
+      "returncode": 0
+    }
+  ],
+  "files": {
+    "run.py": "9e668824fc4542da103777313c23694bae49a628cd5c5f266805cb1f537101a0",
+    "prepare.py": "782b8e98881cac2631c7d84f3497a0e546a7b4fc42fdfcf0222172110de04d18",
+    "attach_audit.py": "1cc7aa552062acb638a42cd8462e6da606874b922b2fdd6dd358969d75438dd6",
+    "cpu_audit.py": "8a9e75eaa27c33ce89e7258a4a2173b3aa204a5390f8b98a743f5df09026cef3",
+    "launch.py": "3ddc3883bccc6c33c2059a809bef44c4b0e6b05781756262ca7e2b22d5ae14ad",
+    "test_driver.py": "cfc34b153baef98d0e0593ae40d0413ecd8fe90296510bba9413e73c85f56efc",
+    "validate.py": "032ff95b5230425ba4ac449a1b0c201e68c96a5951c9197b48c98135199df195",
+    "finalize.py": "fa21c5eb0f3b2ca60d043df884c7998c3ba9f23fee899973af5b874d61879a84"
+  }
+}

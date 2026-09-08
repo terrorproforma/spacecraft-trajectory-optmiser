@@ -1,0 +1,25 @@
+{
+  "supervisor_pid": 305,
+  "supervisor_sha256": "e0e3e9cf44044699bec196e11ebd8dd22c700e7f25cd704f513798f078fd4e0a",
+  "ready_manifest_sha256": "bb33c0656f5f60354c263b26eb4b9fc9ec4b9140874016f4175215febf39038c",
+  "attempt": 1,
+  "started_unix": 1788883843.8524592,
+  "launched": true,
+  "lock_available": true,
+  "GPU_processes": {
+    "command": [
+      "/usr/lib/wsl/lib/nvidia-smi",
+      "--query-compute-apps=pid,process_name,used_memory",
+      "--format=csv,noheader"
+    ],
+    "exitcode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "child_pid": 382,
+  "status": "complete",
+  "output": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/output",
+  "launch_sha256": "4b3d1f68d7bad5bf8c600472e0b6758b3923b7b3ec57628711a3d1c7831774a6",
+  "returncode": 0,
+  "finished_unix": 1788883904.084267
+}

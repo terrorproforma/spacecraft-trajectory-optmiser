@@ -1,0 +1,33 @@
+{
+  "complete": false,
+  "scope": "analytic diagnostic adapter checks, no trajectory qualification",
+  "frozen_commit": "cf71faaaecaa01b4d3c8d9f6e1ba37a489cb75a2",
+  "cases": [],
+  "validation": [
+    {
+      "name": "validate-only",
+      "command": [
+        "/home/angus/spacepdhcg-persistent-replay-v603/build/cuda-tests/persistent_snapshot_replay",
+        "/home/angus/spacepdhcg-persistent-replay-v603/fixtures/mixed.txt",
+        "--validate-only"
+      ],
+      "returncode": 0,
+      "seconds": 0.007584307999991324
+    },
+    {
+      "name": "reject-before-cuda",
+      "command": [
+        "/home/angus/spacepdhcg-persistent-replay-v603/build/cuda-tests/persistent_snapshot_replay",
+        "/home/angus/spacepdhcg-persistent-replay-v603/tiny/malformed.txt",
+        "--tolerance",
+        "1e-10",
+        "--iterations",
+        "100000",
+        "--deadline-seconds",
+        "10"
+      ],
+      "returncode": 1,
+      "seconds": 0.007482998999989832
+    }
+  ]
+}

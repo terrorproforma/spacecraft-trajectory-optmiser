@@ -1,0 +1,35 @@
+{
+  "complete": true,
+  "gpu_calls": 0,
+  "command": [
+    "g++",
+    "-std=c++17",
+    "-O2",
+    "-x",
+    "c++",
+    "-I/home/angus/build-qoco-scaled-pool-v540/source/lib/qdldl/include",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/source/qoco_snapshot_replay.cu",
+    "-I/home/angus/build-qoco-scaled-pool-v540/source/include",
+    "-I/home/angus/build-qoco-scaled-pool-v540/source/algebra",
+    "-I/usr/local/cuda-12.8/include",
+    "-L/home/angus/build-qoco-scaled-pool-v540/final",
+    "-L/usr/local/cuda-12.8/lib64",
+    "-Wl,-rpath,/home/angus/build-qoco-scaled-pool-v540/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+    "-lqoco",
+    "-lcudart",
+    "-o",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/qoco_snapshot_replay"
+  ],
+  "returncode": 0,
+  "seconds": 0.6683898229999841,
+  "added_headers": {
+    "qdldl_version.h": "3a00e3624f0ecb533c1b27c030418894ed43c5862d5d90475087e6f1dee7e812",
+    "qdldl_types.h": "12294736f88f8a469fde0a5823a6392fe75ac3c558075d4a92e01dda04a27653",
+    "qdldl.h": "73c582f68201804d8960dbf62e80a3aab0efd445a88f6a7606c3b299063e376c"
+  },
+  "binary": {
+    "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/qoco_snapshot_replay",
+    "bytes": 37744,
+    "sha256": "16691294e69a8b5056d3cd9caa11119708d6dca7c4ffbdac327ba8bdc5346777"
+  }
+}

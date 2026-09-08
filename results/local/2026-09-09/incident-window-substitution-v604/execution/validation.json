@@ -1,0 +1,88 @@
+{
+  "kind": "CPU_only_no_GPU_execution",
+  "passed": true,
+  "checks": [
+    {
+      "name": "pytest",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/test_driver.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/test_incident.py",
+        "--junitxml=/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/pytest.xml"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "cpu-audit",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/cpu_audit.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "ruff-check",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "check",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/run.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/incident.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/adapt_driver.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/prepare_plan.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/cpu_audit.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/launch.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/test_driver.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/test_incident.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/validate.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/finalize.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "ruff-format",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/run.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/incident.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/adapt_driver.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/prepare_plan.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/cpu_audit.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/launch.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/test_driver.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/test_incident.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/validate.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/finalize.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "launch-recipe",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/launch.py"
+      ],
+      "returncode": 0
+    }
+  ],
+  "files": {
+    "run.py": "05be6b3638e3e1209228f74272fcb29815a5aef5a0fadd45ef54362a603bbe66",
+    "incident.py": "9df71bdb91984bd0197400c2c06fcd0023b64d3c0e1bbf589891370424c00e95",
+    "adapt_driver.py": "815ab6d89a422809713afac395733505833509ecd52132ec0e216191e2d675b5",
+    "prepare_plan.py": "733d7aae1135f718276bedf66b64361ac0cda1bcf83799fb9164bf42430543ab",
+    "cpu_audit.py": "f50b1d0c7bcd493e5b63c3335bf1b0606068edc2d5626d62224cefc20dc8d443",
+    "launch.py": "60e6fec8805cc11d940986895a17a1aa81d22edf1bf07d4d1e5fb71317742efe",
+    "test_driver.py": "1398644c7b84d031a5a617e1c85f86ca86aadd4784efbbf6dd99959e3e3bfafa",
+    "test_incident.py": "51d24c434bf0a95291fd510391f7ea89354a238f7a4d0b00a39b5f0d7c082336",
+    "validate.py": "d374643cf008d99fd9258ba2b05bf833238180a9b355a4d17a9f822dbb48f7d7",
+    "finalize.py": "92a15d908fffd6ca38ed4fb6dc5bcea7930c169a9fbb20e5bf8f20d7e0960eb4"
+  }
+}

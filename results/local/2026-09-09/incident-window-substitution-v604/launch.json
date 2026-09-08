@@ -1,0 +1,31 @@
+{
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/run.py",
+    "--execute",
+    "--output",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/output",
+    "--proxy-seconds",
+    "180",
+    "--wall-seconds",
+    "1800",
+    "--max-refinements",
+    "4"
+  ],
+  "cwd": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/incident-window-substitution-v604/source",
+  "environment": {
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-joint-v596/build/cuda/libspacepdhcg_cuda.so",
+    "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-scaled-pool-v540/final/libqoco.so",
+    "SPACEPDHCG_GTOC12_DATA": "/home/angus/worktrees/spacepdhcg-release/benchmarks/gtoc12/data",
+    "SPACEPDHCG_TEST_GTOC12_JOINT_BATCH": "1",
+    "SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION": "1",
+    "LD_LIBRARY_PATH": "/home/angus/build-qoco-scaled-pool-v540/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "PYTHONHASHSEED": "0"
+  },
+  "driver_sha256": "05be6b3638e3e1209228f74272fcb29815a5aef5a0fadd45ef54362a603bbe66",
+  "launched": true,
+  "pid": 382
+}

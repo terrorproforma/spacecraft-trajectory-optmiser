@@ -219,6 +219,35 @@ set_target_properties(
 )
 
 if(BUILD_TESTING)
+    # The importer deliberately has a CPU-only conversion/KKT test. It never
+    # initializes CUDA, even though this target is configured in a CUDA build.
+    add_executable(persistent_snapshot_conversion_test tests/persistent_snapshot_conversion_test.cpp)
+    target_include_directories(persistent_snapshot_conversion_test PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+    target_compile_features(persistent_snapshot_conversion_test PRIVATE cxx_std_20)
+    spacepdhcg_apply_native_options(persistent_snapshot_conversion_test)
+    add_test(NAME persistent_snapshot_conversion_test COMMAND persistent_snapshot_conversion_test)
+    set_tests_properties(persistent_snapshot_conversion_test PROPERTIES TIMEOUT 30)
+
+    add_executable(persistent_snapshot_replay tests/persistent_snapshot_replay.cu)
+    find_package(Threads REQUIRED)
+    target_link_libraries(persistent_snapshot_replay PRIVATE spacepdhcg_cuda Threads::Threads ${CMAKE_DL_LIBS})
+    set_target_properties(persistent_snapshot_replay PROPERTIES CUDA_STANDARD 20
+        CUDA_STANDARD_REQUIRED ON RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/cuda-tests")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        tests/persistent_snapshot.hpp tests/persistent_snapshot_replay.cu tests/cuda_test_support.hpp
+        include/spacepdhcg/cuda/persistent_pdhcg_c_api.h)
+    set(SPACEPDHCG_SNAPSHOT_SOURCE_HASHES "")
+    foreach(snapshot_source tests/persistent_snapshot.hpp tests/persistent_snapshot_replay.cu tests/cuda_test_support.hpp
+            include/spacepdhcg/cuda/persistent_pdhcg_c_api.h)
+        file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/${snapshot_source}" snapshot_hash)
+        string(APPEND SPACEPDHCG_SNAPSHOT_SOURCE_HASHES "${snapshot_source}:${snapshot_hash}\n")
+    endforeach()
+    string(SHA256 SPACEPDHCG_SNAPSHOT_SOURCE_SHA256 "${SPACEPDHCG_SNAPSHOT_SOURCE_HASHES}")
+    target_compile_definitions(persistent_snapshot_replay PRIVATE
+        SPACEPDHCG_SOURCE_COMMIT="${SPACEPDHCG_SOURCE_COMMIT}"
+        SPACEPDHCG_SNAPSHOT_SOURCE_SHA256="${SPACEPDHCG_SNAPSHOT_SOURCE_SHA256}")
+
     file(
         GLOB SPACEPDHCG_CUDA_TEST_SOURCES
         CONFIGURE_DEPENDS

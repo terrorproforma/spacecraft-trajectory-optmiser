@@ -192,6 +192,35 @@ Each proposed method needs a missing capability, a measurable hypothesis and a
 bounded experiment. Published authors' speedups are context, not speedups of our
 code on our hardware. Preserve [upstream attribution](../README.md#original-sources-and-attribution).
 
+## Execution evidence added on 9 September
+
+The prepared v599 substitution experiment has now completed: all 496 cases were
+screened, with 2,778 total joint rows and 12 retimings. No candidate qualified for
+physical refinement, so the verified incumbent is unchanged. CPU replay matched
+all 1,488 initial GPU outcomes and located authority failures on changed legs.
+The follow-up ranks all four incident-leg windows under equal retiming budgets.
+[Measured work and negative evidence](../results/local/2026-09-09/asteroid-substitution-v599/README.md).
+
+That controlled v604 follow-up also completed: 12,400 shared initial samples,
+12 retimings per arm and 14,940 total joint rows. The new shortlist yielded three
+feasible retimed plans versus two for the historical control; neither arm found
+an objective-eligible plan. No full refinement was attempted and the verified
+fleet score remains unchanged. A slight improvement in this small feasibility
+sample is not a performance or score win. Audit proxy false negatives with a
+bounded low-thrust truth set before committing to larger searches of the same
+neighborhood. [Matched-arm search evidence](../results/local/2026-09-09/incident-window-substitution-v604/README.md).
+
+The persistent snapshot importer now passes analytic GPU checks and directly
+replays two actual GTOC12 captures. The generic scalar-inequality representation
+does not qualify either within 100,000 iterations; QOCO qualifies five of six
+reference repeats under the common external gate. This establishes a concrete
+convergence investigation, not a solver advantage. The optional exact
+variable-bound folding experiment has also failed to qualify either capture and
+worsened their primal residuals; it remains off by default. Seven corrected
+analytic solves pass and generic controls reproduce the original baseline.
+The next diagnostic separates known-solution mapping/termination checks from
+cold-start convergence tuning. [Replay evidence and limitations](GPU_PERSISTENT_CAPTURE_REPLAY.md).
+
 ## Reporting after each tranche
 
 Publish the measured outcome, failed cases, exact source/binary/input identities,

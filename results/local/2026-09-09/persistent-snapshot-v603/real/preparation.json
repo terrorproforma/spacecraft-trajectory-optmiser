@@ -1,0 +1,168 @@
+{
+  "complete": false,
+  "gpu_calls": 0,
+  "qoco": {
+    "path": "/home/angus/build-qoco-scaled-pool-v540/final/libqoco.so",
+    "bytes": 4515888,
+    "sha256": "0cc27a1d8bde1edd74f7ef00e04ec64c2d6c0f8fe526a1d94b04d509a74b3315"
+  },
+  "inputs": [
+    {
+      "label": "conditioning",
+      "file": {
+        "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/inputs/conditioning.txt",
+        "bytes": 682469,
+        "sha256": "1eb1b5a3979c5e86522337dfa94f264e354993163ed44129eff361371e3b49cf"
+      },
+      "dimensions": {
+        "n": 5261,
+        "p": 1487,
+        "m": 9264,
+        "l": 8424,
+        "shift": 0
+      },
+      "soc_count": 210,
+      "quadratic_structural_nonzeros": 1263,
+      "quadratic_numerical_nonzeros": 0
+    },
+    {
+      "label": "difficult",
+      "file": {
+        "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/inputs/difficult.txt",
+        "bytes": 756963,
+        "sha256": "14fdc84e9b654df4ac16db71f0bce4fccfa62577f9620ae622ad2196e2f17080"
+      },
+      "dimensions": {
+        "n": 5839,
+        "p": 1648,
+        "m": 10280,
+        "l": 9344,
+        "shift": 0
+      },
+      "soc_count": 234,
+      "quadratic_structural_nonzeros": 1401,
+      "quadratic_numerical_nonzeros": 0
+    }
+  ],
+  "source": {
+    "audit_persistent_snapshot.py": {
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/source/audit_persistent_snapshot.py",
+      "bytes": 11208,
+      "sha256": "0d944f768ad9c089499cc6e95cd1313677e153f650eced2c7d84b9815c00c7ff"
+    },
+    "prepare_persistent_comparison_v602.py": {
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/source/prepare_persistent_comparison_v602.py",
+      "bytes": 3648,
+      "sha256": "33462f64b34db2f0dd744c93e2e42d28244879314712f15264dfecc0ef2cf21c"
+    },
+    "qoco_snapshot_replay.cu": {
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/source/qoco_snapshot_replay.cu",
+      "bytes": 7220,
+      "sha256": "b24ca9fea93886725caafc4a4c5bb834326ea2d2c94c9d016c6136f632de70fd"
+    },
+    "test_persistent_snapshot_audit.py": {
+      "path": "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/source/test_persistent_snapshot_audit.py",
+      "bytes": 6752,
+      "sha256": "b39c682aabd7f0852d5a8c524dd09d70980b5f21eb3dc9331e7dafec3735172f"
+    }
+  },
+  "qoco_headers": {
+    "cone.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/cone.h",
+      "bytes": 5007,
+      "sha256": "5d20ae15124f6bd86ccafb46b8db1080f23a81df51130f560a367f3a3961c705"
+    },
+    "qoco_api.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/qoco_api.h",
+      "bytes": 4552,
+      "sha256": "e4d4b6216fdf56c6fc38ed4c5fda566e65cd7583bb2860e64eb1d516ba5f6085"
+    },
+    "qoco_linalg.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/qoco_linalg.h",
+      "bytes": 9982,
+      "sha256": "ff3c8a03f7993eb4f4ff8acc3911a90cd5a49627742d355e81103068c57af48f"
+    },
+    "definitions.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/definitions.h",
+      "bytes": 2505,
+      "sha256": "c64d0546afdcf5bcec1734bd30c8673afec649317b17eeefd21b78cce19e0d8e"
+    },
+    "timer.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/timer.h",
+      "bytes": 1357,
+      "sha256": "91a9e4efc285315a32d23715020062878921957a674335612407ec6444cfbea0"
+    },
+    "qoco.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/qoco.h",
+      "bytes": 534,
+      "sha256": "d7c9ea9bfa4f91ddf082b85a995bffe8553c33bedb0a68a78c7e39be6feb0cc2"
+    },
+    "qoco_utils.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/qoco_utils.h",
+      "bytes": 3253,
+      "sha256": "29b885feb7991544abc8a1aa9848389a82b12572e34d2b7c5ea19ab5332a5025"
+    },
+    "input_validation.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/input_validation.h",
+      "bytes": 1597,
+      "sha256": "d0d763250b38c1afeae09a89cf4eb8113840a0e06f9509623d69f36b87241388"
+    },
+    "equilibration.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/equilibration.h",
+      "bytes": 1280,
+      "sha256": "e036ad7946b842abb61d4e1e95b482cede482056a81056358cc41654ef077c34"
+    },
+    "qoco_status.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/qoco_status.h",
+      "bytes": 399,
+      "sha256": "14dd9dac70e078ef14ce5604ce7a0188781336d16fd6925cd21fb55292643a82"
+    },
+    "common_linalg.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/common_linalg.h",
+      "bytes": 3751,
+      "sha256": "42fdc4ad64e09a9f42f4d84a30fec0a7df0a664e13cc2ddcc432d2f3f4de2a53"
+    },
+    "kkt.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/kkt.h",
+      "bytes": 5536,
+      "sha256": "d31fde487ec1395891fee862ddfe8b81305a75abe6ce3323730515fe4c707fab"
+    },
+    "qoco_config.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/qoco_config.h",
+      "bytes": 365,
+      "sha256": "1b1993a1af4667749da3181b8ff35fcc51a9196954f7ada3eb7842d263d5e3d7"
+    },
+    "enums.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/enums.h",
+      "bytes": 869,
+      "sha256": "795f63092b32a997bf0323fd6e2076417b974f18d692f8686e27c8ea130d3777"
+    },
+    "structs.h": {
+      "path": "/home/angus/build-qoco-scaled-pool-v540/source/include/structs.h",
+      "bytes": 9699,
+      "sha256": "701abfcaee9d2a45b668c79e9bced38b0c862cea44fb1b0071dba837f3ac5eee"
+    }
+  },
+  "qoco_build": {
+    "command": [
+      "g++",
+      "-std=c++17",
+      "-O2",
+      "-x",
+      "c++",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/source/qoco_snapshot_replay.cu",
+      "-I/home/angus/build-qoco-scaled-pool-v540/source/include",
+      "-I/home/angus/build-qoco-scaled-pool-v540/source/algebra",
+      "-I/usr/local/cuda-12.8/include",
+      "-L/home/angus/build-qoco-scaled-pool-v540/final",
+      "-L/usr/local/cuda-12.8/lib64",
+      "-Wl,-rpath,/home/angus/build-qoco-scaled-pool-v540/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "-lqoco",
+      "-lcudart",
+      "-o",
+      "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/persistent-replay-20260909/qoco_snapshot_replay"
+    ],
+    "returncode": 1,
+    "seconds": 0.11678201700001978
+  }
+}

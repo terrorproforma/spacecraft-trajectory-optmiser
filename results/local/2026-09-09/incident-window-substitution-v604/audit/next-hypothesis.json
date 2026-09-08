@@ -1,0 +1,174 @@
+{
+  "hypothesis": "The calibrated propellant proxy may reject cargo-preserving fixed-epoch replacements that low-thrust refinement can certify.",
+  "status": "recommended_only_not_GPU_executed",
+  "maximum_whole_route_refinements": 4,
+  "positive_controls": [
+    "original_v595_ship_02",
+    "original_v595_ship_07"
+  ],
+  "candidate_probes": [
+    {
+      "case": "ship_02_replace_31302_with_2181",
+      "mode": "deploy_-30_collect_-30",
+      "failure": "mass_below_dry_plus_collected",
+      "scope": "unexecuted_truth_set_recommendation_not_certified",
+      "ranking_estimate": {
+        "scope": "uncertified_ranking_estimates_only",
+        "complete": true,
+        "incident_legs": [
+          {
+            "leg": 4,
+            "from": 665,
+            "to": 2181,
+            "departure": 65568.0,
+            "arrival": 65783.0,
+            "tof_days": 215.0,
+            "lambert_km_s": 2.9853435001710142,
+            "reference_mass_kg": 1999.3803382452163,
+            "authority_ratio_estimate": 0.53553304417439,
+            "unchanged_authority_limit": 0.55,
+            "authority_normalized_estimate": 0.9736964439534362
+          },
+          {
+            "leg": 5,
+            "from": 2181,
+            "to": 41270,
+            "departure": 65783.0,
+            "arrival": 65943.0,
+            "tof_days": 160.0,
+            "lambert_km_s": 2.5547244467358787,
+            "reference_mass_kg": 1804.2211354772908,
+            "authority_ratio_estimate": 0.5557108220150222,
+            "unchanged_authority_limit": 0.55,
+            "authority_normalized_estimate": 1.0103833127545858
+          },
+          {
+            "leg": 9,
+            "from": 41270,
+            "to": 2181,
+            "departure": 68048.0,
+            "arrival": 68258.0,
+            "tof_days": 210.0,
+            "lambert_km_s": 4.045790514200832,
+            "reference_mass_kg": 1356.5118705040043,
+            "authority_ratio_estimate": 0.5041301861116556,
+            "unchanged_authority_limit": 0.55,
+            "authority_normalized_estimate": 0.9166003383848284
+          },
+          {
+            "leg": 10,
+            "from": 2181,
+            "to": 38331,
+            "departure": 68258.0,
+            "arrival": 68513.0,
+            "tof_days": 255.0,
+            "lambert_km_s": 3.614903096196178,
+            "reference_mass_kg": 1330.1341833071974,
+            "authority_ratio_estimate": 0.36373654817186846,
+            "unchanged_authority_limit": 0.55,
+            "authority_normalized_estimate": 0.6613391784943062
+          }
+        ],
+        "worst_incident_authority_normalized_estimate": 1.0103833127545858,
+        "mass_projection": {
+          "complete": true,
+          "propellant_kg": 2328.881648730482,
+          "propellant_capacity_kg": 2180.0,
+          "propellant_utilization": 1.0682943342800377,
+          "spare_kg": -148.8816487304823
+        },
+        "resource_bottleneck_estimate": 1.0682943342800377,
+        "near_authority_threshold_estimate": true,
+        "mining_raw_kg_estimate": 632.2518822724162,
+        "mining_weighted_kg_estimate": 523.3696807449214,
+        "mining_weighted_gain_kg_estimate": 6.236202514543038,
+        "fleet_raw_shortfall_kg_estimate": 0.0
+      }
+    },
+    {
+      "case": "ship_07_replace_15206_with_3150",
+      "mode": "deploy_-30_collect_+15",
+      "failure": "mass_below_dry_plus_collected",
+      "scope": "unexecuted_truth_set_recommendation_not_certified",
+      "ranking_estimate": {
+        "scope": "uncertified_ranking_estimates_only",
+        "complete": true,
+        "incident_legs": [
+          {
+            "leg": 2,
+            "from": 59653,
+            "to": 3150,
+            "departure": 65120.0,
+            "arrival": 65425.0,
+            "tof_days": 305.0,
+            "lambert_km_s": 3.575987014890047,
+            "reference_mass_kg": 2406.7079001948614,
+            "authority_ratio_estimate": 0.544320241330836,
+            "unchanged_authority_limit": 0.55,
+            "authority_normalized_estimate": 0.9896731660560654
+          },
+          {
+            "leg": 3,
+            "from": 3150,
+            "to": 15785,
+            "departure": 65425.0,
+            "arrival": 65685.0,
+            "tof_days": 260.0,
+            "lambert_km_s": 2.810194647431051,
+            "reference_mass_kg": 2178.2996015543995,
+            "authority_ratio_estimate": 0.45416710297879315,
+            "unchanged_authority_limit": 0.55,
+            "authority_normalized_estimate": 0.8257583690523511
+          },
+          {
+            "leg": 10,
+            "from": 16048,
+            "to": 3150,
+            "departure": 68353.0,
+            "arrival": 68538.0,
+            "tof_days": 185.0,
+            "lambert_km_s": 2.9824988404248813,
+            "reference_mass_kg": 1313.7524249736712,
+            "authority_ratio_estimate": 0.4085611741000741,
+            "unchanged_authority_limit": 0.55,
+            "authority_normalized_estimate": 0.742838498363771
+          },
+          {
+            "leg": 11,
+            "from": 3150,
+            "to": 51006,
+            "departure": 68538.0,
+            "arrival": 68641.0,
+            "tof_days": 103.0,
+            "lambert_km_s": 2.178031194735201,
+            "reference_mass_kg": 1332.1940631543287,
+            "authority_ratio_estimate": 0.5434121844269081,
+            "unchanged_authority_limit": 0.55,
+            "authority_normalized_estimate": 0.9880221535034691
+          }
+        ],
+        "worst_incident_authority_normalized_estimate": 0.9896731660560654,
+        "mass_projection": {
+          "complete": true,
+          "propellant_kg": 2333.1129656058374,
+          "propellant_capacity_kg": 2180.0,
+          "propellant_utilization": 1.0702353053237785,
+          "spare_kg": -153.11296560583708
+        },
+        "resource_bottleneck_estimate": 1.0702353053237785,
+        "near_authority_threshold_estimate": false,
+        "mining_raw_kg_estimate": 615.6605065023956,
+        "mining_weighted_kg_estimate": 532.5446533114635,
+        "mining_weighted_gain_kg_estimate": 9.908764746603651,
+        "fleet_raw_shortfall_kg_estimate": 0.0
+      }
+    }
+  ],
+  "protocol": [
+    "Reproduce each original route through the same pinned native SCvx settings first; a control failure invalidates inference about the proxy.",
+    "Probe the two saved schedules at their score-preserving mined quantities, retaining every native solve and failure; do not retime them into lower-cargo routes first.",
+    "Compare certified propellant/cargo against the recorded projection; a failed refinement is an unresolved numerical/feasibility result, not a proof of impossibility.",
+    "Only a fully certified route installed in the original fleet and accepted by both full-fleet checkers can be promoted; weighted improvement and raw ship-count feasibility remain mandatory.",
+    "This two-probe set can detect a false negative or support a local calibration diagnosis. It cannot establish the population false-negative rate."
+  ]
+}

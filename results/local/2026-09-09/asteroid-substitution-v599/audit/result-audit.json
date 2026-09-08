@@ -1,0 +1,113 @@
+{
+  "kind": "saved_result_inventory_score_counts_and_CPU_replay_audit",
+  "passed": true,
+  "additional_GPU_calls": 0,
+  "additional_physics_refinements": 0,
+  "driver_sha256": "9e668824fc4542da103777313c23694bae49a628cd5c5f266805cb1f537101a0",
+  "source_commit": "3091c716714c8bdec364d54c5e7357f2b5d85730",
+  "report_sha256": "0f8e3d2078ad001c446ca80491cfd506bbcb261d7261a21e47e583370cee29d2",
+  "ready_manifest_sha256": "55b5ffaf895376e62889e6d3b9c94fa61d5fa7974c27afeab9484090655b1120",
+  "scored_objective": "fixed_bonus_weighted_returned_mass_kg",
+  "retained_raw_kg": 14051.854893908598,
+  "retained_weighted_kg": 12810.135953048577,
+  "both_stored_checkers_pass": true,
+  "promotions": 0,
+  "full_refinements": 0,
+  "cases": 496,
+  "initial_samples": 1488,
+  "initial_failure_counts": {
+    "leg_authority": 1487,
+    "mass_below_dry_plus_collected": 1
+  },
+  "retime_calls": 12,
+  "feasible_retime_plans": 2,
+  "polished_plans": 2,
+  "joint_rows_reconciled": 2778,
+  "joint_batches_reconciled": 506,
+  "proxy_checks": [
+    {
+      "case": "ship_02_replace_665_with_40259",
+      "origin": "retimed",
+      "raw_kg": 526.0780287474332,
+      "weighted_kg": 446.0556617568909,
+      "raw_gain_kg": -106.17385352476629,
+      "weighted_gain_kg": -71.07781647348747,
+      "eligible": false,
+      "path": "output/proxies/ship_02_replace_665_with_40259_retimed.json",
+      "sha256": "c95bebe1681191df6e7cd7a81d5fff61418832d4b97881a7485e9dfda66f95ad"
+    },
+    {
+      "case": "ship_07_replace_51006_with_38256",
+      "origin": "retimed",
+      "raw_kg": 538.8090349075975,
+      "weighted_kg": 465.84218357037344,
+      "raw_gain_kg": -75.61943874050269,
+      "weighted_gain_kg": -56.79370499448646,
+      "eligible": false,
+      "path": "output/proxies/ship_07_replace_51006_with_38256_retimed.json",
+      "sha256": "53e17cb26b4d37ce17056653e69cc56398033c3f222760641eca9872b24c702e"
+    },
+    {
+      "case": "ship_07_replace_51006_with_38256",
+      "origin": "joint",
+      "raw_kg": 541.4373716632443,
+      "weighted_kg": 468.15911312100786,
+      "raw_gain_kg": -72.99110198485585,
+      "weighted_gain_kg": -54.476775443852034,
+      "eligible": false,
+      "path": "output/proxies/ship_07_replace_51006_with_38256_joint.json",
+      "sha256": "e13ac4318c4f9bdaf9dd70c9f44e2cddd29dae0842425fde83f6649ee480793c"
+    },
+    {
+      "case": "ship_02_replace_665_with_40259",
+      "origin": "joint",
+      "raw_kg": 530.8966461327858,
+      "weighted_kg": 450.1348134887607,
+      "raw_gain_kg": -101.3552361394137,
+      "weighted_gain_kg": -66.99866474161769,
+      "eligible": false,
+      "path": "output/proxies/ship_02_replace_665_with_40259_joint.json",
+      "sha256": "976407c170f2da3c49f808a15a05fced481566cc86de7ab695a3f59cf2f6622c"
+    }
+  ],
+  "authority_replay": {
+    "originals_pass_identical_proxy_settings": true,
+    "all_CPU_GPU_sample_outcomes_agree": true,
+    "changed_incident_leg_failures": 1487,
+    "unchanged_leg_failures": 0,
+    "empirical_ratio_limit": 0.55,
+    "first_failure_ratio_min_median_max": [
+      0.552387553286487,
+      1.5553005513564895,
+      11.89898907895986
+    ],
+    "first_failure_ratios_at_most_one": 419,
+    "physical_feasibility_of_rejected_samples_established": false
+  },
+  "telemetry": {
+    "backend": "cuda",
+    "completed_batches": 2425,
+    "completed_branch_requests": 6430118,
+    "gpu_used": true,
+    "completed_neighbour_queries": 24,
+    "joint_preflight_download_bytes": 177792,
+    "completed_element_hops": 3215059,
+    "completed_joint_batches": 506,
+    "completed_joint_evaluations": 2778,
+    "joint_result_download_bytes": 920368,
+    "completed_retime_dp_calls": 93,
+    "completed_retime_forward_calls": 93,
+    "completed_retime_driver_calls": 12,
+    "retime_table_uploads": 0,
+    "retime_resident_builds": 12,
+    "retime_resident_cells": 3210552,
+    "retime_sweep_updates": 0,
+    "retime_sweep_samples": 0
+  },
+  "timing": {
+    "campaign_seconds": 23.40957923299993,
+    "baseline_verification_seconds": 21.1874831130001,
+    "fixed_screen_seconds": 1.4021237790000214,
+    "search_seconds": 2.0444823390000693
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "scope": "original-equation conic KKT audit; no nonlinear or PSD certification",
+  "snapshot_sha256": "4d012ffb629c233f1902b7bd2d794365a1098d740dd54289f76d09823618c248",
+  "log_sha256": "7277783d43024be78f627d2adf6d65b78f57e385373409bee72f15c278d38612",
+  "auditor_sha256": "0d944f768ad9c089499cc6e95cd1313677e153f650eced2c7d84b9815c00c7ff",
+  "longdouble_mantissa_bits": 63,
+  "numeric_input": "FP64 parsing and origin reconstruction, then long-double products",
+  "gate": "relative primal/dual/gap and max block complementarity <=1e-9; cones <=1e-8",
+  "gate_note": "Blockwise check prevents cancellation; production tolerances unchanged",
+  "quadratic_structural_nonzeros": 1,
+  "quadratic_numerical_nonzeros": 0,
+  "qualified_count": 1,
+  "results": [
+    {
+      "repeat": 0,
+      "primal": 0.0,
+      "dual": 1.3464983468491898e-11,
+      "gap": 2.6341046242144648e-11,
+      "primal_absolute": 0.0,
+      "equality_absolute": 0.0,
+      "conic_equation_absolute": 0.0,
+      "dual_absolute": 5.385993387396759e-11,
+      "primal_cone_violation": 1.6775469902086115e-11,
+      "dual_cone_violation": 4.682319750863976e-17,
+      "cone_violation": 1.6775469902086115e-11,
+      "objective": -3.000000000025163,
+      "dual_objective": -2.99999999994614,
+      "complementarity_absolute": 2.516320485267741e-11,
+      "complementarity_max_absolute": 8.391519210280728e-12,
+      "complementarity_max_relative": 2.797173070070114e-12,
+      "passes_common_kkt_gate": true,
+      "solver_terminated_accepted": true,
+      "qualified": true,
+      "backend": "persistent",
+      "coordinates": "original",
+      "residual_tolerance": 1e-09,
+      "cone_tolerance": 1e-08
+    }
+  ]
+}
