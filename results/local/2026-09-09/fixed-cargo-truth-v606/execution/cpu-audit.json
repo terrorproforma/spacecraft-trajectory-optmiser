@@ -1,0 +1,82 @@
+{
+  "status": "CPU_prepared_not_GPU_executed",
+  "native_loads": 0,
+  "GPU_calls": 0,
+  "physics_certificates_created": 0,
+  "source_commit": "b08b1f5aa464659e558926713d29bcd364a3778f",
+  "source_manifest_sha256": "292fbf35e2a1a8de90b94f8654338d5491c3a07e9f40c852e4a7b495420f65df",
+  "input_sha256": "33701ef2b797f44ef2e8aa50a2dd59cb238df9aab604e7cef25ead6cbdd669e8",
+  "retained_raw_kg": 14051.854893908598,
+  "retained_weighted_kg": 12810.135953048577,
+  "ship_count": 23,
+  "raw_ship_count_floor_kg": 14043.495453372925,
+  "maximum_whole_route_refinements": 4,
+  "maximum_leg_calls": 66,
+  "cases": [
+    {
+      "id": "control_ship_02",
+      "ship": 2,
+      "kind": "control",
+      "legs": 16,
+      "prescribed_raw_kg": 632.2518822724162,
+      "prescribed_weighted_kg": 517.1334782305537,
+      "fleet_raw_gain_if_certified_kg": 0.0,
+      "fleet_weighted_gain_if_certified_kg": 0.0,
+      "archived_certified_propellant_kg": 2177.32143754323,
+      "original_route_final_dry_mass_kg": 502.6785624567701
+    },
+    {
+      "id": "ship_02_replace_31302_with_2181",
+      "ship": 2,
+      "kind": "probe",
+      "legs": 16,
+      "prescribed_raw_kg": 632.2518822724162,
+      "prescribed_weighted_kg": 523.3696807449214,
+      "fleet_raw_gain_if_certified_kg": 0.0,
+      "fleet_weighted_gain_if_certified_kg": 6.236202514367733,
+      "archived_certified_propellant_kg": 2177.32143754323,
+      "original_route_final_dry_mass_kg": 502.6785624567701
+    },
+    {
+      "id": "control_ship_07",
+      "ship": 7,
+      "kind": "control",
+      "legs": 17,
+      "prescribed_raw_kg": 614.4284736481861,
+      "prescribed_weighted_kg": 522.6358885649358,
+      "fleet_raw_gain_if_certified_kg": 0.0,
+      "fleet_weighted_gain_if_certified_kg": 0.0,
+      "archived_certified_propellant_kg": 2176.857746190116,
+      "original_route_final_dry_mass_kg": 503.14225380988387
+    },
+    {
+      "id": "ship_07_replace_15206_with_3150",
+      "ship": 7,
+      "kind": "probe",
+      "legs": 17,
+      "prescribed_raw_kg": 615.6605065023956,
+      "prescribed_weighted_kg": 532.5446533114635,
+      "fleet_raw_gain_if_certified_kg": 1.2320328542094785,
+      "fleet_weighted_gain_if_certified_kg": 9.908764746527709,
+      "archived_certified_propellant_kg": 2176.857746190116,
+      "original_route_final_dry_mass_kg": 503.14225380988387
+    }
+  ],
+  "acceptance": {
+    "prescribed_epochs_and_cargo_unchanged": true,
+    "actual_control_solves_mandatory": true,
+    "matching_control_failure_skips_probe": true,
+    "independent_leg_and_route_certification_required": true,
+    "both_full_fleet_checkers_required": true,
+    "weighted_score_gain_and_raw_ship_count_floor_required": true,
+    "native_scvx_settings_identical_to_v595": true,
+    "certification_tolerances_unchanged": true
+  },
+  "limits": [
+    "A failed cold-start control blocks interpretation of its probe; no physical infeasibility claim.",
+    "Two selected probes cannot measure a population-wide surrogate false-negative rate.",
+    "Measured proxy propellant comparisons are available only after a route completes certification.",
+    "Sequential route solving stops at the first uncertified leg; later initial masses are unknown.",
+    "Local/H100 profiles are alternatives; only one four-route campaign is authorized."
+  ]
+}

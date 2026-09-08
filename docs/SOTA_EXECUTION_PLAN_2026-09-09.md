@@ -68,7 +68,7 @@ PDHCG, our persistent core, GPU QOCO and CPU Clarabel references. Add CuClarabel
 and applicable first-order trajectory methods for the subsequent comparative
 campaign. Unsupported backends are recorded, not silently replaced.
 
-The first tooling gap is concrete. [The existing PD3 comparator](../scripts/gpu/diagnose_g3_pd3.py)
+The initial tooling gap was concrete. [The existing PD3 comparator](../scripts/gpu/diagnose_g3_pd3.py)
 audits one canonical dump with CPU Clarabel, upstream PDHCG and GPU QOCO;
 `--persistent-output` imports an earlier persistent-solver log rather than
 replaying that dump through our core. The native integration harness can emit
@@ -77,9 +77,11 @@ same generated fixture with `--tight-pd3-100k`, including primal/dual output.
 Use this narrow comparison first, with pinned source and verified fixture
 identity. Its current backend tolerance settings differ, so use it for numerical
 diagnosis first and align requested accuracy and common external qualification
-before drawing latency conclusions. Then add general capture/replay of our persistent backend, including
-original-coordinate primal/dual qualification. The QOCO snapshot executable is
-QOCO-only; an arbitrary captured GTOC12 comparison needs this missing adapter.
+before drawing latency conclusions. General snapshot replay through the
+persistent backend, including original-coordinate primal/dual qualification,
+is now implemented and measured below. The separate QOCO snapshot executable
+remains QOCO-only. Identical-input upstream comparison, real-capture convergence
+and native GTOC12 backend integration are the remaining gaps.
 
 Once captured GTOC12 subproblems qualify through the persistent core, add its
 explicit backend integration to native GTOC12 SCvx: retained assembly, warm-start
@@ -218,8 +220,37 @@ convergence investigation, not a solver advantage. The optional exact
 variable-bound folding experiment has also failed to qualify either capture and
 worsened their primal residuals; it remains off by default. Seven corrected
 analytic solves pass and generic controls reproduce the original baseline.
-The next diagnostic separates known-solution mapping/termination checks from
-cold-start convergence tuning. [Replay evidence and limitations](GPU_PERSISTENT_CAPTURE_REPLAY.md).
+The known-solution diagnostic is now complete: all eight imported reference
+certificates pass the common KKT gate and are installed correctly on the GPU.
+The native absolute natural-residual predicate rejects the initial points; after
+one or 1,000 steps, seven outputs fail common objective-gap accuracy and none has
+native accepted termination. This identifies a stopping/near-solution behavior
+investigation rather than an import defect. [Replay evidence and limitations](GPU_PERSISTENT_CAPTURE_REPLAY.md).
+
+The implementation audit also distinguishes the explicit persistent/cooperative
+PDHG iteration from upstream PDHCG-CQP's inexact conic quadratic proximal scheme.
+Recovery CGLS is not that inner solve. Both current captures have zero Hessians,
+so missing quadratic inner iterations cannot explain these particular failures.
+Keep the reusable native core, but restore an identical-input upstream reference
+and add nonzero-quadratic trajectory captures before drawing general conclusions
+about the method. Audit native versus common KKT stopping, then test one
+primal-dual balance or restart intervention at a time. A global 2^-13 objective
+rescaling is largely neutralized by existing balance; equality-penalty curvature
+adds substantial sparse work without activating an upstream proximal solve.
+Neither is a justified default or a measured improvement.
+
+The bounded low-thrust truth set has also completed locally: four routes,
+66 native leg solves, 110.374 seconds including verification. Both original
+controls pass both fleet checkers. Both proposals certify every preceding leg,
+including all changed incident transfers, but fail the unchanged Earth-return
+refinement. Their prefixes consume an additional 178.700067 and 95.392567 kg
+of fuel, leaving only 13.723155 and 91.543915 kg for return. No feasible proxy
+false negative or score gain was demonstrated, and a failed SCvx call still does
+not establish physical infeasibility. Preserve whole-route mass checks; shift
+the next score experiment toward broader itinerary construction and coupled
+timing/mass choices, with a matched-budget baseline, rather than repeatedly
+sampling this rejected substitution neighborhood.
+[Fixed cargo, full controls, failures and exact work counts](../results/local/2026-09-09/fixed-cargo-truth-v606/README.md).
 
 ## Reporting after each tranche
 

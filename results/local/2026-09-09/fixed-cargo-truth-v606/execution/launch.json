@@ -1,0 +1,43 @@
+{
+  "profile": "local",
+  "command": [
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/run.py",
+    "--execute",
+    "--profile",
+    "local",
+    "--output",
+    "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/output",
+    "--wall-seconds",
+    "1800",
+    "--lock",
+    "/home/angus/.spacepdhcg-gpu.lock",
+    "--lock-fd",
+    "3"
+  ],
+  "budget": "at most four routes on one host; no second-profile run",
+  "environment": {
+    "SPACEPDHCG_TEST_GTOC12_PARALLEL_DIRECTIONS": "0",
+    "SPACEPDHCG_TEST_GTOC12_JOINT_BATCH": "0",
+    "SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION": "0",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "SPACEPDHCG_GTOC12_CUDA_LIBRARY": "/home/angus/build-spacepdhcg-joint-v590/build/cuda/libspacepdhcg_cuda.so",
+    "SPACEPDHCG_QOCO_LIBRARY": "/home/angus/build-qoco-scaled-pool-v540/final/libqoco.so",
+    "SPACEPDHCG_GTOC12_DATA": "/home/angus/worktrees/spacepdhcg-release/benchmarks/gtoc12/data",
+    "LD_LIBRARY_PATH": "/home/angus/build-qoco-scaled-pool-v540/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64"
+  },
+  "supervisor_sha256": "cc6705704caa1892e69dbc2e7548ba55f7156dd815af3001d0bd43b497f8f1e3",
+  "supervisor_pid": 298,
+  "driver_sha256": "2275a7ae3491e273601c1070b1f1069caeb5c3f2a963eb279a183e39c0961974",
+  "launched": true,
+  "started_utc": "2026-09-08T16:56:41.009286+00:00",
+  "compute_process_observation": "",
+  "gpu_inventory": "NVIDIA GeForce RTX 5090, GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4, 595.97, 6658 MiB",
+  "pid": 377,
+  "returncode": 0,
+  "finished_utc": "2026-09-08T16:58:34.973944+00:00"
+}

@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <thread>
 #if defined(__linux__)
 #include <dlfcn.h>
@@ -26,7 +27,8 @@ using Clock=std::chrono::steady_clock;
 namespace {
 double elapsed(Clock::time_point start) {return std::chrono::duration<double>(Clock::now()-start).count();}
 void number(long double v) {if(std::isfinite(v))std::cout<<v;else std::cout<<"null";}
-void quoted(const std::string& value) {
+// Avoid the name quoted: ADL can select std::quoted(string&) and discard its manipulator.
+void json_string(const std::string& value) {
     std::cout<<'"';
     for(unsigned char c:value) {
         if(c=='"'||c=='\\')std::cout<<'\\'<<c;
@@ -40,7 +42,7 @@ void vector_json(const std::vector<double>& v) {
 }
 void metric(const char* name,long double v,bool first=false) {
     if(!first)std::cout<<',';
-    quoted(name);std::cout<<':';number(v);
+    json_string(name);std::cout<<':';number(v);
 }
 void audit_json(const s::Quality& q) {
     std::cout<<'{';metric("primal",q.primal,true);metric("dual",q.dual);metric("gap",q.gap);
@@ -54,14 +56,14 @@ void audit_json(const s::Quality& q) {
     std::cout<<",\"finite\":"<<(q.finite?"true":"false")<<'}';
 }
 struct Arguments {
-    std::string path,mode="cold";
+    std::string path,mode="cold",initial_point;
     double tolerance{},deadline{},audit_tolerance=1e-9,cone_tolerance=1e-8;
     std::uint64_t iterations{};
     int repeats=1;
     bool validate_only=false,fold_singleton_bounds=false;
 };
 Arguments arguments(int argc,char** argv) {
-    s::require(argc>=2,"usage: persistent_snapshot_replay SNAPSHOT --tolerance T --iterations N --deadline-seconds S [--repeats N] [--mode cold|reuse|full-retained] [--fold-singleton-bounds] [--audit-tolerance T] [--cone-tolerance T], or SNAPSHOT --validate-only");
+    s::require(argc>=2,"usage: persistent_snapshot_replay SNAPSHOT --tolerance T --iterations N --deadline-seconds S [--repeats N] [--mode cold|reuse|full-retained] [--fold-singleton-bounds] [--initial-point PATH] [--audit-tolerance T] [--cone-tolerance T], or SNAPSHOT --validate-only");
     Arguments out;out.path=argv[1];
     auto number_arg=[](const std::string& text) {
         std::size_t consumed=0;const double v=std::stod(text,&consumed);
@@ -85,6 +87,7 @@ Arguments arguments(int argc,char** argv) {
         else if(name=="--cone-tolerance")out.cone_tolerance=number_arg(value);
         else if(name=="--repeats")out.repeats=static_cast<int>(integer_arg(value,1000));
         else if(name=="--mode") {s::require(value=="cold"||value=="reuse"||value=="full-retained","unsupported repeat mode");out.mode=value;}
+        else if(name=="--initial-point") {s::require(!value.empty(),"empty initial-point path");out.initial_point=value;}
         else throw std::runtime_error("unknown option: "+name);
     }
     s::require(out.validate_only || (out.tolerance>0 && out.iterations>0 && out.deadline>0),"solve requires explicit tolerance, iteration cap and deadline");
@@ -133,6 +136,41 @@ std::string library_path() {
     throw std::runtime_error("runtime library fingerprinting currently requires Linux");
 #endif
 }
+struct SolveWait {
+    spacepdhcg_cuda_status status{};
+    double wall_seconds{};
+    bool deadline_requested{};
+    int cancellation_status{};
+};
+SolveWait bounded_solve(spacepdhcg_cuda_workspace* w,test::ProblemStorage& p,
+                        const spacepdhcg_cuda_solve_options& options,double deadline_seconds) {
+    const auto begin=Clock::now();
+    api(spacepdhcg_cuda_workspace_solve_async(w,&options,p.exchange.consumer_stream),"solve launch",w);
+    std::mutex mutex;std::condition_variable wake;bool finished=false;
+    std::atomic<bool> deadline_requested=false;
+    std::atomic<int> cancellation_status{SPACEPDHCG_CUDA_SUCCESS};
+    std::thread watchdog([&] {
+        std::unique_lock lock(mutex);
+        const auto deadline=begin+std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(deadline_seconds));
+        if(!wake.wait_until(lock,deadline,[&]{return finished;})) {
+            deadline_requested=true;cancellation_status=spacepdhcg_cuda_workspace_cancel(w);
+        }
+    });
+    const auto status=spacepdhcg_cuda_workspace_wait(w);
+    {std::lock_guard lock(mutex);finished=true;}wake.notify_one();watchdog.join();
+    const double wall=elapsed(begin);
+    s::require(status==SPACEPDHCG_CUDA_SUCCESS || status==SPACEPDHCG_CUDA_NUMERICAL_FAILURE,"persistent wait failed: "+std::to_string(status));
+    return {status,wall,deadline_requested.load(),cancellation_status.load()};
+}
+std::vector<double> internal_copy(std::uintptr_t address,std::size_t count,cudaStream_t stream) {
+    std::vector<double> values(count);
+    if(count) {
+        s::require(address!=0,"null internal iterate pointer");
+        test::cuda_require(cudaMemcpyAsync(values.data(),reinterpret_cast<const void*>(address),count*sizeof(double),cudaMemcpyDeviceToHost,stream),"internal iterate readback");
+        test::cuda_require(cudaStreamSynchronize(stream),"internal iterate readback wait");
+    }
+    return values;
+}
 } // namespace
 
 int main(int argc,char** argv) try {
@@ -142,33 +180,64 @@ int main(int argc,char** argv) try {
     const auto snapshot=s::read(s::file_bytes(args.path,128ULL*1024*1024));
     const auto canonical=s::canonical(snapshot,args.fold_singleton_bounds);
     const double conversion_seconds=elapsed(prepare);
+    const auto initial_begin=Clock::now();std::optional<s::InitialPoint> initial;
+    if(!args.initial_point.empty())initial=s::initial_point(s::file_bytes(args.initial_point,128ULL*1024*1024),snapshot,canonical);
+    const double initial_validation_seconds=initial?elapsed(initial_begin):0;
     const auto library=args.validate_only?std::string{}:library_path();
     const auto library_sha=args.validate_only?std::string{}:s::sha256(s::file_bytes(library));
     // Everything above, including malformed-input rejection, is CPU-only.
     std::cout<<std::setprecision(21)<<std::boolalpha;
-    std::cout<<"PERSISTENT_REPLAY_META {\"input_sha256\":";quoted(snapshot.input_sha256);
-    std::cout<<",\"source_commit\":";quoted(SPACEPDHCG_SOURCE_COMMIT);
-    std::cout<<",\"source_sha256\":";quoted(SPACEPDHCG_SNAPSHOT_SOURCE_SHA256);
+    std::cout<<"PERSISTENT_REPLAY_META {\"input_sha256\":";json_string(snapshot.input_sha256);
+    std::cout<<",\"source_commit\":";json_string(SPACEPDHCG_SOURCE_COMMIT);
+    std::cout<<",\"source_sha256\":";json_string(SPACEPDHCG_SNAPSHOT_SOURCE_SHA256);
     std::cout<<",\"coordinate_system\":\"original\",\"slack_source\":\"reconstructed_h_minus_Gx\",\"shifted\":"<<snapshot.shifted;
-    std::cout<<",\"convexity_evidence\":";quoted(canonical.convexity_evidence);
+    std::cout<<",\"native_objective_coordinates\":";json_string(snapshot.shifted?"translated":"original");metric("objective_offset",snapshot.offset);
+    std::cout<<",\"convexity_evidence\":";json_string(canonical.convexity_evidence);
     std::cout<<",\"variables\":"<<snapshot.n<<",\"equalities\":"<<snapshot.p<<",\"inequalities\":"<<snapshot.m;
     std::cout<<",\"soc_count\":"<<snapshot.soc.size()<<",\"symmetric_quadratic_entries\":"<<canonical.Q.values.size();
     std::cout<<",\"fold_singleton_bounds\":"<<args.fold_singleton_bounds<<",\"representation\":";
-    quoted(args.fold_singleton_bounds?"exact_singletons_as_native_variable_bounds":"all_nonnegative_rows_as_scalar_duals");
+    json_string(args.fold_singleton_bounds?"exact_singletons_as_native_variable_bounds":"all_nonnegative_rows_as_scalar_duals");
     std::cout<<",\"singleton_rows\":"<<canonical.singleton_rows<<",\"folded_rows\":"<<canonical.folded_bounds.size();
     std::cout<<",\"retained_nonexact_singleton_ratios\":"<<canonical.retained_nonexact_ratios<<",\"retained_out_of_range_singleton_ratios\":"<<canonical.retained_out_of_range_ratios;
     std::cout<<",\"native_scalar_rows\":"<<canonical.A.rows<<",\"native_affine_rows\":"<<canonical.F.rows;
     std::cout<<",\"folded_dual_activity_rule\":\"exact_local_primal_equals_tight_native_bound\"";
     metric("conversion_seconds",conversion_seconds);metric("audit_tolerance",args.audit_tolerance);metric("cone_tolerance",args.cone_tolerance);
-    std::cout<<",\"repeat_mode\":";quoted(args.mode);
-    std::cout<<",\"repeat_seconds_scope\":\"workspace_setup_solve_download_audit_and_cold_or_failed_cleanup_excludes_shared_initialization_and_output\"";
+    std::cout<<",\"repeat_mode\":";json_string(args.mode);
+    std::cout<<",\"initial_point_supplied\":"<<bool(initial);
+    if(initial) {
+        std::cout<<",\"initial_point_sha256\":";json_string(initial->file_sha256);
+        std::cout<<",\"initial_point_coordinates\":";json_string(initial->coordinates);
+        std::cout<<",\"initial_point_repeat_policy\":\"full_reset_and_seed_every_cold_or_reuse_repeat_and_only_fresh_full_retained_workspace\"";
+        std::cout<<",\"initial_native_measurement\":\"one_iteration_bootstrap_if_needed_then_full_reset_seed_residual_only\"";
+        metric("initial_point_audit_tolerance",s::initial_point_tolerance);metric("initial_point_cone_tolerance",s::initial_point_cone_tolerance);
+    }
+    metric("initial_point_validation_seconds",initial_validation_seconds);
+    std::cout<<",\"repeat_seconds_scope\":\"workspace_setup_solve_download_audit_cleanup_includes_bootstrap_and_prestep_output_excludes_shared_initialization_and_final_record_output\"";
+    std::cout<<",\"setup_seconds_scope\":\"workspace_creation_repeat_preparation_and_seed_measurement_including_bootstrap_and_prestep_output\"";
     std::cout<<",\"peak_workspace_bytes_scope\":\"native_workspace_only_excludes_borrowed_input_output_storage\"";
     std::cout<<",\"scaling_policy\":\"refresh_if_needed\",\"matrix_change_threshold\":0.25,\"vector_change_threshold\":0.5,\"scaling_reuse_limit\":4,\"residual_check_frequency\":25";
     std::cout<<",\"complementarity_gate\":\"max_absolute_scalar_or_SOC_dot_over_max_1_abs_primal_objective_abs_dual_objective\"";
     std::cout<<",\"captured_qoco_settings_used_by_persistent\":false,\"validate_only\":"<<args.validate_only;
-    if(args.validate_only) {std::cout<<"}\n";return 0;}
-    std::cout<<",\"library_path\":";quoted(library);
-    std::cout<<",\"library_sha256\":";quoted(library_sha);std::cout<<"}\n"<<std::flush;
+    if(!args.validate_only) {
+        std::cout<<",\"library_path\":";json_string(library);
+        std::cout<<",\"library_sha256\":";json_string(library_sha);
+    }
+    std::cout<<"}\n";
+    if(initial) {
+        std::cout<<"PERSISTENT_REPLAY_INITIAL_POINT {\"point_sha256\":";json_string(initial->file_sha256);
+        std::cout<<",\"coordinate_system\":\"original\",\"phase\":\"cpu_initial_point_validation\",\"native_residual_measured_in_this_phase\":false,\"strict_reconstruction_is_import_gate\":false";
+        std::cout<<",\"supplied_audit\":";audit_json(initial->supplied_audit);
+        std::cout<<",\"mapped_reference_audit\":";audit_json(initial->roundtrip_audit);
+        std::cout<<",\"supplied_qualified\":"<<initial->supplied_audit.qualified<<",\"mapped_reference_qualified\":"<<initial->roundtrip_audit.qualified;
+        std::cout<<",\"strict_reconstructed_audit\":";audit_json(initial->reconstructed_audit);
+        std::cout<<",\"strict_reconstructed_qualified\":"<<initial->reconstructed_audit.qualified;
+        std::cout<<",\"reference_folded_multipliers_are_audit_only\":true,\"x_solver\":";vector_json(initial->primal);
+        std::cout<<",\"dual_solver\":";vector_json(initial->dual);
+        std::cout<<",\"x\":";vector_json(initial->reference.x);std::cout<<",\"y\":";vector_json(initial->reference.y);
+        std::cout<<",\"z\":";vector_json(initial->reference.z);std::cout<<",\"s\":";vector_json(initial->reference.s);
+        std::cout<<"}\n";
+    }
+    std::cout<<std::flush;if(args.validate_only)return 0;
     // The test storage helper binds device zero explicitly. Select it deliberately.
     test::cuda_require(cudaSetDevice(0),"select CUDA device zero");
     std::unique_ptr<Owner> owner;
@@ -182,25 +251,72 @@ int main(int argc,char** argv) try {
             else api(spacepdhcg_cuda_workspace_warm_start_async(w,SPACEPDHCG_CUDA_WARM_START_FULL_RETAINED,nullptr,p.exchange.consumer_stream),"full retained warm start",w);
             api(spacepdhcg_cuda_workspace_wait(w),"prepare repeat",w);
         }
+        const bool initial_applied=initial && (fresh || args.mode=="reuse");
+        double seed_seconds=0;
+        if(initial_applied) {
+            spacepdhcg_cuda_diagnostics epoch{};
+            api(spacepdhcg_cuda_workspace_diagnostics(w,&epoch),"read solve epoch only",w);
+            const bool bootstrap_needed=epoch.solve_epoch==0;
+            SolveWait bootstrap_wait{};spacepdhcg_cuda_diagnostics bootstrap{};
+            if(bootstrap_needed) {
+                bootstrap_wait=bounded_solve(w,p,test::solve_options(args.tolerance,1),args.deadline);
+                api(spacepdhcg_cuda_workspace_diagnostics(w,&bootstrap),"bootstrap diagnostics",w);
+                std::cout<<"PERSISTENT_REPLAY_BOOTSTRAP {\"repeat\":"<<repeat<<",\"phase\":\"unseeded_report_epoch_bootstrap\",\"iteration_limit\":1,\"iterations\":"<<bootstrap.iterations;
+                std::cout<<",\"recovery_iterations\":"<<bootstrap.recovery_iterations<<",\"termination\":"<<bootstrap.termination<<",\"api_status\":"<<bootstrap_wait.status;
+                std::cout<<",\"deadline_requested\":"<<bootstrap_wait.deadline_requested<<",\"cancellation_api_status\":"<<bootstrap_wait.cancellation_status;
+                metric("wall_seconds",bootstrap_wait.wall_seconds);metric("scaling_seconds",bootstrap.scaling_seconds);metric("solve_seconds",bootstrap.solve_seconds);
+                std::cout<<"}\n"<<std::flush;
+                s::require(bootstrap_wait.status==SPACEPDHCG_CUDA_SUCCESS && bootstrap.iterations<=1
+                    && bootstrap.termination!=SPACEPDHCG_CUDA_TERMINATION_CANCELLED
+                    && bootstrap.termination!=SPACEPDHCG_CUDA_TERMINATION_NUMERICAL_FAILURE,"bootstrap failed before seeded residual measurement");
+            }
+            const auto reset_begin=Clock::now();
+            api(spacepdhcg_cuda_workspace_reset_async(w,SPACEPDHCG_CUDA_RESET_FULL,p.exchange.consumer_stream),"full reset after bootstrap",w);
+            api(spacepdhcg_cuda_workspace_wait(w),"wait for full reset",w);
+            const double reset_seconds=elapsed(reset_begin);const auto seed_begin=Clock::now();
+            p.primal.upload(initial->primal,p.stream);p.dual.upload(initial->dual,p.stream);
+            api(spacepdhcg_cuda_workspace_warm_start_async(w,SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL,&p.exchange.iterates,p.exchange.consumer_stream),"import qualified primal-dual start",w);
+            api(spacepdhcg_cuda_workspace_wait(w),"wait for imported start",w);
+            seed_seconds=elapsed(seed_begin);
+            spacepdhcg_cuda_pointer_snapshot pointers{};
+            api(spacepdhcg_cuda_workspace_pointer_snapshot(w,&pointers),"internal iterate addresses",w);
+            const auto verify_begin=Clock::now();
+            const auto before_x=internal_copy(pointers.primal,initial->primal.size(),p.stream),before_dual=internal_copy(pointers.dual,initial->dual.size(),p.stream);
+            s::require(s::same_fp64_bits(before_x,initial->primal) && s::same_fp64_bits(before_dual,initial->dual),"native warm start differs from mapped seed");
+            double verify_seconds=elapsed(verify_begin);const auto residual_begin=Clock::now();
+            api(spacepdhcg_cuda_workspace_residuals_async(w,p.exchange.consumer_stream),"seeded residual only",w);
+            api(spacepdhcg_cuda_workspace_wait(w),"wait for seeded residual only",w);
+            const double residual_seconds=elapsed(residual_begin);
+            spacepdhcg_cuda_diagnostics measured{};
+            api(spacepdhcg_cuda_workspace_diagnostics(w,&measured),"seeded residual diagnostics",w);
+            s::require(measured.solve_epoch>0 && measured.termination==SPACEPDHCG_CUDA_TERMINATION_UNSPECIFIED
+                && measured.state==SPACEPDHCG_CUDA_WARM_STARTED,"seeded residual inherited an accepted termination or lacked a report epoch");
+            const auto recheck_begin=Clock::now();
+            s::require(s::same_fp64_bits(before_x,internal_copy(pointers.primal,initial->primal.size(),p.stream))
+                && s::same_fp64_bits(before_dual,internal_copy(pointers.dual,initial->dual.size(),p.stream)),"residual-only measurement changed internal seed");
+            verify_seconds+=elapsed(recheck_begin);
+            std::cout<<"PERSISTENT_REPLAY_PRESTEP {\"repeat\":"<<repeat<<",\"phase\":\"seeded_residual_only\",\"seeded_iterations\":0,\"native_pre_step_measured\":true";
+            std::cout<<",\"termination\":"<<measured.termination<<",\"state\":"<<measured.state<<",\"solve_epoch\":"<<measured.solve_epoch;
+            std::cout<<",\"warm_start_mode\":"<<measured.warm_start_mode<<",\"warm_start_accepted\":"<<bool(measured.warm_start_accepted);
+            std::cout<<",\"reset_api_status\":0,\"seed_api_status\":0,\"residual_api_status\":0";
+            std::cout<<",\"inherited_report_iterations\":"<<measured.iterations<<",\"inherited_report_counters_are_seed_work\":false,\"native_seed_verified_unchanged\":true";
+            std::cout<<",\"bootstrap_performed\":"<<bootstrap_needed<<",\"bootstrap_iterations\":"<<bootstrap.iterations<<",\"bootstrap_termination\":"<<bootstrap.termination<<",\"bootstrap_api_status\":"<<bootstrap_wait.status;
+            std::cout<<",\"bootstrap_deadline_requested\":"<<bootstrap_wait.deadline_requested;
+            metric("bootstrap_wall_seconds",bootstrap_wait.wall_seconds);metric("bootstrap_scaling_seconds",bootstrap.scaling_seconds);metric("bootstrap_solve_seconds",bootstrap.solve_seconds);
+            metric("reset_seconds",reset_seconds);metric("seed_seconds",seed_seconds);metric("residual_only_wall_seconds",residual_seconds);metric("internal_iterate_verification_seconds",verify_seconds);
+            metric("native_objective",measured.objective);metric("native_natural_residual",measured.natural_residual_inf);
+            metric("native_scalar_primal_violation",measured.scalar_primal_violation_inf);metric("native_box_violation",measured.box_violation_inf);
+            metric("native_affine_cone_distance",measured.affine_cone_distance_inf);metric("native_stationarity",measured.stationarity_inf);metric("native_complementarity",measured.complementarity_inf);
+            std::cout<<"}\n"<<std::flush;
+        }
+        spacepdhcg_cuda_diagnostics before{};
+        api(spacepdhcg_cuda_workspace_diagnostics(w,&before),"pre-solve state only",w);
+        if(initial_applied)s::require(before.state==SPACEPDHCG_CUDA_WARM_STARTED && before.warm_start_accepted
+            && before.warm_start_mode==SPACEPDHCG_CUDA_WARM_START_PRIMAL_DUAL,"C ABI did not accept explicit primal-dual seed");
         const double setup_seconds=elapsed(setup_begin);
         const auto options=test::solve_options(args.tolerance,args.iterations);
-        const auto begin=Clock::now();
-        api(spacepdhcg_cuda_workspace_solve_async(w,&options,p.exchange.consumer_stream),"solve launch",w);
-        std::mutex mutex;std::condition_variable wake;bool finished=false;
-        std::atomic<bool> deadline_requested=false;
-        std::atomic<int> cancellation_status{SPACEPDHCG_CUDA_SUCCESS};
-        std::thread watchdog([&] {
-            std::unique_lock lock(mutex);
-            const auto deadline=begin+std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(args.deadline));
-            if(!wake.wait_until(lock,deadline,[&]{return finished;})) {
-                deadline_requested=true;cancellation_status=spacepdhcg_cuda_workspace_cancel(w);
-            }
-        });
-        const auto status=spacepdhcg_cuda_workspace_wait(w);
-        {std::lock_guard lock(mutex);finished=true;}wake.notify_one();watchdog.join();
-        const double wall=elapsed(begin);
-        // Numerical failures still have an auditable termination and iterate.
-        s::require(status==SPACEPDHCG_CUDA_SUCCESS || status==SPACEPDHCG_CUDA_NUMERICAL_FAILURE,"persistent wait failed: "+std::to_string(status));
+        const auto waited=bounded_solve(w,p,options,args.deadline);
+        const auto status=waited.status;const double wall=waited.wall_seconds;
         spacepdhcg_cuda_diagnostics diagnostic{};
         api(spacepdhcg_cuda_workspace_diagnostics(w,&diagnostic),"diagnostics",w);
         const auto download=Clock::now();const auto primal=p.primal.download(p.stream),dual=p.dual.download(p.stream);
@@ -213,14 +329,17 @@ int main(int argc,char** argv) try {
         // Independently unqualified iterates never seed a retained solve.
         if(!optimal || !quality.qualified || args.mode=="cold")owner.reset();
         const double cleanup_seconds=elapsed(cleanup_begin),repeat_seconds=elapsed(complete_begin);
-        std::cout<<"PERSISTENT_REPLAY {\"repeat\":"<<repeat<<",\"termination\":"<<diagnostic.termination<<",\"termination_name\":";quoted(termination_name(diagnostic.termination));
+        std::cout<<"PERSISTENT_REPLAY {\"repeat\":"<<repeat<<",\"termination\":"<<diagnostic.termination<<",\"termination_name\":";json_string(termination_name(diagnostic.termination));
         std::cout<<",\"api_status\":"<<status<<",\"solver_optimal\":"<<optimal;
         std::cout<<",\"fresh_workspace\":"<<fresh<<",\"within_requested_wall_deadline\":"<<(wall<=args.deadline);
+        std::cout<<",\"initial_point_applied\":"<<initial_applied<<",\"state_before_solve\":"<<before.state;
+        std::cout<<",\"solve_epoch_before\":"<<before.solve_epoch<<",\"warm_start_mode_before\":"<<before.warm_start_mode<<",\"warm_start_accepted_before\":"<<bool(before.warm_start_accepted);
+        metric("initial_point_upload_and_warm_start_seconds",seed_seconds);
         std::cout<<",\"folded_dual_reconstruction_supported\":"<<original.folded_dual_reconstruction_supported<<",\"reconstructed_bound_duals\":"<<original.reconstructed_bound_duals;
         std::cout<<",\"off_contact_bound_normals\":"<<original.off_contact_bound_normals<<",\"off_contact_one_ulp_normals\":"<<original.off_contact_one_ulp_normals;
         metric("max_off_contact_bound_distance",original.max_off_contact_bound_distance);
         std::cout<<",\"kkt_qualified_original\":"<<quality.qualified<<",\"qualified_original\":"<<(optimal&&quality.qualified);
-        std::cout<<",\"deadline_requested\":"<<deadline_requested.load()<<",\"cancellation_api_status\":"<<cancellation_status.load();
+        std::cout<<",\"deadline_requested\":"<<waited.deadline_requested<<",\"cancellation_api_status\":"<<waited.cancellation_status;
         std::cout<<",\"iteration_limit\":"<<args.iterations<<",\"iterations\":"<<diagnostic.iterations<<",\"recovery_iterations\":"<<diagnostic.recovery_iterations;
         metric("requested_tolerance",args.tolerance);metric("deadline_seconds",args.deadline);
         metric("setup_seconds",setup_seconds);metric("wall_seconds",wall);metric("scaling_seconds",diagnostic.scaling_seconds);

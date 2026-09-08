@@ -1,0 +1,31 @@
+{
+  "scope": "completed requested solves and bootstrap work only; CPU audits and waiting are not solver work",
+  "completed_v606c": {
+    "completed_executable_invocations": 6,
+    "native_solve_api_calls": 11,
+    "actual_requested_solve_iterations": 80,
+    "bootstrap_iterations": 5,
+    "independently_qualified_final_vectors": 6,
+    "executable_wall_seconds_sum": 1.6883088760000646
+  },
+  "initial_v606b": {
+    "completed_executable_invocations": 2,
+    "native_solve_api_calls": 3,
+    "actual_requested_solve_iterations": 76,
+    "bootstrap_iterations": 1,
+    "independently_qualified_final_vectors": 2
+  },
+  "zero_call_busy_v606c": {
+    "completed_executable_invocations": 0,
+    "native_solve_api_calls": 0
+  },
+  "combined": {
+    "completed_executable_invocations": 8,
+    "native_solve_api_calls": 14,
+    "actual_requested_solve_iterations": 156,
+    "bootstrap_iterations": 6,
+    "independently_qualified_final_vectors": 8
+  },
+  "tiny_report_sha256": "22d9230a063b1459c6d2dc29abe60680b4969dd5985a0d8aade54789f6d30837",
+  "executable_wall_scope": "sum of native executable invocations, excluding queue wait and independent audit subprocesses"
+}

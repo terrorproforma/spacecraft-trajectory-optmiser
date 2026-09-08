@@ -1,0 +1,105 @@
+{
+  "complete": true,
+  "cuda_visible_devices": "",
+  "cases": [
+    {
+      "name": "unseeded-control",
+      "snapshot_sha256": "fc71810057a9fc1d6e6ec44cae18633de9e2020aa71f65c9ed247a5f702ec5e5",
+      "point_sha256": null,
+      "record_prefixes": [
+        "PERSISTENT_REPLAY_META"
+      ],
+      "all_json_records_parsed": true
+    },
+    {
+      "name": "original-generic",
+      "snapshot_sha256": "fc71810057a9fc1d6e6ec44cae18633de9e2020aa71f65c9ed247a5f702ec5e5",
+      "point_sha256": "2be582a90c8592f2ab09afb1213f48208564b783c7c6fc47db3ad0327233b7de",
+      "record_prefixes": [
+        "PERSISTENT_REPLAY_META",
+        "PERSISTENT_REPLAY_INITIAL_POINT"
+      ],
+      "all_json_records_parsed": true
+    },
+    {
+      "name": "translated-folded",
+      "snapshot_sha256": "fc71810057a9fc1d6e6ec44cae18633de9e2020aa71f65c9ed247a5f702ec5e5",
+      "point_sha256": "ea5031cc8d81644ba9691ae707a19e25f290b562e5c9be7b8130aa78f4b9a15f",
+      "record_prefixes": [
+        "PERSISTENT_REPLAY_META",
+        "PERSISTENT_REPLAY_INITIAL_POINT"
+      ],
+      "all_json_records_parsed": true
+    },
+    {
+      "name": "shifted-original-generic",
+      "snapshot_sha256": "6d8435decb3faedadc04be26df72f0c12856db2bb3b3bdaa639f43b3128c6124",
+      "point_sha256": "bfa4e1419f9c6bd144d71d4b79088b52a78dcce921f1b6d1ab82058c15957702",
+      "record_prefixes": [
+        "PERSISTENT_REPLAY_META",
+        "PERSISTENT_REPLAY_INITIAL_POINT"
+      ],
+      "all_json_records_parsed": true
+    },
+    {
+      "name": "shifted-translated-folded",
+      "snapshot_sha256": "6d8435decb3faedadc04be26df72f0c12856db2bb3b3bdaa639f43b3128c6124",
+      "point_sha256": "f2529c98cf944be8f58febb7abb43a23fa9e8177f476e99decfc76d669548beb",
+      "record_prefixes": [
+        "PERSISTENT_REPLAY_META",
+        "PERSISTENT_REPLAY_INITIAL_POINT"
+      ],
+      "all_json_records_parsed": true
+    },
+    {
+      "name": "weak-bound-folded",
+      "snapshot_sha256": "4d012ffb629c233f1902b7bd2d794365a1098d740dd54289f76d09823618c248",
+      "point_sha256": "02706db7a535c10f066d57969c5463c3443b7612edbc122b76502cee2bc3f6f8",
+      "record_prefixes": [
+        "PERSISTENT_REPLAY_META",
+        "PERSISTENT_REPLAY_INITIAL_POINT"
+      ],
+      "all_json_records_parsed": true
+    },
+    {
+      "name": "conditioning-generic",
+      "snapshot_sha256": "1eb1b5a3979c5e86522337dfa94f264e354993163ed44129eff361371e3b49cf",
+      "point_sha256": "9caf303469dcd254d56b74f8bf3818c8044f51a3a20bc3c07835b76dd23c5632",
+      "record_prefixes": [
+        "PERSISTENT_REPLAY_META",
+        "PERSISTENT_REPLAY_INITIAL_POINT"
+      ],
+      "all_json_records_parsed": true
+    },
+    {
+      "name": "conditioning-folded",
+      "snapshot_sha256": "1eb1b5a3979c5e86522337dfa94f264e354993163ed44129eff361371e3b49cf",
+      "point_sha256": "9caf303469dcd254d56b74f8bf3818c8044f51a3a20bc3c07835b76dd23c5632",
+      "record_prefixes": [
+        "PERSISTENT_REPLAY_META",
+        "PERSISTENT_REPLAY_INITIAL_POINT"
+      ],
+      "all_json_records_parsed": true
+    },
+    {
+      "name": "difficult-generic",
+      "snapshot_sha256": "14fdc84e9b654df4ac16db71f0bce4fccfa62577f9620ae622ad2196e2f17080",
+      "point_sha256": "b92be6c5a0051ab99c000c459ef466c69fc8b2fd669c38b3580aea000d926da6",
+      "record_prefixes": [
+        "PERSISTENT_REPLAY_META",
+        "PERSISTENT_REPLAY_INITIAL_POINT"
+      ],
+      "all_json_records_parsed": true
+    },
+    {
+      "name": "difficult-folded",
+      "snapshot_sha256": "14fdc84e9b654df4ac16db71f0bce4fccfa62577f9620ae622ad2196e2f17080",
+      "point_sha256": "b92be6c5a0051ab99c000c459ef466c69fc8b2fd669c38b3580aea000d926da6",
+      "record_prefixes": [
+        "PERSISTENT_REPLAY_META",
+        "PERSISTENT_REPLAY_INITIAL_POINT"
+      ],
+      "all_json_records_parsed": true
+    }
+  ]
+}

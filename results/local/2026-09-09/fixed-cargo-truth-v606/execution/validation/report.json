@@ -1,0 +1,107 @@
+{
+  "complete": true,
+  "GPU_calls": 0,
+  "commands": [
+    {
+      "name": "pytest",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/test_fixed.py",
+        "--junitxml=/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/validation/pytest.xml"
+      ],
+      "returncode": 0,
+      "seconds": 11.013605740999992,
+      "log_sha256": "ba4f517d4d7d50cf2adb883bcfa24765d7946d2e24df88b942ce5bb6228b97fe"
+    },
+    {
+      "name": "ruff-check",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "check",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/audit_cpu.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/common.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/fixed_refine.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/launch.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/plan.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/prepare.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/prepare_plan.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/prepare_profiles.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/run.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/test_fixed.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/validate.py"
+      ],
+      "returncode": 0,
+      "seconds": 0.0810654900000145,
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "name": "ruff-format",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/audit_cpu.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/common.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/fixed_refine.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/launch.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/plan.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/prepare.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/prepare_plan.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/prepare_profiles.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/run.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/test_fixed.py",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/validate.py"
+      ],
+      "returncode": 0,
+      "seconds": 0.06608412599996427,
+      "log_sha256": "75b7030be9d7de96bf4e76e79b1f03f14af8899d169fd8d79564d59167d1ab80"
+    },
+    {
+      "name": "cpu-audit",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/audit_cpu.py"
+      ],
+      "returncode": 0,
+      "seconds": 1.9492436450000241,
+      "log_sha256": "034ea3094f0048415158e6a5ce3c9970fc0dd7cb9a89433b773a375d25ecb2ed"
+    },
+    {
+      "name": "h100-recipe",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/launch.py",
+        "--profile",
+        "h100"
+      ],
+      "returncode": 0,
+      "seconds": 0.0717185309999877,
+      "log_sha256": "17f19cbc170ff1bc00b058ab896e30c3070775d460160f079876d4ff78c909a5"
+    },
+    {
+      "name": "local-recipe",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/build/performance/truth-set-v606/launch.py",
+        "--profile",
+        "local"
+      ],
+      "returncode": 0,
+      "seconds": 0.06823520099999314,
+      "log_sha256": "647003352c9d2a46238e39181b8aed1d30d3ec5eb60adfe4b286b49340514007"
+    }
+  ]
+}

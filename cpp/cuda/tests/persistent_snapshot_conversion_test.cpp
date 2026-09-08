@@ -29,6 +29,14 @@ std::string bounds_fixture(double objective,const std::vector<double>& a,const s
     out<<' '<<objective;for(double v:h)out<<' '<<v;
     out<<"\n0\n0\n0\n";return out.str();
 }
+std::string point_fixture(const s::Snapshot& q,const s::Vectors& v,const std::string& coordinates="original") {
+    std::ostringstream out;out<<std::setprecision(17);
+    out<<"SPACEPDHCG_QOCO_INITIAL_POINT_V1\nsnapshot_sha256 "<<q.input_sha256<<"\ncoordinates "<<coordinates<<'\n';
+    auto vector=[&](const char* name,const std::vector<double>& values) {
+        out<<name<<' '<<values.size();for(double value:values)out<<' '<<value;out<<'\n';
+    };
+    vector("x",v.x);vector("y",v.y);vector("z",v.z);vector("s",v.s);return out.str();
+}
 void equal(const std::vector<double>& a,const std::vector<double>& b) {s::require(a==b,"array mismatch");}
 void near(long double a,long double b) {s::require(std::isfinite(a) && std::abs(a-b)<1e-15L,"analytic scalar mismatch");}
 void reject(std::string bytes,const std::string& before,const std::string& after) {
@@ -36,6 +44,12 @@ void reject(std::string bytes,const std::string& before,const std::string& after
     bytes.replace(position,before.size(),after);
     bool rejected=false;try {static_cast<void>(s::read(bytes));}catch(const std::exception&) {rejected=true;}
     s::require(rejected,"malformed snapshot was accepted");
+}
+void reject_point(const s::Snapshot& q,const s::Canonical& c,std::string bytes,const std::string& before,const std::string& after) {
+    const auto position=bytes.find(before);s::require(position!=std::string::npos,"invalid point mutation fixture");
+    bytes.replace(position,before.size(),after);
+    bool rejected=false;try {static_cast<void>(s::initial_point(bytes,q,c));}catch(const std::exception&) {rejected=true;}
+    s::require(rejected,"malformed or unqualified initial point was accepted");
 }
 void checks() {
     s::require(s::sha256("")=="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","SHA empty");
@@ -68,6 +82,30 @@ void checks() {
         const auto fv=s::original_vectors(q,folded,shifted?std::vector<double>{-1,1}:std::vector<double>{1,0},{3,1,0,-1});
         equal(fv.z,{1,1,-1,0});equal(fv.x,v.x);equal(fv.s,v.s);
         s::require(fv.reconstructed_bound_duals==1 && s::audit(q,fv,1e-9,1e-8).qualified,"folded shifted KKT failed");
+        for(const std::string coordinates:{"original","translated"}) {
+            auto encoded=v;if(shifted && coordinates=="translated")encoded.x={-1,1};
+            const auto bytes=point_fixture(q,encoded,coordinates);
+            const auto point=s::initial_point(bytes,q,c),folded_point=s::initial_point(bytes,q,folded);
+            equal(point.primal,shifted?std::vector<double>{-1,1}:std::vector<double>{1,0});
+            equal(point.dual,{3,1,1,0,-1});equal(folded_point.dual,{3,1,0,-1});
+            equal(point.reference.x,v.x);equal(folded_point.reference.z,v.z);
+            s::require(point.supplied_audit.qualified && point.roundtrip_audit.qualified && point.reconstructed_audit.qualified
+                && folded_point.roundtrip_audit.qualified && folded_point.reconstructed_audit.qualified,"initial-point coordinate/dual roundtrip failed");
+            s::require(point.file_sha256==s::sha256(bytes),"initial point identity missing");
+        }
+        const auto point_bytes=point_fixture(q,{{1,0},{3},{1,1,-1,0},{0,1,1,0}});
+        reject_point(q,c,point_bytes,"SPACEPDHCG_QOCO_INITIAL_POINT_V1","SPACEPDHCG_QOCO_INITIAL_POINT_V2");
+        reject_point(q,c,point_bytes,q.input_sha256,std::string(64,'0'));
+        reject_point(q,c,point_bytes,"coordinates original","coordinates unknown");
+        reject_point(q,c,point_bytes,"x 2 1 0","x 3 1 0");
+        reject_point(q,c,point_bytes,"x 2 1 0","x 2 nan 0");
+        reject_point(q,c,point_bytes,"y 1 3","y 1 -3");
+        reject_point(q,c,point_bytes,"z 4 1 1 -1 0","z 4 -1 1 -1 0");
+        reject_point(q,c,point_bytes,"z 4 1 1 -1 0","z 4 1 1 1 0");
+        reject_point(q,c,point_bytes,"s 4 0 1 1 0","s 4 0 -1 1 0");
+        reject_point(q,c,point_bytes,"s 4 0 1 1 0","s 4 0.1 1 1 0");
+        reject_point(q,c,point_bytes,"s 4 0 1 1 0","s 4 0 1 1");
+        reject_point(q,c,point_bytes,"s 4 0 1 1 0","s 4 0 1 1 0 trailing");
     }
     const auto q=fixture(false);
     reject(q,"SPACEPDHCG_QOCO_QP_V1","SPACEPDHCG_QOCO_QP_V2");
@@ -115,6 +153,15 @@ void checks() {
     const auto inside=s::original_vectors(upper,cu,{std::nextafter(1.0,0.0)},{});
     equal(inside.z,{0,0,0,0,0});s::require(inside.off_contact_bound_normals==1 && inside.off_contact_one_ulp_normals==1
         && !s::audit(upper,inside,1e-9,1e-8).qualified,"interior iterate gained invented active dual");
+    auto weak=inside;weak.z=vu.z;
+    const auto weak_point=s::initial_point(point_fixture(upper,weak),upper,cu);
+    s::require(weak_point.supplied_audit.qualified && weak_point.roundtrip_audit.qualified
+        && !weak_point.reconstructed_audit.qualified && weak_point.dual.empty(),"weak-contact reference point rejected or snapped");
+    const auto lossy=s::read("SPACEPDHCG_QOCO_QP_V1\n1 0 1 1 0 1 1 0 1\n200 0 20 0\n1e-12 1e-8 1e-8 1e-8 1e-13 1e-11 1e-11 1e-5 1e-5\n2 0 1\n1 0\n2 0 0\n0\n2 0 1\n1 0\n0\n4 0 1 -3 1\n4 0 1 -3 -1e20\n1 1e20\n-3e20\n");
+    const s::Vectors exact_lossy{{1},{},{3},{0}};
+    s::require(s::audit(lossy,exact_lossy,1e-9,1e-8).qualified,"lossy-coordinate source point must qualify");
+    bool lost=false;try {static_cast<void>(s::initial_point(point_fixture(lossy,exact_lossy),lossy,s::canonical(lossy)));}
+    catch(const std::exception&) {lost=true;}s::require(lost,"FP64 coordinate loss silently changed qualified seed");
     const auto lower=s::read(bounds_fixture(2,{1,-1},{1,0}));
     const auto vl=s::original_vectors(lower,s::canonical(lower,true),{0},{});
     equal(vl.z,{0,2});s::require(s::audit(lower,vl,1e-9,1e-8).qualified,"lower bound KKT");
@@ -159,9 +206,17 @@ int main(int argc,char** argv) try {
         s::require(!std::filesystem::exists(root),"fixture output already exists");
         std::filesystem::create_directories(root);
         for(bool shifted:{false,true}) {
-            std::ofstream out(root/(shifted?"mixed-shifted.txt":"mixed.txt"));out<<fixture(shifted);s::require(bool(out),"fixture write failed");
+            const std::string name=shifted?"mixed-shifted":"mixed";
+            std::ofstream out(root/(name+".txt"));out<<fixture(shifted);s::require(bool(out),"fixture write failed");
+            const auto q=s::read(fixture(shifted));const s::Vectors exact{{1,0},{3},{1,1,-1,0},{0,1,1,0}};
+            std::ofstream point(root/(name+"-initial-original.txt"));point<<point_fixture(q,exact);s::require(bool(point),"initial point write failed");
+            auto translated=exact;if(shifted)translated.x={-1,1};
+            std::ofstream local(root/(name+"-initial-translated.txt"));local<<point_fixture(q,translated,"translated");s::require(bool(local),"translated point write failed");
         }
         std::ofstream upper(root/"bounds-duplicate.txt");upper<<bounds_fixture(-3,{1,2,-1,1,2},{1,2,0,2,2});s::require(bool(upper),"bound fixture write failed");
+        const auto uq=s::read(bounds_fixture(-3,{1,2,-1,1,2},{1,2,0,2,2}));
+        const auto weak=s::original_vectors(uq,s::canonical(uq),{std::nextafter(1.0,0.0)},{0,1.5,0,0,0});
+        std::ofstream weak_point(root/"bounds-weak-initial.txt");weak_point<<point_fixture(uq,weak);s::require(bool(weak_point),"weak-contact point write failed");
         std::ofstream fixed(root/"bounds-fixed.txt");fixed<<bounds_fixture(6,{2,-3},{2,-3});s::require(bool(fixed),"fixed fixture write failed");
     } else s::require(argc==1,"usage: persistent_snapshot_conversion_test [--write-fixtures NEW_DIRECTORY]");
     std::cout<<"persistent snapshot conversion and independent analytic KKT checks passed (CPU only)\n";return 0;

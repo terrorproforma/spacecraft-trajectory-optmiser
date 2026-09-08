@@ -250,6 +250,15 @@ does not simply use conjugate gradient for every inner solve.
 [Original QP paper](https://doi.org/10.1287/ijoc.2024.0983),
 [conic extension](https://arxiv.org/abs/2608.09159).
 
+The current persistent CUDA implementation uses explicit PDHG updates: it applies
+the quadratic gradient in one projected primal update per outer iteration. It does not yet
+implement the upstream conic quadratic proximal inner solve. Recovery CGLS solves
+constraint systems and is a separate operation. For the two captured GTOC12
+problems tested so far, the Hessian is zero, so the absence of a quadratic inner
+solve cannot explain their convergence failures. Qualified-point replay now
+separates accurate input mapping, the native stopping predicate, and subsequent
+objective-gap drift. [Measured diagnostic and implementation boundary](docs/GPU_PERSISTENT_CAPTURE_REPLAY.md).
+
 Trajectory optimisation repeatedly asks for a better thrust history while
 satisfying dynamics, endpoint, mass and thrust constraints. Successive
 convexification (SCvx) turns the nonlinear problem into a sequence of convex

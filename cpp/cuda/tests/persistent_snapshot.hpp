@@ -321,6 +321,11 @@ struct Vectors {
     std::size_t reconstructed_bound_duals{},off_contact_bound_normals{},off_contact_one_ulp_normals{};
     long double max_off_contact_bound_distance{};
 };
+inline bool same_fp64_bits(const std::vector<double>& a,const std::vector<double>& b) {
+    if(a.size()!=b.size())return false;
+    for(std::size_t i=0;i<a.size();++i)if(std::bit_cast<std::uint64_t>(a[i])!=std::bit_cast<std::uint64_t>(b[i]))return false;
+    return true;
+}
 inline Vectors original_vectors(const Snapshot& q,const Canonical& c,const std::vector<double>& primal,
                                 const std::vector<double>& dual) {
     require(primal.size()==static_cast<std::size_t>(q.n) && dual.size()==static_cast<std::size_t>(c.A.rows+c.F.rows),"iterate dimension mismatch");
@@ -404,6 +409,76 @@ inline Quality audit(const Snapshot& q,const Vectors& v,double tolerance,double 
         +out.primal_cone_violation+out.dual_cone_violation+out.complementarity+out.global_complementarity);
     out.qualified=out.finite && std::max({out.primal,out.dual,out.gap,out.block_complementarity_normalized})<=tolerance
         && std::max(out.primal_cone_violation,out.dual_cone_violation)<=cone_tolerance;
+    return out;
+}
+
+// Strict whitespace-delimited, seven-line interchange (no optional fields):
+// SPACEPDHCG_QOCO_INITIAL_POINT_V1
+// snapshot_sha256 <64 lowercase hexadecimal digits>
+// coordinates original|translated
+// x <n> <FP64 values...>
+// y <p> <FP64 values...>
+// z <m> <FP64 values...>
+// s <m> <FP64 values...>
+// Only x changes coordinates; y/z/s always use the original capture row order.
+inline constexpr double initial_point_tolerance=1e-9;
+inline constexpr double initial_point_cone_tolerance=1e-8;
+struct InitialPoint {
+    std::string file_sha256,coordinates;
+    std::vector<double> primal,dual;
+    Vectors supplied,reference,reconstructed;
+    Quality supplied_audit,roundtrip_audit,reconstructed_audit;
+};
+inline InitialPoint initial_point(const std::string& bytes,const Snapshot& q,const Canonical& c) {
+    require(bytes.size()<=128ULL*1024*1024,"initial point exceeds 128 MiB diagnostic limit");
+    std::istringstream in(bytes);
+    auto word=[&]() {std::string value;require(bool(in>>value),"truncated initial point");return value;};
+    auto label=[&](const std::string& expected) {require(word()==expected,"invalid initial-point field: "+expected);};
+    label("SPACEPDHCG_QOCO_INITIAL_POINT_V1");label("snapshot_sha256");
+    const auto identity=word();
+    require(identity.size()==64 && identity.find_first_not_of("0123456789abcdef")==std::string::npos
+        && identity==q.input_sha256,"initial point snapshot identity mismatch");
+    label("coordinates");InitialPoint out;out.coordinates=word();
+    require(out.coordinates=="original" || out.coordinates=="translated","unsupported initial-point coordinates");
+    auto values=[&](const std::string& name,int expected) {
+        label(name);const auto count=word();int n{};
+        const auto parsed=std::from_chars(count.data(),count.data()+count.size(),n);
+        require(parsed.ec==std::errc{} && parsed.ptr==count.data()+count.size() && n==expected,"initial-point vector length mismatch");
+        std::vector<double> result(expected);
+        for(auto& value:result) {
+            const auto text=word();const auto parsed_value=std::from_chars(text.data(),text.data()+text.size(),value);
+            require(parsed_value.ec==std::errc{} && parsed_value.ptr==text.data()+text.size() && std::isfinite(value),
+                "nonfinite, unrepresentable or malformed initial-point value");
+        }
+        return result;
+    };
+    const auto x=values("x",q.n);out.supplied.x=x;out.supplied.y=values("y",q.p);
+    out.supplied.z=values("z",q.m);out.supplied.s=values("s",q.m);
+    std::string trailing;require(!(in>>trailing),"trailing initial-point data");
+    out.file_sha256=sha256(bytes);out.primal=x;
+    if(q.shifted) for(int j=0;j<q.n;++j) {
+        if(out.coordinates=="translated")out.supplied.x[j]+=q.origin[j];
+        else out.primal[j]-=q.origin[j];
+        require(std::isfinite(out.primal[j]) && std::isfinite(out.supplied.x[j]),"initial-point coordinate conversion overflow");
+    }
+    out.supplied_audit=audit(q,out.supplied,initial_point_tolerance,initial_point_cone_tolerance);
+    require(out.supplied_audit.qualified,"initial point fails supplied original-equation KKT gate");
+    out.dual.assign(c.A.rows+c.F.rows,0);
+    for(int i=0;i<q.p;++i)out.dual[i]=out.supplied.y[i];
+    for(int i=0;i<q.m;++i) {
+        if(i>=q.nonnegative)out.dual[c.A.rows+c.soc_to_affine[i]]=-out.supplied.z[i];
+        else if(c.nonnegative_to_scalar[i]>=0)out.dual[c.nonnegative_to_scalar[i]]=out.supplied.z[i];
+    }
+    out.reconstructed=original_vectors(q,c,out.primal,out.dual);
+    out.reconstructed_audit=audit(q,out.reconstructed,initial_point_tolerance,initial_point_cone_tolerance);
+    // Omitted box multipliers are an audit-only reference, not GPU dual inputs.
+    // A weakly interior qualified QOCO point need not have exact native contact.
+    out.reference=out.reconstructed;
+    for(const auto& bound:c.folded_bounds)out.reference.z[bound.row]=out.supplied.z[bound.row];
+    out.reference.s=out.supplied.s;
+    require(same_fp64_bits(out.reference.y,out.supplied.y) && same_fp64_bits(out.reference.z,out.supplied.z),"initial-point dual mapping changed source bits");
+    out.roundtrip_audit=audit(q,out.reference,initial_point_tolerance,initial_point_cone_tolerance);
+    require(out.roundtrip_audit.qualified,"initial-point FP64 coordinate roundtrip loses original KKT qualification");
     return out;
 }
 } // namespace spacepdhcg::snapshot

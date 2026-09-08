@@ -1,0 +1,197 @@
+{
+  "complete": true,
+  "status": "incumbent_retained",
+  "stage": "complete",
+  "audited_prepared_files": 256,
+  "native_calls": 66,
+  "whole_route_refinements": 4,
+  "promotions": 0,
+  "native_wrapper_wall_seconds": 42.38319499199987,
+  "native_iterations": 362,
+  "native_accepted_iterations": 301,
+  "native_status_counts": {
+    "converged": 64,
+    "infeasible": 2
+  },
+  "wall_seconds": 110.373791121,
+  "baseline_verification_seconds": 20.819168151000014,
+  "retained_raw_kg": 14051.854893908598,
+  "retained_weighted_kg": 12810.135953048577,
+  "returncode": 0,
+  "report_sha256": "f76e7cd2ddcda366bfd7ff7f6da0c19cb21e8eb55e388121577f24a91a91585e",
+  "launch_sha256": "fded4ad2c7e666b5440e6202ac9b1878f2bcad673bed264c775d0ad9916df278",
+  "auditor_sha256": "e5378565b6e467a05c3ea0b5bfd6e85113f735bce5a81192609a0c51b9592691",
+  "all_full_fleet_verification_seconds": 62.00802472000002,
+  "all_route_refinement_seconds": 47.774765177000006,
+  "qoco": {
+    "reported_subproblem_rows": 362,
+    "reported_inner_iterations": 15217,
+    "qualified_rows": 323,
+    "status_counts": {
+      "2": 199,
+      "1": 144,
+      "4": 19
+    },
+    "timing_scope": "native wrapper wall time includes host marshalling; not isolated CUDA kernel time"
+  },
+  "matched_pairs": [
+    {
+      "probe": "ship_02_replace_31302_with_2181",
+      "control_passed": true,
+      "extra_certified_prefix_propellant_kg": 178.70006694733047,
+      "same_return_geometry": true,
+      "probe_return_available_propellant_kg": 13.723154842880376,
+      "control_certified_return_propellant_kg": 189.74465935120702,
+      "interpretation": "All prior legs certified; changed earlier route consumed more fuel; same scheduled return did not converge/certify. This is not a proof of physical infeasibility or a measured complete-route propellant value."
+    },
+    {
+      "probe": "ship_07_replace_15206_with_3150",
+      "control_passed": true,
+      "extra_certified_prefix_propellant_kg": 95.39256735752338,
+      "same_return_geometry": true,
+      "probe_return_available_propellant_kg": 91.54391508186995,
+      "control_certified_return_propellant_kg": 183.7942389571117,
+      "interpretation": "All prior legs certified; changed earlier route consumed more fuel; same scheduled return did not converge/certify. This is not a proof of physical infeasibility or a measured complete-route propellant value."
+    }
+  ],
+  "cases": [
+    {
+      "id": "control_ship_02",
+      "ship": 2,
+      "kind": "control",
+      "status": "control_passed",
+      "native_calls": 16,
+      "proxy_interpretation_allowed": false,
+      "requested_legs": 16,
+      "leg_certified": 16,
+      "failure_details": [],
+      "route_certified": true,
+      "prescribed_raw_kg": 632.2518822724162,
+      "unattempted_leg_indices": [],
+      "certified_prefix_propellant_kg": 1987.5767782097896,
+      "last_leg": {
+        "from": 31520,
+        "to": 0,
+        "departure": 69308.0,
+        "arrival": 69788.0,
+        "initial_mass_kg": 1324.6751040626268,
+        "minimum_final_mass_kg": 1132.2518822724162,
+        "status": "feasible",
+        "diagnostic": "converged",
+        "available_propellant_kg": 192.42322179021062,
+        "certified_propellant_kg": 189.74465935120702
+      }
+    },
+    {
+      "id": "ship_02_replace_31302_with_2181",
+      "ship": 2,
+      "kind": "probe",
+      "status": "fixed_refinement_failed",
+      "native_calls": 16,
+      "proxy_interpretation_allowed": true,
+      "requested_legs": 16,
+      "leg_certified": 15,
+      "failure_details": [
+        {
+          "leg": 15,
+          "from": 31520,
+          "to": 0,
+          "departure": 69308.0,
+          "arrival": 69788.0,
+          "initial_mass_kg": 1145.9750371152966,
+          "minimum_final_mass_kg": 1132.2518822724162,
+          "status": "infeasible",
+          "diagnostic": "virtual control remains 2.306e-03",
+          "certification": "optimizer status is not certification",
+          "certified": false,
+          "certificate": null
+        }
+      ],
+      "route_certified": false,
+      "prescribed_raw_kg": 632.2518822724162,
+      "unattempted_leg_indices": [],
+      "certified_prefix_propellant_kg": 2166.27684515712,
+      "last_leg": {
+        "from": 31520,
+        "to": 0,
+        "departure": 69308.0,
+        "arrival": 69788.0,
+        "initial_mass_kg": 1145.9750371152966,
+        "minimum_final_mass_kg": 1132.2518822724162,
+        "status": "infeasible",
+        "diagnostic": "virtual control remains 2.306e-03",
+        "available_propellant_kg": 13.723154842880376,
+        "uncertified_solution_residual": 0.002306424083589609
+      }
+    },
+    {
+      "id": "control_ship_07",
+      "ship": 7,
+      "kind": "control",
+      "status": "control_passed",
+      "native_calls": 17,
+      "proxy_interpretation_allowed": false,
+      "requested_legs": 17,
+      "leg_certified": 17,
+      "failure_details": [],
+      "route_certified": true,
+      "prescribed_raw_kg": 614.4284736481861,
+      "unattempted_leg_indices": [],
+      "certified_prefix_propellant_kg": 1993.0635175606064,
+      "last_leg": {
+        "from": 59653,
+        "to": 0,
+        "departure": 69218.0,
+        "arrival": 69728.0,
+        "initial_mass_kg": 1301.3649560875797,
+        "minimum_final_mass_kg": 1114.4284736481861,
+        "status": "feasible",
+        "diagnostic": "converged",
+        "available_propellant_kg": 186.93648243939356,
+        "certified_propellant_kg": 183.7942389571117
+      }
+    },
+    {
+      "id": "ship_07_replace_15206_with_3150",
+      "ship": 7,
+      "kind": "probe",
+      "status": "fixed_refinement_failed",
+      "native_calls": 17,
+      "proxy_interpretation_allowed": true,
+      "requested_legs": 17,
+      "leg_certified": 16,
+      "failure_details": [
+        {
+          "leg": 16,
+          "from": 59653,
+          "to": 0,
+          "departure": 69218.0,
+          "arrival": 69728.0,
+          "initial_mass_kg": 1207.2044215842654,
+          "minimum_final_mass_kg": 1115.6605065023955,
+          "status": "infeasible",
+          "diagnostic": "virtual control remains 2.189e-03",
+          "certification": "optimizer status is not certification",
+          "certified": false,
+          "certificate": null
+        }
+      ],
+      "route_certified": false,
+      "prescribed_raw_kg": 615.6605065023956,
+      "unattempted_leg_indices": [],
+      "certified_prefix_propellant_kg": 2088.45608491813,
+      "last_leg": {
+        "from": 59653,
+        "to": 0,
+        "departure": 69218.0,
+        "arrival": 69728.0,
+        "initial_mass_kg": 1207.2044215842654,
+        "minimum_final_mass_kg": 1115.6605065023955,
+        "status": "infeasible",
+        "diagnostic": "virtual control remains 2.189e-03",
+        "available_propellant_kg": 91.54391508186995,
+        "uncertified_solution_residual": 0.002189442301811728
+      }
+    }
+  ]
+}

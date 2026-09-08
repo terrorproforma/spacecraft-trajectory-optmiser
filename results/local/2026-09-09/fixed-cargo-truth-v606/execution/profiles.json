@@ -1,0 +1,52 @@
+{
+  "budget_scope": "one selected host only; profiles are alternatives, at most four whole-route refinements overall",
+  "preferred_profile": "h100",
+  "common_environment": {
+    "SPACEPDHCG_TEST_GTOC12_PARALLEL_DIRECTIONS": "0",
+    "SPACEPDHCG_TEST_GTOC12_JOINT_BATCH": "0",
+    "SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION": "0",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "profiles": {
+    "local": {
+      "python": "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+      "data": "/home/angus/worktrees/spacepdhcg-release/benchmarks/gtoc12/data",
+      "lock": "/home/angus/.spacepdhcg-gpu.lock",
+      "native_libraries": {
+        "SPACEPDHCG_GTOC12_CUDA_LIBRARY": {
+          "path": "/home/angus/build-spacepdhcg-joint-v590/build/cuda/libspacepdhcg_cuda.so",
+          "sha256": "ffbae813f1f683d276213cb83ec8be17d1c2338c9c4a96f3ec5283e26a432b73"
+        },
+        "SPACEPDHCG_QOCO_LIBRARY": {
+          "path": "/home/angus/build-qoco-scaled-pool-v540/final/libqoco.so",
+          "sha256": "0cc27a1d8bde1edd74f7ef00e04ec64c2d6c0f8fe526a1d94b04d509a74b3315"
+        }
+      },
+      "LD_LIBRARY_PATH": "/home/angus/build-qoco-scaled-pool-v540/final:/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib:/usr/local/cuda-12.8/lib64",
+      "validation_reference": "reference/v595-report.json"
+    },
+    "h100": {
+      "python": "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+      "data": "/home/ubuntu/spacepdhcg/gtoc12/benchmarks/gtoc12/data",
+      "lock": "/home/ubuntu/.spacepdhcg-gpu.lock",
+      "native_libraries": {
+        "SPACEPDHCG_GTOC12_CUDA_LIBRARY": {
+          "path": "/home/ubuntu/spacepdhcg-joint-selection-v632/build/cuda/libspacepdhcg_cuda.so",
+          "sha256": "29a6b10b6349a21fd49f3b2d3f425cdca0d4e3acc4d97fd14cd16c42de54b44e"
+        },
+        "SPACEPDHCG_QOCO_LIBRARY": {
+          "path": "/home/ubuntu/spacepdhcg-scaled-pool-v545/final/libqoco.so",
+          "sha256": "b50d61903921659c1f431b7c2f3472e0f353e5e5a72159e4164d7d282d27c906"
+        }
+      },
+      "LD_LIBRARY_PATH": "/home/ubuntu/spacepdhcg-scaled-pool-v545/final:/home/ubuntu/spacepdhcg-recovery-v152/cudss/lib:/usr/local/cuda/lib64",
+      "validation_reference": "reference/h100-native-compatibility-report.json",
+      "source_compatibility_report_sha256": "aed764bc863a8ec4254ea931a582b0084115aa51b96a07174f200e4107639dae",
+      "scope": "352/355 native files identical; remaining joint APIs unused; parallel direction dispatch forced off; fresh control solves still required"
+    }
+  }
+}

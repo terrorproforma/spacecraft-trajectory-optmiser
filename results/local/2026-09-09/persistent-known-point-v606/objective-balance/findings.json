@@ -1,0 +1,287 @@
+{
+  "arithmetic": "FP64 ten Ruiz passes and sequential norm sums; GPU reduction rounding may differ",
+  "cases": [
+    {
+      "C": 383405.790253617,
+      "D_sha256_le_float64": "6c0bc3f1e2470bfacd8d975728ec3dc66b8eff771cdc9d4f78b3c6b18132f4bb",
+      "R_sha256_le_float64": "18cfc5cac778578149b410596e728dea394268e7c110416926f4016e9be2d2e8",
+      "bound_scale_B": 0.014048666509029653,
+      "c_max_abs": 10000.0,
+      "c_norm": 383405.790253617,
+      "capture": "conditioning",
+      "generic_log_sha256": "177a7d5a4c641f40c0b629fa6356de00f9e4c9283ac7e8626cff0cc404732e54",
+      "input_relative_path": "build/performance/persistent-bound-ablation-v605/inputs/conditioning.txt",
+      "input_sha256": "1eb1b5a3979c5e86522337dfa94f264e354993163ed44129eff361371e3b49cf",
+      "m": 9264,
+      "n": 5261,
+      "nonnegative_rows": 8424,
+      "objective_scale_O": 2.608195852083155e-06,
+      "p": 1487,
+      "quadratic_numerical_nonzeros": 0,
+      "quadratic_structural_entries": 1263,
+      "ruiz_passes": [
+        {
+          "C": 383405.790253617,
+          "D_max": 1.0000527460213102,
+          "D_min": 1.0,
+          "R_max": 1.0000527460213102,
+          "R_min": 0.8408877611591489,
+          "pass": 1
+        },
+        {
+          "C": 383405.790253617,
+          "D_max": 1.0000527460213102,
+          "D_min": 1.0,
+          "R_max": 1.0000527460213102,
+          "R_min": 0.7710895554828489,
+          "pass": 2
+        },
+        {
+          "C": 383405.790253617,
+          "D_max": 1.0000527460213102,
+          "D_min": 1.0,
+          "R_max": 1.0000527460213102,
+          "R_min": 0.7383940953015878,
+          "pass": 3
+        },
+        {
+          "C": 383405.790253617,
+          "D_max": 1.0000527460213102,
+          "D_min": 1.0,
+          "R_max": 1.0000527460213102,
+          "R_min": 0.7225699767445203,
+          "pass": 4
+        },
+        {
+          "C": 383405.790253617,
+          "D_max": 1.0000527460213102,
+          "D_min": 1.0,
+          "R_max": 1.0000527460213102,
+          "R_min": 0.7147855446212382,
+          "pass": 5
+        },
+        {
+          "C": 383405.790253617,
+          "D_max": 1.0000527460213102,
+          "D_min": 1.0,
+          "R_max": 1.0000527460213102,
+          "R_min": 0.710924834139984,
+          "pass": 6
+        },
+        {
+          "C": 383405.790253617,
+          "D_max": 1.0000527460213102,
+          "D_min": 1.0,
+          "R_max": 1.0000527460213102,
+          "R_min": 0.7090023056508795,
+          "pass": 7
+        },
+        {
+          "C": 383405.790253617,
+          "D_max": 1.0000527460213102,
+          "D_min": 1.0,
+          "R_max": 1.0000527460213102,
+          "R_min": 0.708042991920213,
+          "pass": 8
+        },
+        {
+          "C": 383405.790253617,
+          "D_max": 1.0000527460213102,
+          "D_min": 1.0,
+          "R_max": 1.0000527460213102,
+          "R_min": 0.7075638219135594,
+          "pass": 9
+        },
+        {
+          "C": 383405.790253617,
+          "D_max": 1.0000527460213102,
+          "D_min": 1.0,
+          "R_max": 1.0000527460213102,
+          "R_min": 0.7073243585288005,
+          "pass": 10
+        }
+      ],
+      "scenarios": [
+        {
+          "alpha": 0.0001220703125,
+          "alpha_C": 46.80246463056848,
+          "dual_step_change_percent": 2.1363732224413123,
+          "effective_original_dual_step_ratio": 1.0213637322244131,
+          "effective_original_primal_step_ratio": 0.9790831301813651,
+          "exponent": -13,
+          "objective_coefficients_exact_in_binary64": true,
+          "primal_step_change_percent": -2.091686981863494
+        },
+        {
+          "alpha": 1.9073486328125e-06,
+          "alpha_C": 0.7312885098526325,
+          "dual_step_change_percent": 136.74431787011213,
+          "effective_original_dual_step_ratio": 2.367443178701121,
+          "effective_original_primal_step_ratio": 0.42239662138317596,
+          "exponent": -19,
+          "objective_coefficients_exact_in_binary64": true,
+          "primal_step_change_percent": -57.7603378616824
+        }
+      ],
+      "soc_count": 210
+    },
+    {
+      "C": 403856.41012617364,
+      "D_sha256_le_float64": "195c519bac83eacc7a0d2016daf022ae681388d7180b024a0b6772a78b300b9b",
+      "R_sha256_le_float64": "6a929ca33578377cb5959f3ce6a3b16ec7190660920b52c52ba799376cc14f9d",
+      "bound_scale_B": 0.013737035079155548,
+      "c_max_abs": 10000.0,
+      "c_norm": 403856.41012617364,
+      "capture": "difficult",
+      "generic_log_sha256": "478fad212a9c526a137dd8f851e89548382a2b4a90c8c9565161184d6a502679",
+      "input_relative_path": "build/performance/persistent-bound-ablation-v605/inputs/difficult.txt",
+      "input_sha256": "14fdc84e9b654df4ac16db71f0bce4fccfa62577f9620ae622ad2196e2f17080",
+      "m": 10280,
+      "n": 5839,
+      "nonnegative_rows": 9344,
+      "objective_scale_O": 2.4761214600162438e-06,
+      "p": 1648,
+      "quadratic_numerical_nonzeros": 0,
+      "quadratic_structural_entries": 1401,
+      "ruiz_passes": [
+        {
+          "C": 403856.41012617364,
+          "D_max": 1.0004419589416895,
+          "D_min": 1.0,
+          "R_max": 1.0004419589416895,
+          "R_min": 0.8423981655706242,
+          "pass": 1
+        },
+        {
+          "C": 403856.41012617364,
+          "D_max": 1.0004419589416893,
+          "D_min": 1.0,
+          "R_max": 1.0004419589416893,
+          "R_min": 0.7731624558444633,
+          "pass": 2
+        },
+        {
+          "C": 403856.41012617364,
+          "D_max": 1.0004419589416893,
+          "D_min": 1.0,
+          "R_max": 1.0004419589416893,
+          "R_min": 0.7407086716797298,
+          "pass": 3
+        },
+        {
+          "C": 403856.41012617364,
+          "D_max": 1.0004419589416893,
+          "D_min": 1.0,
+          "R_max": 1.0004419589416893,
+          "R_min": 0.7249962583103999,
+          "pass": 4
+        },
+        {
+          "C": 403856.41012617364,
+          "D_max": 1.0004419589416893,
+          "D_min": 1.0,
+          "R_max": 1.0004419589416893,
+          "R_min": 0.7172654854459592,
+          "pass": 5
+        },
+        {
+          "C": 403856.41012617364,
+          "D_max": 1.0004419589416893,
+          "D_min": 1.0,
+          "R_max": 1.0004419589416893,
+          "R_min": 0.7134310671856684,
+          "pass": 6
+        },
+        {
+          "C": 403856.41012617364,
+          "D_max": 1.0004419589416893,
+          "D_min": 1.0,
+          "R_max": 1.0004419589416893,
+          "R_min": 0.7115215518017214,
+          "pass": 7
+        },
+        {
+          "C": 403856.41012617364,
+          "D_max": 1.0004419589416893,
+          "D_min": 1.0,
+          "R_max": 1.0004419589416893,
+          "R_min": 0.7105687115394843,
+          "pass": 8
+        },
+        {
+          "C": 403856.41012617364,
+          "D_max": 1.0004419589416893,
+          "D_min": 1.0,
+          "R_max": 1.0004419589416893,
+          "R_min": 0.7100927700168334,
+          "pass": 9
+        },
+        {
+          "C": 403856.41012617364,
+          "D_max": 1.0004419589416893,
+          "D_min": 1.0,
+          "R_max": 1.0004419589416893,
+          "R_min": 0.7098549188141214,
+          "pass": 10
+        }
+      ],
+      "scenarios": [
+        {
+          "alpha": 0.0001220703125,
+          "alpha_C": 49.29887818923018,
+          "dual_step_change_percent": 2.0281910878993115,
+          "effective_original_dual_step_ratio": 1.0202819108789931,
+          "effective_original_primal_step_ratio": 0.9801212677959568,
+          "exponent": -13,
+          "objective_coefficients_exact_in_binary64": true,
+          "primal_step_change_percent": -1.9878732204043237
+        },
+        {
+          "alpha": 1.9073486328125e-06,
+          "alpha_C": 0.7702949717067216,
+          "dual_step_change_percent": 129.81982919075367,
+          "effective_original_dual_step_ratio": 2.2981982919075366,
+          "effective_original_primal_step_ratio": 0.4351234632456306,
+          "exponent": -19,
+          "objective_coefficients_exact_in_binary64": true,
+          "primal_step_change_percent": -56.48765367543693
+        }
+      ],
+      "soc_count": 234
+    }
+  ],
+  "derivation": {
+    "diagonal_steps": "primal=O/(D^2 B), dual=B/(R^2 O)",
+    "general_P_caveat": "For nonzero P, q_norm scales by rho and primal ratio gains max(1,q_norm+Knorm)/max(1,rho*q_norm+Knorm); not evaluated here",
+    "normalizers": "C=||c/D||2; O=1/(C+1); B=1/(||rhs/R||2+1)",
+    "ratios": "rho=alpha*(C+1)/(alpha*C+1); original-coordinate primal ratio=rho, dual ratio=1/rho",
+    "ruiz": "D/R start at one; ten max-norm square-root passes on A/F; share affine SOC row maximum; factor=1 when maximum<=1e-12; P/c not used",
+    "zero_P": "P=0 implies q_norm=0; operator norm, B, D, R and both base steps unchanged by objective scaling"
+  },
+  "finding": "alpha=2^-13 mostly cancels existing objective normalization: only about 2% effective balance change. alpha=2^-19 changes balance materially but improvement is untested. Do not repeat 2^-13 expecting an 8192-fold step-balance change.",
+  "identities": {
+    "adapter_executable_sha256": "d44ce03670072f2e192e47458248bd8afd1df23e206286b0a3f00041775974df",
+    "adapter_manifest_sha256": "34c82c97fad913af9664d48a9111996636ba3aed18d0a704805d762acc1eb4b4",
+    "adapter_source_commit": "efaabd712df62c095ef3ee782ae561ee5afa8e05",
+    "core_bytes": 14532208,
+    "core_identity_scope": "cross-checked existing build manifests and run metadata; binary not loaded or rehashed here",
+    "core_manifest_sha256": "0584ae0a86e1b8922aa73e1dea83b41c7941ba74c585aa4db883435d55d32b9a",
+    "core_path_recorded_in_existing_evidence": "/home/angus/spacepdhcg-persistent-replay-v603/build/cuda/libspacepdhcg_cuda.so",
+    "core_sha256": "d4b0bea9672bb0cea612b7d4e8db5d448f1b79b9831be5710723276edd128633",
+    "core_source_archive_sha256": "e5ddc53e1761ef20a279158bf61db7f12f2177e05fa038db910551298a094eb6",
+    "core_source_commit": "cf71faaaecaa01b4d3c8d9f6e1ba37a489cb75a2",
+    "reviewed_source_sha256": {
+      "cpp/cuda/src/cooperative_pdhg.cuh": "3ca44177992eaadd6acc3f4be7c9360949c27b445dede4db15247dd63cfead98",
+      "cpp/cuda/src/persistent_pdhcg.cu": "af2ffcc7d101bb1c9cf5069274c03c52855653d17476675047573539729c5246"
+    }
+  },
+  "mapping_and_guards": [
+    "Scale all P/c/objective-offset coefficients by positive exact power-of-two alpha; preserve constraints, topology, origin, primal and slack.",
+    "Scale initial y/z by alpha; recover original y/z by 1/alpha before auditing original unscaled equations.",
+    "Reject overflow and every inexact subnormal conversion, including nonzero-to-nonzero rounding; retain signed zeros.",
+    "Absolute native stopping tolerance is not transformation invariant; preserve original external gates and compare fixed budgets or equal qualified accuracy."
+  ],
+  "schema": "SPACEPDHCG_OBJECTIVE_BALANCE_CPU_V1",
+  "scope": "frozen-source scaling analysis, generic zero-P captures; no solver execution or speedup claim",
+  "script_sha256": "32afe589b0dc1858d552df41198184ee99910b23c3dc88d951b5768c267f4c53"
+}
