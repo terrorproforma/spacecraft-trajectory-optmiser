@@ -1,0 +1,208 @@
+{
+  "complete": true,
+  "success": true,
+  "pid": 369,
+  "core_sha256": "65f1335e3af820d22451e0d4f587f2d26aeccf364a0ed3bb9597bfd009bac5aa",
+  "qoco_sha256": "5b1b1a047f9d5041f821b64490562a3d598f51b47fedb08d89cdae211728940a",
+  "runs": [
+    {
+      "name": "baseline0",
+      "device_search": 0,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-search-campaign-v703/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/angus/spacepdhcg-search-campaign-v703/repo",
+        "--output",
+        "/home/angus/spacepdhcg-search-campaign-v703/baseline0",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4",
+        "--lock",
+        "/home/angus/spacepdhcg-search-campaign-v703/child.lock"
+      ],
+      "process_seconds": 76.93581910400007,
+      "campaign_seconds": 75.549424929,
+      "status": "improved",
+      "orders": 18,
+      "best": {
+        "ok": true,
+        "independent": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.854893908598,
+          "weighted_score_fixed_bonus_kg": 12810.135953048577,
+          "weighted_score_dynamic_kg": null,
+          "ship_limit": 23.03346208009841,
+          "max_position_error_km": 66.8554004821042,
+          "max_velocity_error_km_s": 4.94967112012233e-06,
+          "max_mass_error_kg": 9.367795428261161e-11,
+          "violations": []
+        },
+        "official": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.9,
+          "return_code": 0,
+          "wall_seconds": 0.1883940469999743,
+          "message": "Check successfully!"
+        },
+        "score_kg": 12810.135953048577,
+        "total_mass_kg": 14051.854893908598,
+        "solution": "/home/angus/spacepdhcg-search-campaign-v703/baseline0/best/Result.txt",
+        "viewer_manifest": "/home/angus/spacepdhcg-search-campaign-v703/baseline0/best/viewer/manifest.json",
+        "viewer": {
+          "schema_version": "1.0.0",
+          "files": {
+            "trajectories.json": {
+              "bytes": 10557393,
+              "sha256": "e83b3222539de9d0a802de72433c0800fc569925ca6c3430f235d19f7059db0f"
+            }
+          },
+          "source": {
+            "path_basename": "Result.txt",
+            "sha256": "06ffc1cc856859ab09b28d35c6e901be114d8e473e2d182cd64b38175a32a8ae",
+            "bytes": 10084994
+          },
+          "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+        },
+        "source": "verified_candidate"
+      },
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 3728,
+        "completed_branch_requests": 106462390,
+        "gpu_used": true,
+        "completed_element_hops": 53231195,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_geometry_computed_hops": 221023,
+        "joint_geometry_cached_hops": 0,
+        "joint_geometry_rejected_hops": 206881,
+        "joint_geometry_stats_download_bytes": 3168,
+        "completed_joint_batches": 132,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 88576,
+        "completed_joint_mesh_batches": 128,
+        "joint_mesh_epoch_upload_bytes": 39888,
+        "joint_mesh_epoch_download_bytes": 39888
+      },
+      "native_solves": 36,
+      "native_seconds": 8.177104928000176,
+      "nonconverged": []
+    },
+    {
+      "name": "candidate0",
+      "device_search": 1,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-search-campaign-v703/repo/build/performance/orphan-recovery-v595/run.py",
+        "--repo",
+        "/home/angus/spacepdhcg-search-campaign-v703/repo",
+        "--output",
+        "/home/angus/spacepdhcg-search-campaign-v703/candidate0",
+        "--wall-seconds",
+        "1800",
+        "--joint-seconds",
+        "15",
+        "--max-certifications",
+        "4",
+        "--lock",
+        "/home/angus/spacepdhcg-search-campaign-v703/child.lock"
+      ],
+      "process_seconds": 75.86682979200009,
+      "campaign_seconds": 74.99262078700008,
+      "status": "improved",
+      "orders": 18,
+      "best": {
+        "ok": true,
+        "independent": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.854893908498,
+          "weighted_score_fixed_bonus_kg": 12810.135953048477,
+          "weighted_score_dynamic_kg": null,
+          "ship_limit": 23.03346208009802,
+          "max_position_error_km": 66.8554004821042,
+          "max_velocity_error_km_s": 4.94967112012233e-06,
+          "max_mass_error_kg": 9.367795428261161e-11,
+          "violations": []
+        },
+        "official": {
+          "ok": true,
+          "ships": 23,
+          "mined_asteroids": 195,
+          "total_mass_kg": 14051.9,
+          "return_code": 0,
+          "wall_seconds": 0.18431647100010196,
+          "message": "Check successfully!"
+        },
+        "score_kg": 12810.135953048477,
+        "total_mass_kg": 14051.854893908498,
+        "solution": "/home/angus/spacepdhcg-search-campaign-v703/candidate0/best/Result.txt",
+        "viewer_manifest": "/home/angus/spacepdhcg-search-campaign-v703/candidate0/best/viewer/manifest.json",
+        "viewer": {
+          "schema_version": "1.0.0",
+          "files": {
+            "trajectories.json": {
+              "bytes": 10557340,
+              "sha256": "d2d927c5d947b04ba0ba3d0bfea86820846d71048347f6e7b661dcefcfe31f34"
+            }
+          },
+          "source": {
+            "path_basename": "Result.txt",
+            "sha256": "58917fe6ce52274e6c9745aea19b1be781c492b9eec22f352e0d10892b3242bd",
+            "bytes": 10084994
+          },
+          "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+        },
+        "source": "verified_candidate"
+      },
+      "screening": {
+        "backend": "cuda",
+        "completed_batches": 3600,
+        "completed_branch_requests": 106462390,
+        "gpu_used": true,
+        "completed_element_hops": 53231195,
+        "completed_retime_dp_calls": 277,
+        "completed_retime_forward_calls": 277,
+        "completed_retime_driver_calls": 36,
+        "retime_table_uploads": 0,
+        "retime_resident_builds": 36,
+        "retime_resident_cells": 53010172,
+        "retime_sweep_updates": 0,
+        "retime_sweep_samples": 0,
+        "joint_geometry_computed_hops": 221023,
+        "joint_geometry_cached_hops": 0,
+        "joint_geometry_rejected_hops": 206881,
+        "joint_geometry_stats_download_bytes": 96,
+        "completed_joint_mesh_batches": 128,
+        "joint_mesh_epoch_upload_bytes": 1248,
+        "joint_mesh_epoch_download_bytes": 1248,
+        "completed_joint_searches": 4,
+        "joint_search_accepted_moves": 112,
+        "joint_search_report_download_bytes": 128,
+        "completed_joint_batches": 4,
+        "completed_joint_evaluations": 23142,
+        "joint_result_download_bytes": 2688
+      },
+      "native_solves": 36,
+      "native_seconds": 8.018744508999589,
+      "nonconverged": []
+    }
+  ],
+  "stage": "candidate0",
+  "child_pid": 495
+}

@@ -1,0 +1,21 @@
+{
+  "complete": true,
+  "success": true,
+  "pid": 226914,
+  "stages": [
+    {
+      "name": "benchmark",
+      "returncode": 0,
+      "seconds": 1.5158866689889692,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys,runpy;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+        "/home/ubuntu/spacepdhcg-joint-search-v702/benchmark.py",
+        "/home/ubuntu/spacepdhcg-joint-search-v702/followup-v705/benchmark.json"
+      ]
+    }
+  ],
+  "stage": "benchmark",
+  "child_pid": 226915
+}

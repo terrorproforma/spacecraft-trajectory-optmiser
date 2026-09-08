@@ -1,8 +1,10 @@
 #include "spacepdhcg/cuda/gtoc12_joint_c_api.h"
 #include "../internal/gtoc12_joint_geometry.h"
+#include "../internal/graph_append.h"
 
 #include <cuda_runtime.h>
 #include <cmath>
+#include <chrono>
 #include <cstddef>
 #include <limits>
 #include <mutex>
@@ -17,6 +19,14 @@ using Result = spacepdhcg_gtoc12_joint_result;
 using Selection = spacepdhcg_gtoc12_joint_selection;
 using CachedCost = spacepdhcg_gtoc12_joint_cached_cost;
 using GeometryStats = spacepdhcg_gtoc12_joint_geometry_stats;
+using SearchReport = spacepdhcg_gtoc12_joint_search_report;
+struct SearchState {
+    SearchReport report{};
+    Result best{};
+    int moves_here{};
+    uint64_t started{}, budget{};
+};
+static_assert(sizeof(SearchReport) == 32, "joint search report ABI");
 static_assert(sizeof(Visit) == 48, "joint visit ABI");
 static_assert(sizeof(Stage) == 72, "joint stage ABI");
 static_assert(sizeof(Cost) == 32, "joint cost ABI");
@@ -44,6 +54,9 @@ struct Workspace {
     CachedCost* cached_costs = nullptr;
     int cached_capacity = 0;
     GeometryStats* geometry_stats = nullptr;
+    SearchState* search = nullptr;
+    double *mesh_days = nullptr, *best_payload = nullptr;
+    int mesh_capacity = 0;
     std::mutex mutex;
 };
 
@@ -288,15 +301,58 @@ __global__ void select_candidate(int count, int n, double minimum,
     for (int64_t j = lane; j < n; j += 128) collected[j] = collected[visits + j];
 }
 
+// The conditional-loop reducer uses one complete warp. All lanes participate
+// in each shuffle, independent of their candidate count or feasibility. This
+// avoids block barriers in the repeatedly executed graph and keeps stable ties.
+__global__ void select_search_candidate(int count, int n, const Result* results,
+    Selection* selection, double* masses, double* inflations, double* proxies,
+    double* collected, const SearchState* search) {
+    const int lane=threadIdx.x;
+    double best=-INFINITY;
+    int index=INT32_MAX, invalid=0;
+    const double threshold=search->best.objective+1e-9;
+    for(int64_t row=lane;row<count;row+=32) {
+        const Result value=results[row];
+        invalid|=value.failure==SPACEPDHCG_JOINT_INVALID_STAY;
+        if(value.failure==0 && value.objective>threshold
+            && (value.objective>best || (value.objective==best && row<index))) {
+            best=value.objective;index=int(row);
+        }
+    }
+    for(int offset=16;offset>0;offset/=2) {
+        const double other=__shfl_down_sync(0xffffffff,best,offset);
+        const int other_index=__shfl_down_sync(0xffffffff,index,offset);
+        const int other_invalid=__shfl_down_sync(0xffffffff,invalid,offset);
+        if(lane+offset<32) {
+            if(other>best || (other==best && other_index<index)) {best=other;index=other_index;}
+            invalid|=other_invalid;
+        }
+    }
+    const int winner=__shfl_sync(0xffffffff,index,0);
+    if(lane==0) {
+        selection->index=winner==INT32_MAX ? -1 : winner;
+        selection->invalid_stay=invalid;
+        selection->value=winner==INT32_MAX ? failure(SPACEPDHCG_JOINT_OK) : results[winner];
+    }
+    if(winner==INT32_MAX)return;
+    for(int64_t j=lane;j<n-1;j+=32) {
+        const size_t cell=size_t(winner)*(n-1)+j;
+        masses[j]=masses[cell];inflations[j]=inflations[cell];proxies[j]=proxies[cell];
+    }
+    for(int64_t j=lane;j<n;j+=32)collected[j]=collected[size_t(winner)*n+j];
+}
+
 bool flag(int value) { return value == 0 || value == 1; }
 __global__ void generate_mesh(int n, int count, double delta,
     const double* base_arrivals, const double* base_departures,
-    double* arrivals, double* departures) {
+    double* arrivals, double* departures,
+    const SearchState* search = nullptr, const double* mesh_days = nullptr) {
     const size_t cell = size_t(blockIdx.x) * blockDim.x + threadIdx.x;
     if (cell >= size_t(count) * n) return;
     const int row = int(cell / n), j = int(cell % n);
     const int per_sign = count / 2, move = row % per_sign;
-    const double d = row < per_sign ? delta : -delta;
+    const double step = search ? mesh_days[search->report.levels] : delta;
+    const double d = row < per_sign ? step : -step;
     bool touched = false, arrival_shift = false, departure_shift = false;
     if (move < 2) {
         touched = j == (move == 0 ? 0 : n - 1);
@@ -328,6 +384,72 @@ __global__ void select_mesh_epochs(int n, const Selection* selected,
     if (j >= n || selected->index < 0) return;
     const size_t cell = size_t(selected->index) * n + j;
     output_arrivals[j] = arrivals[cell]; output_departures[j] = departures[cell];
+}
+
+__device__ uint64_t global_nanoseconds() {
+    uint64_t value;
+    asm volatile("mov.u64 %0, %%globaltimer;" : "=l"(value));
+    return value;
+}
+
+// One block owns the controller and copies the compact incumbent payload.
+// The expensive candidate/geometry work remains distributed across blocks.
+__global__ void search_save(int n, int count, int max_moves, bool initial,
+    SearchState* state, const Result* results, const Selection* selection,
+    const double* arrivals, const double* departures,
+    double* base_arrivals, double* base_departures,
+    const double* masses, const double* inflations, const double* proxies,
+    const double* collected, double* best_payload) {
+    const int lane = threadIdx.x;
+    const bool invalid = initial ? results[0].failure == SPACEPDHCG_JOINT_INVALID_STAY
+                                 : selection->invalid_stay != 0;
+    const bool accept = initial || (!invalid && selection->index >= 0);
+    const int row = initial ? 0 : selection->index;
+    if (accept) {
+        for (int j = lane; j < n; j += blockDim.x) {
+            base_arrivals[j] = arrivals[size_t(row)*n+j];
+            base_departures[j] = departures[size_t(row)*n+j];
+            best_payload[3*(n-1)+j] = collected[j];
+        }
+        for (int j = lane; j < n-1; j += blockDim.x) {
+            best_payload[j] = masses[j];
+            best_payload[n-1+j] = inflations[j];
+            best_payload[2*(n-1)+j] = proxies[j];
+        }
+    }
+    if (lane == 0) {
+        if (accept) state->best = initial ? results[0] : selection->value;
+        state->report.invalid_stay |= invalid;
+        if (initial) {
+            state->report.evaluations = 1;
+            if (state->best.failure) state->report.stop = 2;
+        } else {
+            ++state->report.batches;
+            state->report.evaluations += count;
+            if (accept) { ++state->report.moves; ++state->moves_here; }
+            if (!accept || state->moves_here >= max_moves) {
+                ++state->report.levels; state->moves_here = 0;
+            }
+        }
+        if (invalid) state->report.stop = 3;
+    }
+}
+
+__global__ void search_start(SearchState* state) {
+    state->started = global_nanoseconds();
+}
+__global__ void search_gate(SearchState* state, int levels, int max_moves,
+    cudaGraphConditionalHandle loop) {
+    bool active = state->report.stop == 0 && state->report.levels < levels && max_moves > 0;
+    if (active && global_nanoseconds() - state->started >= state->budget) {
+        state->report.stop = 1; active = false;
+    }
+    cudaGraphSetConditional(loop, active);
+}
+__global__ void search_finish(const SearchState* state, Selection* output) {
+    output->index = 0;
+    output->invalid_stay = state->report.invalid_stay;
+    output->value = state->best;
 }
 
 bool finite_or_nan(double value) { return std::isfinite(value) || std::isnan(value); }
@@ -407,6 +529,7 @@ bool release(Workspace* w) {
     free_buffer(w->proxies); free_buffer(w->collected);
     free_buffer(w->elements); free_buffer(w->hop_requests); free_buffer(w->hop_results);
     free_buffer(w->cached_costs); free_buffer(w->geometry_stats);
+    free_buffer(w->search); free_buffer(w->mesh_days); free_buffer(w->best_payload);
     if (w->stream && cudaStreamDestroy(w->stream) != cudaSuccess) ok = false;
     return ok;
 }
@@ -546,6 +669,119 @@ extern "C" int spacepdhcg_gtoc12_joint_destroy(void** output) {
     return ok ? 0 : 2;
 }
 
+struct SearchConfig {
+    const double* days;
+    int levels, max_moves;
+    double seconds;
+    SearchReport* report;
+    std::chrono::steady_clock::time_point entered;
+};
+
+static int search_graph(Workspace* w, int count, int record_count, const SearchConfig& config,
+    Selection* selection, double* masses, double* inflations, double* proxies,
+    double* collected, double* output_arrivals, double* output_departures, GeometryStats* stats) {
+    struct Graph {
+        cudaStream_t stream;
+        cudaGraph_t graph{};
+        cudaGraphExec_t executable{};
+        ~Graph() {
+            cudaStreamSynchronize(stream);
+            if(executable) cudaGraphExecDestroy(executable);
+            if(graph) cudaGraphDestroy(graph);
+        }
+    } graph{w->stream};
+    if(!w->search && !allocate(w->search,1)) return 2;
+    if(!w->best_payload && !allocate(w->best_payload,size_t(4)*w->n-3)) return 2;
+    if(config.levels>w->mesh_capacity) {
+        double* next{};
+        if(!allocate(next,size_t(config.levels))) return 2;
+        if(w->mesh_days && cudaFree(w->mesh_days)!=cudaSuccess) {cudaFree(next);return 2;}
+        w->mesh_days=next; w->mesh_capacity=config.levels;
+    }
+    if(config.levels && !upload(w->mesh_days,config.days,size_t(config.levels),w->stream)) return 2;
+    if(cudaGraphCreate(&graph.graph,0)!=cudaSuccess) return 2;
+    cudaGraphConditionalHandle loop{};
+    if(cudaGraphConditionalHandleCreate(&loop,graph.graph,0,cudaGraphCondAssignDefault)!=cudaSuccess) return 2;
+    const auto evaluate=[&](int rows) {
+        const size_t legs=size_t(rows)*(w->n-1);
+        clear_geometry_costs<<<unsigned((legs+127)/128),128,0,w->stream>>>(legs,w->costs);
+        if(cudaGetLastError()!=cudaSuccess) return cudaErrorUnknown;
+        const auto values=[&]() {
+            evaluate_candidates<<<unsigned((size_t(rows)+127)/128),128,0,w->stream>>>(rows,w->n,
+                w->policy,w->visits,w->stages,w->arrivals,w->departures,w->costs,w->results,
+                w->masses,w->inflations,w->proxies,w->collected);
+            return cudaGetLastError();
+        };
+        auto error=values();if(error!=cudaSuccess)return error;
+        error=spacepdhcg_joint_geometry_launch(rows,w->n,w->elements,w->arrivals,w->departures,
+            w->results,w->cached_costs,record_count,w->costs,w->hop_requests,w->hop_results,
+            w->geometry_stats,w->stream);
+        return error==cudaSuccess ? values() : error;
+    };
+    const auto save=[&](bool initial) {
+        search_save<<<1,128,0,w->stream>>>(w->n,count,config.max_moves,initial,w->search,
+            w->results,w->selection,w->arrivals,w->departures,w->base_arrivals,w->base_departures,
+            w->masses,w->inflations,w->proxies,w->collected,w->best_payload);
+        return cudaGetLastError();
+    };
+    const auto gate=[&]() {
+        search_gate<<<1,1,0,w->stream>>>(w->search,config.levels,config.max_moves,loop);
+        return cudaGetLastError();
+    };
+    cudaGraphNode_t head{};
+    if(spacepdhcg_graph_append(w->stream,graph.graph,nullptr,0,[&]() {
+        search_start<<<1,1,0,w->stream>>>(w->search);
+        if(cudaGetLastError()!=cudaSuccess)return cudaErrorUnknown;
+        for(auto pair : {std::pair<double*,double*>{w->arrivals,w->base_arrivals},
+                        std::pair<double*,double*>{w->departures,w->base_departures}}) {
+            auto error=cudaMemcpyAsync(pair.first,pair.second,size_t(w->n)*sizeof(double),cudaMemcpyDeviceToDevice,w->stream);
+            if(error!=cudaSuccess)return error;
+        }
+        for(auto pointer : {w->masses,w->inflations,w->proxies,w->collected}) {
+            auto error=cudaMemsetAsync(pointer,0,size_t(w->n-1)*sizeof(double),w->stream);
+            if(error!=cudaSuccess)return error;
+        }
+        auto error=cudaMemsetAsync(w->collected,0,size_t(w->n)*sizeof(double),w->stream);
+        if(error!=cudaSuccess)return error;
+        error=evaluate(1);if(error!=cudaSuccess)return error;
+        error=save(true);return error==cudaSuccess ? gate() : error;
+    },&head)!=cudaSuccess)return 2;
+    cudaGraphNodeParams params{};params.type=cudaGraphNodeTypeConditional;
+    params.conditional.handle=loop;params.conditional.type=cudaGraphCondTypeWhile;
+    params.conditional.size=1;cudaGraphNode_t outer{};
+    if(cudaGraphAddNode(&outer,graph.graph,&head,1,&params)!=cudaSuccess)return 2;
+    cudaGraphNode_t tail{};
+    if(spacepdhcg_graph_append(w->stream,params.conditional.phGraph_out[0],nullptr,0,[&]() {
+        generate_mesh<<<unsigned((size_t(count)*w->n+127)/128),128,0,w->stream>>>(w->n,count,0,
+            w->base_arrivals,w->base_departures,w->arrivals,w->departures,w->search,w->mesh_days);
+        auto error=cudaGetLastError();if(error!=cudaSuccess)return error;
+        error=evaluate(count);if(error!=cudaSuccess)return error;
+        select_search_candidate<<<1,32,0,w->stream>>>(count,w->n,w->results,w->selection,
+            w->masses,w->inflations,w->proxies,w->collected,w->search);
+        error=cudaGetLastError();if(error!=cudaSuccess)return error;
+        error=save(false);return error==cudaSuccess ? gate() : error;
+    },&tail)!=cudaSuccess)return 2;
+    if(spacepdhcg_graph_append(w->stream,graph.graph,&outer,1,[&]() {
+        search_finish<<<1,1,0,w->stream>>>(w->search,w->selection);return cudaGetLastError();
+    },&tail)!=cudaSuccess || cudaGraphInstantiate(&graph.executable,graph.graph,0)!=cudaSuccess)return 2;
+    SearchState initial{};
+    const double elapsed=std::chrono::duration<double>(std::chrono::steady_clock::now()-config.entered).count();
+    const double remaining=std::max(0.0,config.seconds-elapsed);
+    initial.budget=remaining>=double(UINT64_MAX)*1e-9 ? UINT64_MAX : uint64_t(remaining*1e9);
+    if(!upload(w->search,&initial,1,w->stream)
+        ||cudaGraphLaunch(graph.executable,w->stream)!=cudaSuccess
+        ||!download(selection,w->selection,1,w->stream)
+        ||!download(config.report,&w->search->report,1,w->stream)
+        ||!download(masses,w->best_payload,size_t(w->n-1),w->stream)
+        ||!download(inflations,w->best_payload+w->n-1,size_t(w->n-1),w->stream)
+        ||!download(proxies,w->best_payload+2*(w->n-1),size_t(w->n-1),w->stream)
+        ||!download(collected,w->best_payload+3*(w->n-1),size_t(w->n),w->stream)
+        ||!download(output_arrivals,w->base_arrivals,size_t(w->n),w->stream)
+        ||!download(output_departures,w->base_departures,size_t(w->n),w->stream)
+        ||!download(stats,w->geometry_stats,1,w->stream))return 2;
+    return cudaStreamSynchronize(w->stream)==cudaSuccess ? 0 : 2;
+}
+
 static int geometry_host_impl(void* opaque, int32_t count,
     const Policy* policy, const Visit* visits, const Stage* stages,
     const double* arrivals, const double* departures,
@@ -554,7 +790,8 @@ static int geometry_host_impl(void* opaque, int32_t count,
     Result* results, Selection* selection,
     double* masses, double* inflations, double* proxies, double* collected,
     GeometryStats* stats, bool mesh = false, double delta = 0.0,
-    double* output_arrivals = nullptr, double* output_departures = nullptr) {
+    double* output_arrivals = nullptr, double* output_departures = nullptr,
+    const SearchConfig* search = nullptr) {
     auto* w=static_cast<Workspace*>(opaque);
     if(!correct_device(w) || count<0 || count>w->capacity || !stats || record_count<0) return 1;
     std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);
@@ -563,7 +800,7 @@ static int geometry_host_impl(void* opaque, int32_t count,
     const int status=validate(w->n,mesh?1:count,policy,visits,stages,arrivals,departures,
         nullptr,selection?&selection->value:results,false);
     if(status)return status;
-    if(mesh) {
+    if(mesh && !search) {
         if(!std::isfinite(delta) || delta<=0.0)return 1;
         for(int j=0;j<w->n;++j)
             if(!std::isfinite(arrivals[j]+delta)||!std::isfinite(arrivals[j]-delta)
@@ -606,6 +843,8 @@ static int geometry_host_impl(void* opaque, int32_t count,
         ||!upload(w->elements,elements,size_t(w->n-1),w->stream)
         ||(record_count&&!upload(w->cached_costs,records,size_t(record_count),w->stream))
         ||cudaMemsetAsync(w->geometry_stats,0,sizeof(GeometryStats),w->stream)!=cudaSuccess)return failed();
+    if(search) return search_graph(w,count,record_count,*search,selection,masses,inflations,
+        proxies,collected,output_arrivals,output_departures,stats);
     if(mesh) {
         generate_mesh<<<unsigned((epochs+127)/128),128,0,w->stream>>>(w->n,count,delta,
             w->base_arrivals,w->base_departures,w->arrivals,w->departures);
@@ -670,4 +909,32 @@ extern "C" int spacepdhcg_gtoc12_joint_mesh_host(void* opaque, double delta,
     return geometry_host_impl(opaque,int32_t(count),policy,visits,stages,arrivals,departures,
         elements,records,record_count,minimum,results,selection,masses,inflations,
         proxies,collected,stats,true,delta,output_arrivals,output_departures);
+}
+
+extern "C" int spacepdhcg_gtoc12_joint_search_host(void* opaque, const double* days,
+    int32_t levels, int32_t max_moves, double seconds, const Policy* policy,
+    const Visit* visits, const Stage* stages, const double* arrivals, const double* departures,
+    const spacepdhcg_orbitweaver_hop_elements* elements, const CachedCost* records,
+    int32_t record_count, Selection* selection, double* masses, double* inflations,
+    double* proxies, double* collected, double* output_arrivals, double* output_departures,
+    GeometryStats* stats, SearchReport* report) {
+    const SearchConfig config{days,levels,max_moves,seconds,report,std::chrono::steady_clock::now()};
+    auto* w=static_cast<Workspace*>(opaque);
+    if(!correct_device(w)||levels<0||max_moves<0||(levels&&!days)||!report||!selection
+        ||std::isnan(seconds)||seconds<0||!arrivals||!departures
+        ||int64_t(levels)*max_moves>INT32_MAX)return 1;
+    long double travel=0;
+    for(int j=0;j<levels;++j) {
+        if(!std::isfinite(days[j])||days[j]<=0)return 1;
+        travel+=static_cast<long double>(days[j])*max_moves;
+    }
+    // Bound every possible repeated finite move before launching the loop.
+    for(int j=0;j<w->n;++j)
+        if(fabsl(arrivals[j])+travel>std::numeric_limits<double>::max()
+            ||fabsl(departures[j])+travel>std::numeric_limits<double>::max())return 1;
+    const int64_t count=10*int64_t(w->n)-14;
+    if(count>INT32_MAX)return 1;
+    return geometry_host_impl(opaque,int32_t(count),policy,visits,stages,arrivals,departures,
+        elements,records,record_count,0,nullptr,selection,masses,inflations,proxies,collected,
+        stats,true,0,output_arrivals,output_departures,&config);
 }

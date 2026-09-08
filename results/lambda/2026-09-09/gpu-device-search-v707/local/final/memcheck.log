@@ -1,0 +1,1446 @@
+========= COMPUTE-SANITIZER
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaMemcpyAsync.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: geometry_host_impl(void*, int, spacepdhcg_gtoc12_joint_policy const*, spacepdhcg_gtoc12_joint_visit const*, spacepdhcg_gtoc12_joint_stage const*, double const*, double const*, spacepdhcg_orbitweaver_hop_elements const*, spacepdhcg_gtoc12_joint_cached_cost const*, int, double, spacepdhcg_gtoc12_joint_result*, spacepdhcg_gtoc12_joint_selection*, double*, double*, double*, double*, spacepdhcg_gtoc12_joint_geometry_stats*, bool, double, double*, double*, SearchConfig const*) [0x6258a] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_search_host [0x638c1] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaStreamSynchronize.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: geometry_host_impl(void*, int, spacepdhcg_gtoc12_joint_policy const*, spacepdhcg_gtoc12_joint_visit const*, spacepdhcg_gtoc12_joint_stage const*, double const*, double const*, spacepdhcg_orbitweaver_hop_elements const*, spacepdhcg_gtoc12_joint_cached_cost const*, int, double, spacepdhcg_gtoc12_joint_result*, spacepdhcg_gtoc12_joint_selection*, double*, double*, double*, double*, spacepdhcg_gtoc12_joint_geometry_stats*, bool, double, double*, double*, SearchConfig const*) [0x60c33] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_search_host [0x638c1] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+F========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaStreamSynchronize.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e461] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e475] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e48e] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e4a7] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e4c0] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e4d9] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e4f2] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e50b] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e524] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e53d] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e556] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e56f] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e588] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e5a1] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e5bd] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e5d9] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e5f5] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e611] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e62d] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e649] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e665] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e681] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaFree.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e69d] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaStreamDestroy.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e6b6] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_destroy [0x6002b] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1414962] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: gen_iternext [0x1413d42] in python
+=========         Host Frame: builtin_next [0x141314c] in python
+=========         Host Frame: cfunction_vectorcall_FASTCALL.llvm.8691674818894108523 [0x1405109] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: partial_vectorcall [0x1525c25] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: method_vectorcall.llvm.16653525103252552227 [0x141341f] in python
+=========         Host Frame: PyObject_Call [0x145b733] in python
+=========         Host Frame: partial_call [0x1494c3f] in python
+=========         Host Frame: _PyObject_MakeTpCall [0x145cadb] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1417030] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+E========= Program hit cudaErrorUnknown (error 999) due to "unknown error" on CUDA API call to cudaStreamCreateWithFlags.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: spacepdhcg_gtoc12_joint_create [0x5e99e] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: slot_tp_init [0x149293f] in python
+=========         Host Frame: type_call [0x140356c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416e34] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorInvalidResourceHandle (error 400) due to "invalid resource handle" on CUDA API call to cudaStreamSynchronize.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e461] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_create [0x5eae7] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: slot_tp_init [0x149293f] in python
+=========         Host Frame: type_call [0x140356c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416e34] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+========= Program hit cudaErrorInvalidResourceHandle (error 400) due to "invalid resource handle" on CUDA API call to cudaStreamDestroy.
+=========     Saved host backtrace up to driver entry point at error
+=========         Host Frame: (anonymous namespace)::release((anonymous namespace)::Workspace*) [0x5e6b6] in libspacepdhcg_cuda.so
+=========         Host Frame: spacepdhcg_gtoc12_joint_create [0x5eae7] in libspacepdhcg_cuda.so
+=========         Host Frame: ffi_call_unix64 [0x44d051] in python
+=========         Host Frame: ffi_call_int [0x44c145] in python
+=========         Host Frame: ffi_call [0x44be19] in python
+=========         Host Frame: _ctypes_callproc [0x3632ce] in python
+=========         Host Frame: PyCFuncPtr_call [0x3619e4] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: slot_tp_init [0x149293f] in python
+=========         Host Frame: type_call [0x140356c] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416e34] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x141936d] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: _PyObject_Call_Prepend.warm [0x16c58b7] in python
+=========         Host Frame: slot_tp_call [0x149c92d] in python
+=========         Host Frame: _PyEval_EvalFrameDefault [0x1416ea5] in python
+=========         Host Frame: PyEval_EvalCode [0x1497b1f] in python
+=========         Host Frame: run_mod.llvm.10765962669227346324 [0x14b2948] in python
+=========         Host Frame: PyRun_SimpleStringFlags [0x156199f] in python
+=========         Host Frame: Py_RunMain.warm [0x16ea554] in python
+=========         Host Frame: pymain_main.llvm.12225469820353354614 [0x157a297] in python
+=========         Host Frame: main [0x157a0ab] in python
+========= 
+F                                                                      [100%]
+==================================== ERRORS ====================================
+_ ERROR at teardown of test_whole_search_matches_controller[ship-01.json-moves] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7aeee9a55100>
+
+    @pytest.fixture
+    def gpu(monkeypatch):
+        monkeypatch.setenv(JOINT_FLAG, "1")
+        # A deliberately partial geometry batch exercises retained Lambert storage.
+>       with using_lambert_backend("cuda", maximum_batch_size=97) as backend:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_gtoc12_gpu_joint.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/contextlib.py:144: in __exit__
+    next(self.gen)
+src/spacepdhcg/gtoc12/lambert.py:160: in using_lambert_backend
+    with GpuLambert(maximum_batch_size) as gpu:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/spacepdhcg/gtoc12/gpu_lambert.py:270: in __exit__
+    self.close()
+src/spacepdhcg/gtoc12/gpu_lambert.py:219: in close
+    self.joint_workspace.close()
+src/spacepdhcg/gtoc12/gpu_joint.py:280: in close
+    self._check(self.destroy(ct.byref(self.handle)))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+status = 2
+
+    @staticmethod
+    def _check(status):
+        if status:
+>           raise RuntimeError(f"CUDA joint itinerary failed (native status {status})")
+E           RuntimeError: CUDA joint itinerary failed (native status 2)
+
+src/spacepdhcg/gtoc12/gpu_joint.py:275: RuntimeError
+=================================== FAILURES ===================================
+___________ test_whole_search_matches_controller[ship-01.json-moves] ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7aeee9a55100>
+gpu = <spacepdhcg.gtoc12.gpu_lambert.GpuLambert object at 0x7aeee99f3950>
+incumbent = (<spacepdhcg.gtoc12.jointopt.JointItinerary object at 0x7aeeeaa20830>, [Visit(body=0, deploy=False, collect=False, rol...66333.,
+       66623., 66908., 67673., 67903., 68183., 68303., 68503., 68663.,
+       68813., 68963., 69203., 69653.]))
+case = 'moves'
+
+    @pytest.mark.parametrize("case", ["moves", "empty", "zero", "expired", "ties", "infeasible"])
+    def test_whole_search_matches_controller(monkeypatch, gpu, incumbent, case):
+        template, visits, arr, dep = incumbent
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "1")
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_MESH", "1")
+        rows = oracle._moves(visits, arr, dep, 3.0)
+        values = evaluate_joint(deepcopy(template), visits, *rows)
+        worst = min((i for i, v in enumerate(values) if v.feasible), key=lambda i: values[i].objective)
+        arr, dep = rows[0][worst].copy(), rows[1][worst].copy()
+        mesh, moves, deadline = (3.0, 1.0), 3, math.inf
+        if case == "empty":
+            mesh = ()
+        elif case == "zero":
+            moves = 0
+        elif case == "expired":
+            deadline = time.perf_counter() - 1
+        elif case == "ties":
+            mesh = (1e-300, 1e-300)
+        elif case == "infeasible":
+            arr[0] = dep[0] = 0
+        monkeypatch.setenv(FLAG, "0")
+        baseline = deepcopy(template)
+        expected = baseline.optimise_epochs(
+            visits, arr, dep, mesh=mesh, max_moves=moves, deadline=deadline
+        )
+        if case == "moves":
+            assert expected[3] > 0
+        else:
+            assert expected[3] == 0
+        monkeypatch.setenv(FLAG, "1")
+        for _ in range(2):
+            candidate = deepcopy(template)
+            before = dict(gpu.telemetry)
+>           actual = candidate.optimise_epochs(
+                visits, arr, dep, mesh=mesh, max_moves=moves, deadline=deadline
+            )
+
+tests/test_gtoc12_gpu_joint_search.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/spacepdhcg/gtoc12/jointopt.py:558: in optimise_epochs
+    return search_epochs(self, visits, arr, dep, mesh, max_moves, deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/spacepdhcg/gtoc12/gpu_joint.py:723: in search_epochs
+    output = evaluate_joint(
+src/spacepdhcg/gtoc12/gpu_joint.py:692: in evaluate_joint
+    return current.run(
+src/spacepdhcg/gtoc12/gpu_joint.py:443: in run
+    self._check(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+status = 2
+
+    @staticmethod
+    def _check(status):
+        if status:
+>           raise RuntimeError(f"CUDA joint itinerary failed (native status {status})")
+E           RuntimeError: CUDA joint itinerary failed (native status 2)
+
+src/spacepdhcg/gtoc12/gpu_joint.py:275: RuntimeError
+___________ test_whole_search_matches_controller[ship-02.json-moves] ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7aeee95079e0>
+gpu = <spacepdhcg.gtoc12.gpu_lambert.GpuLambert object at 0x7aeee9516de0>
+incumbent = (<spacepdhcg.gtoc12.jointopt.JointItinerary object at 0x7aeee9a56510>, [Visit(body=0, deploy=False, collect=False, rol...65568., 65813., 65943., 66253.,
+       67853., 68048., 68288., 68513., 68768., 68918., 69098., 69308.,
+       69788.]))
+case = 'moves'
+
+    @pytest.mark.parametrize("case", ["moves", "empty", "zero", "expired", "ties", "infeasible"])
+    def test_whole_search_matches_controller(monkeypatch, gpu, incumbent, case):
+        template, visits, arr, dep = incumbent
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_JOINT_RESIDENT_GEOMETRY", "1")
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_MESH", "1")
+        rows = oracle._moves(visits, arr, dep, 3.0)
+>       values = evaluate_joint(deepcopy(template), visits, *rows)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_gtoc12_gpu_joint_search.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/spacepdhcg/gtoc12/gpu_joint.py:691: in evaluate_joint
+    gpu.joint_workspace = current = GpuJoint(gpu, capacity, len(visits))
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/spacepdhcg/gtoc12/gpu_joint.py:270: in __init__
+    self._check(self.create(gpu.device_id, count, visits, ct.byref(self.handle)))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+status = 2
+
+    @staticmethod
+    def _check(status):
+        if status:
+>           raise RuntimeError(f"CUDA joint itinerary failed (native status {status})")
+E           RuntimeError: CUDA joint itinerary failed (native status 2)
+
+src/spacepdhcg/gtoc12/gpu_joint.py:275: RuntimeError
+=========================== short test summary info ============================
+ERROR tests/test_gtoc12_gpu_joint_search.py::test_whole_search_matches_controller[ship-01.json-moves]
+FAILED tests/test_gtoc12_gpu_joint_search.py::test_whole_search_matches_controller[ship-01.json-moves]
+FAILED tests/test_gtoc12_gpu_joint_search.py::test_whole_search_matches_controller[ship-02.json-moves]
+2 failed, 22 deselected, 1 error in 1.01s
+========= Target application returned an error
+========= ERROR SUMMARY: 29 errors

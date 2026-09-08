@@ -70,6 +70,15 @@ All 36 native legs converge in the new full campaigns, retaining the same
 wider Python search control remains. [Implementation, evidence, timing limits
 and downloaded H100 visualiser](docs/GPU_CONDITIONING_RETRY.md).
 
+The whole fixed-order epoch search can now run inside one CUDA conditional
+graph: initial evaluation, neighbourhood generation, geometry, winner acceptance,
+mesh transitions and deadline checks remain on the GPU. Paired stage timings are
+**1.37–1.60x faster locally and 2.29–2.78x on H100**, with exactly matching search
+results. Both GPUs pass 111 tests. All four complete fleet replays pass both
+physics checkers at the same score; joint host calls fall from **132 to 4**.
+This completes GPU control of that search stage; broader route and fleet control
+remain. [Measurements, sanitizer limits, evidence and visualiser](docs/GPU_DEVICE_EPOCH_SEARCH.md).
+
 The richer family32 search reproduces the historical **641.068 kg first
 ship** on both GPUs. Its verified three-ship fleet returns 1,587.269 raw kg /
 1,420.909 weighted kg; it cannot improve the historical 23-ship fleet. Selection

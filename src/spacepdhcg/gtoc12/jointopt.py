@@ -541,12 +541,21 @@ class JointItinerary:
         """Steepest-ascent pattern search over the epoch vector on a shrinking mesh; returns
         the best epochs, their evaluation and the number of moves taken.  Deterministic."""
 
-        from .gpu_joint import cuda_joint_enabled, cuda_mesh_enabled, evaluate_joint, evaluate_mesh
+        from .gpu_joint import (
+            cuda_joint_enabled,
+            cuda_mesh_enabled,
+            cuda_search_enabled,
+            evaluate_joint,
+            evaluate_mesh,
+            search_epochs,
+        )
 
         mesh = self.settings.mesh_days if mesh is None else mesh
         max_moves = self.settings.max_moves_per_mesh if max_moves is None else max_moves
         arr = np.array(arrivals, dtype=np.float64)
         dep = np.array(departures, dtype=np.float64)
+        if cuda_search_enabled():
+            return search_epochs(self, visits, arr, dep, mesh, max_moves, deadline)
         best = self.evaluate(visits, arr, dep)
         taken = 0
         if not best.feasible:

@@ -9,6 +9,7 @@ from __future__ import annotations
 import ctypes as ct
 import math
 import os
+import time
 from itertools import pairwise
 
 import numpy as np
@@ -76,6 +77,11 @@ CACHED_COST = np.dtype(
 )
 GEOMETRY_STATS = np.dtype(
     [(name, np.uint64) for name in ("computed_hops", "cached_hops", "rejected_hops")]
+)
+SEARCH_REPORT = np.dtype(
+    [(name, np.int32) for name in ("levels", "moves", "stop", "invalid_stay")]
+    + [(name, np.uint64) for name in ("batches", "evaluations")],
+    align=True,
 )
 FAILURES = (
     "",
@@ -228,6 +234,15 @@ class GpuJoint:
         self.best = getattr(gpu.library, "spacepdhcg_gtoc12_joint_best_host", None)
         self.geometry = getattr(gpu.library, "spacepdhcg_gtoc12_joint_geometry_host", None)
         self.mesh = getattr(gpu.library, "spacepdhcg_gtoc12_joint_mesh_host", None)
+        self.search = getattr(gpu.library, "spacepdhcg_gtoc12_joint_search_host", None)
+        if self.search is not None:
+            self.search.argtypes = (
+                [ct.c_void_p, ct.c_void_p, ct.c_int32, ct.c_int32, ct.c_double]
+                + [ct.c_void_p] * 7
+                + [ct.c_int32]
+                + [ct.c_void_p] * 9
+            )
+            self.search.restype = ct.c_int
         if self.mesh is not None:
             self.mesh.argtypes = (
                 [ct.c_void_p, ct.c_double]
@@ -264,11 +279,23 @@ class GpuJoint:
             self.gpu._owned()
             self._check(self.destroy(ct.byref(self.handle)))
 
-    def run(self, joint, visits, arrivals, departures, *, minimum_objective=None, mesh_delta=None):
+    def run(
+        self,
+        joint,
+        visits,
+        arrivals,
+        departures,
+        *,
+        minimum_objective=None,
+        mesh_delta=None,
+        search_config=None,
+    ):
         from .jointopt import Evaluation
         from .search import PlannedLeg, RoutePlan
 
         self.gpu._owned()
+        if search_config is not None and self.search is None:
+            raise RuntimeError("CUDA joint search requires spacepdhcg_gtoc12_joint_search_host")
         selection_override = os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SELECTION")
         if selection_override == "1" and self.best is None:
             raise RuntimeError(
@@ -293,11 +320,14 @@ class GpuJoint:
         metadata, stages, policy = _metadata(joint, visits)
         count, n = arrivals.shape
         mesh_epochs = None
+        search_report = np.zeros(1, SEARCH_REPORT) if search_config is not None else None
         if mesh_delta is not None:
             count = 10 * n - 14
             mesh_epochs = (np.empty((1, n)), np.empty((1, n)))
 
         def finish(value):
+            if search_report is not None:
+                return value, *mesh_epochs, search_report[0]
             return value if mesh_epochs is None else (value, *mesh_epochs)
 
         if resident_geometry:
@@ -403,7 +433,33 @@ class GpuJoint:
             if mesh_epochs is not None:
                 geometry_arguments += tuple(a.ctypes.data for a in mesh_epochs)
             geometry_arguments += (stats.ctypes.data,)
-            self._check((self.geometry if mesh_delta is None else self.mesh)(*geometry_arguments))
+            if search_config is None:
+                self._check(
+                    (self.geometry if mesh_delta is None else self.mesh)(*geometry_arguments)
+                )
+            else:
+                days, max_moves, deadline = search_config
+                remaining = max(0.0, deadline - time.perf_counter())
+                self._check(
+                    self.search(
+                        self.handle,
+                        days.ctypes.data,
+                        len(days),
+                        max_moves,
+                        remaining,
+                        *(a.ctypes.data for a in (policy, metadata, stages, arrivals, departures)),
+                        ct.addressof(elements),
+                        records.ctypes.data,
+                        len(records),
+                        selection.ctypes.data,
+                        *(
+                            a.ctypes.data
+                            for a in (masses, inflations, proxies, payload, *mesh_epochs)
+                        ),
+                        stats.ctypes.data,
+                        search_report.ctypes.data,
+                    )
+                )
             if device_selection:
                 result = selection["value"]
             computed = int(stats["computed_hops"][0])
@@ -422,7 +478,10 @@ class GpuJoint:
             )
             if mesh_epochs is not None:
                 for key, amount in (
-                    ("completed_joint_mesh_batches", 1),
+                    (
+                        "completed_joint_mesh_batches",
+                        1 if search_report is None else int(search_report["batches"][0]),
+                    ),
                     ("joint_mesh_epoch_upload_bytes", arrivals.nbytes + departures.nbytes),
                     ("joint_mesh_epoch_download_bytes", sum(a.nbytes for a in mesh_epochs)),
                 ):
@@ -442,6 +501,15 @@ class GpuJoint:
             result = selection["value"]
         else:
             self._check(self.evaluate(self.handle, count, *(array.ctypes.data for array in arrays)))
+        if search_report is not None:
+            count = int(search_report["evaluations"][0])
+            telemetry["completed_joint_searches"] = telemetry.get("completed_joint_searches", 0) + 1
+            telemetry["joint_search_accepted_moves"] = telemetry.get(
+                "joint_search_accepted_moves", 0
+            ) + int(search_report["moves"][0])
+            telemetry["joint_search_report_download_bytes"] = (
+                telemetry.get("joint_search_report_download_bytes", 0) + search_report.nbytes
+            )
         joint.evaluations += count
         telemetry = self.gpu.telemetry
         telemetry["completed_joint_batches"] = telemetry.get("completed_joint_batches", 0) + 1
@@ -560,8 +628,21 @@ def cuda_mesh_enabled():
     )
 
 
+def cuda_search_enabled():
+    return (
+        cuda_joint_enabled() and os.environ.get("SPACEPDHCG_TEST_GTOC12_JOINT_DEVICE_SEARCH") == "1"
+    )
+
+
 def evaluate_joint(
-    joint, visits, arrivals, departures, *, minimum_objective=None, _mesh_delta=None
+    joint,
+    visits,
+    arrivals,
+    departures,
+    *,
+    minimum_objective=None,
+    _mesh_delta=None,
+    _search_config=None,
 ):
     from .jointopt import JointItinerary
     from .lambert import _GPU_BACKEND
@@ -609,8 +690,49 @@ def evaluate_joint(
         capacity = max(required, 2 * (3 + 5 * (len(visits) - 2)))
         gpu.joint_workspace = current = GpuJoint(gpu, capacity, len(visits))
     return current.run(
-        joint, visits, arr, dep, minimum_objective=minimum_objective, mesh_delta=_mesh_delta
+        joint,
+        visits,
+        arr,
+        dep,
+        minimum_objective=minimum_objective,
+        mesh_delta=_mesh_delta,
+        search_config=_search_config,
     )
+
+
+def search_epochs(joint, visits, arrivals, departures, mesh, max_moves, deadline):
+    """One device-controlled search; only final epochs/report return to Python."""
+    from .jointopt import JointItinerary
+
+    if (
+        joint.moves is not JointItinerary.moves
+        or getattr(joint.evaluate, "__func__", None) is not JointItinerary.evaluate
+    ):
+        raise ValueError("CUDA joint search does not support overridden moves/evaluation")
+    days = np.ascontiguousarray(mesh, dtype=np.float64)
+    if days.ndim != 1 or not np.isfinite(days).all() or np.any(days <= 0):
+        raise ValueError("joint search mesh must contain finite positive steps")
+    if (
+        not isinstance(max_moves, (int, np.integer))
+        or not 0 <= max_moves <= np.iinfo(np.int32).max
+        or len(days) * max_moves > np.iinfo(np.int32).max
+    ):
+        raise ValueError("joint search move budget must fit nonnegative int32")
+    if math.isnan(deadline):
+        raise ValueError("joint search deadline must not be NaN")
+    output = evaluate_joint(
+        joint,
+        visits,
+        np.asarray(arrivals)[None],
+        np.asarray(departures)[None],
+        minimum_objective=-math.inf,
+        _mesh_delta=1.0,
+        _search_config=(days, int(max_moves), deadline),
+    )
+    if output is None:
+        raise RuntimeError("CUDA joint search backend is unavailable")
+    selected, arr, dep, report = output
+    return arr[0], dep[0], selected[1], int(report["moves"])
 
 
 def evaluate_mesh(joint, visits, arrivals, departures, delta, minimum_objective):

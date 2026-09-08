@@ -192,6 +192,36 @@ int spacepdhcg_gtoc12_joint_mesh_host(
     double* output_arrivals, double* output_departures,
     spacepdhcg_gtoc12_joint_geometry_stats* stats);
 
+/* Entire fixed-order epoch search, including initial evaluation, mesh-level
+ * transitions and accepted epochs, executes in one conditional CUDA graph.
+ * No per-neighbourhood host decisions/downloads. Same first-row tie rule and
+ * objective + 1e-9 improvement gate as mesh_host. Metadata is immutable for the
+ * call; learned/cached exact-epoch overrides are uploaded once.
+ * remaining_seconds includes native setup; +infinity disables the deadline.
+ * Deadlines are soft: checked between complete neighbourhoods. Device timing
+ * uses the NVIDIA global nanosecond timer on the validated CUDA targets.
+ * stop: 0 levels/move budget exhausted, 1 deadline, 2 initial infeasible,
+ * 3 invalid mining stay. All outputs describe the retained incumbent.
+ */
+typedef struct spacepdhcg_gtoc12_joint_search_report {
+    int32_t levels, moves, stop, invalid_stay;
+    uint64_t batches, evaluations;
+} spacepdhcg_gtoc12_joint_search_report;
+int spacepdhcg_gtoc12_joint_search_host(
+    void* workspace, const double* mesh_days, int32_t levels,
+    int32_t max_moves_per_mesh, double remaining_seconds,
+    const spacepdhcg_gtoc12_joint_policy* policy,
+    const spacepdhcg_gtoc12_joint_visit* visits,
+    const spacepdhcg_gtoc12_joint_stage* stages,
+    const double* arrivals, const double* departures,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const spacepdhcg_gtoc12_joint_cached_cost* records, int32_t record_count,
+    spacepdhcg_gtoc12_joint_selection* incumbent,
+    double* masses, double* inflations, double* proxies, double* collected,
+    double* output_arrivals, double* output_departures,
+    spacepdhcg_gtoc12_joint_geometry_stats* stats,
+    spacepdhcg_gtoc12_joint_search_report* report);
+
 #ifdef __cplusplus
 }
 #endif

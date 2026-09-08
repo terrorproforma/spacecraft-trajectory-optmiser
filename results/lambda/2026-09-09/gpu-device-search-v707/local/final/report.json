@@ -1,0 +1,117 @@
+{
+  "complete": true,
+  "success": false,
+  "pid": 374,
+  "stages": [
+    {
+      "name": "git-init",
+      "returncode": 0,
+      "seconds": 0.008059087999981784,
+      "command": [
+        "git",
+        "init"
+      ]
+    },
+    {
+      "name": "git-add",
+      "returncode": 0,
+      "seconds": 0.1644083190000174,
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ]
+    },
+    {
+      "name": "git-freeze",
+      "returncode": 0,
+      "seconds": 0.06411330599996745,
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Frozen warp-reduced device epoch search"
+      ]
+    },
+    {
+      "name": "configure",
+      "returncode": 0,
+      "seconds": 15.649744349999992,
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "-S",
+        "/home/angus/spacepdhcg-joint-search-v702/repo/cpp",
+        "-B",
+        "/home/angus/spacepdhcg-joint-search-v702/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.8/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=120",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/angus/spacecraft-trajectory-optmiser/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "returncode": 0,
+      "seconds": 52.73735325100006,
+      "command": [
+        "/home/angus/spacecraft-trajectory-optmiser/.venv/bin/cmake",
+        "--build",
+        "/home/angus/spacepdhcg-joint-search-v702/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j3"
+      ]
+    },
+    {
+      "name": "pytest",
+      "returncode": 0,
+      "seconds": 18.824465423999982,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint_search.py",
+        "tests/test_gtoc12_gpu_joint_mesh.py",
+        "tests/test_gtoc12_gpu_joint_geometry.py",
+        "tests/test_gtoc12_gpu_joint_selection.py",
+        "tests/test_gtoc12_gpu_joint_compatibility.py",
+        "tests/test_gtoc12_gpu_joint.py",
+        "tests/test_gtoc12_jointopt.py"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "returncode": 86,
+      "seconds": 1.2705844250000382,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint_search.py",
+        "-k",
+        "whole_search and moves"
+      ]
+    }
+  ],
+  "stage": "memcheck",
+  "child_pid": 1094,
+  "core_sha256": "65f1335e3af820d22451e0d4f587f2d26aeccf364a0ed3bb9597bfd009bac5aa",
+  "error": "Traceback (most recent call last):\n  File \"/home/angus/spacepdhcg-joint-search-v702/worker.py\", line 45, in <module>\n    run(mode,[cuda+'/bin/compute-sanitizer','--tool',mode,'--error-exitcode','86',py,'-c',boot,'-q',tests[0],'-k','whole_search and moves'])\n  File \"/home/angus/spacepdhcg-joint-search-v702/worker.py\", line 29, in run\n    if code:raise RuntimeError((name,code))\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: ('memcheck', 86)\n"
+}

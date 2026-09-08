@@ -1,5 +1,9 @@
 # GPU-generated itinerary neighbourhoods
 
+The subsequent [GPU-controlled epoch search](GPU_DEVICE_EPOCH_SEARCH.md) moves
+the complete mesh loop onto CUDA, including incumbent acceptance, level changes
+and deadline checks. This document records the earlier per-neighbourhood API.
+
 The optional CUDA mesh path generates all `10*N - 14` ordered timing moves from
 one incumbent arrival/departure vector. Trial epochs feed directly into resident
 preflight, sparse cost lookup, orbit propagation, Lambert screening, mass/mining

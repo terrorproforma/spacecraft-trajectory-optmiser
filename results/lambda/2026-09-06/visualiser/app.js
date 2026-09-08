@@ -68,6 +68,7 @@ const FLEET_DATASETS = {
   "gtoc12-geometry-v659": { directory: "./data/gtoc12-geometry-v659", label: "H100 resident geometry v659 (23 ships, 12,810 weighted kg; verified)" },
   "gtoc12-mesh-v670": { directory: "./data/gtoc12-mesh-v670", label: "H100 GPU mesh v670 (23 ships, 12,810 weighted kg; verified)" },
   "gtoc12-retry-v696": { directory: "./data/gtoc12-retry-v696", label: "H100 GPU conditioning retry v696 (23 ships, 12,810 weighted kg; verified)" },
+  "gtoc12-search-v707": { directory: "./data/gtoc12-search-v707", label: "H100 GPU epoch search v707 (23 ships, 12,810 weighted kg; verified)" },
   "gtoc12-v380": { directory: "./data/gtoc12-v380", label: "GPU recovery v380 (4 ships, 2,089 weighted kg)" },
   "gtoc12-v374": { directory: "./data/gtoc12-v374", label: "GPU fleet v374 (3 ships, 1,670 weighted kg)" },
   "gtoc12-v360": { directory: "./data/gtoc12-v360", label: "GPU SOC step v360 (548 kg certified)" },

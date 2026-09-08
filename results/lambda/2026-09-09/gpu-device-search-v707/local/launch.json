@@ -1,0 +1,16 @@
+{
+  "core_sha256": "65f1335e3af820d22451e0d4f587f2d26aeccf364a0ed3bb9597bfd009bac5aa",
+  "worker_sha256": "2a5b4f1538ba0008146149a1bfc136e882bb151afc6bfc492e7ee7b6eef01142",
+  "validation_stages": {
+    "git-init": 0,
+    "git-add": 0,
+    "git-freeze": 0,
+    "configure": 0,
+    "build": 0,
+    "pytest": 0,
+    "memcheck": 86
+  },
+  "limitations": [
+    "Local active-loop memcheck returns CUDA error 999; empty-loop memcheck and active-loop race/sync pass. H100 active-loop memcheck passes."
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "complete": true,
+  "success": false,
+  "pid": 226170,
+  "stages": [
+    {
+      "name": "git-init",
+      "returncode": 0,
+      "seconds": 0.0036444359575398266,
+      "command": [
+        "git",
+        "init"
+      ]
+    },
+    {
+      "name": "git-add",
+      "returncode": 0,
+      "seconds": 0.21394739695824683,
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ]
+    },
+    {
+      "name": "git-freeze",
+      "returncode": 0,
+      "seconds": 0.06375079799909145,
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Frozen warp-reduced device epoch search"
+      ]
+    },
+    {
+      "name": "configure",
+      "returncode": 0,
+      "seconds": 2.3669545450247824,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-joint-search-v702/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-joint-search-v702/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "returncode": 0,
+      "seconds": 51.43290959094884,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-joint-search-v702/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "-j3"
+      ]
+    },
+    {
+      "name": "pytest",
+      "returncode": 0,
+      "seconds": 34.971156618034,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint_search.py",
+        "tests/test_gtoc12_gpu_joint_mesh.py",
+        "tests/test_gtoc12_gpu_joint_geometry.py",
+        "tests/test_gtoc12_gpu_joint_selection.py",
+        "tests/test_gtoc12_gpu_joint_compatibility.py",
+        "tests/test_gtoc12_gpu_joint.py",
+        "tests/test_gtoc12_jointopt.py"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "returncode": 0,
+      "seconds": 1.7662552139954641,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint_search.py",
+        "-k",
+        "whole_search and moves"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "returncode": 0,
+      "seconds": 2.0666535779600963,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint_search.py",
+        "-k",
+        "whole_search and moves"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "returncode": 0,
+      "seconds": 1.4158561259973794,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint_search.py",
+        "-k",
+        "whole_search and moves"
+      ]
+    },
+    {
+      "name": "benchmark",
+      "returncode": 1,
+      "seconds": 0.2641973000136204,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "/home/ubuntu/spacepdhcg-joint-search-v702/benchmark.py",
+        "/home/ubuntu/spacepdhcg-joint-search-v702/benchmark.json"
+      ]
+    }
+  ],
+  "stage": "benchmark",
+  "child_pid": 226812,
+  "core_sha256": "4288e12e3cf77664ca4e305778a11b4d13662f30474585844db0fb521f2d60a3",
+  "error": "Traceback (most recent call last):\n  File \"/home/ubuntu/spacepdhcg-joint-search-v702/worker.py\", line 46, in <module>\n    run('benchmark',[py,str(root/'benchmark.py'),str(root/'benchmark.json')])\n  File \"/home/ubuntu/spacepdhcg-joint-search-v702/worker.py\", line 29, in run\n    if code:raise RuntimeError((name,code))\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: ('benchmark', 1)\n"
+}

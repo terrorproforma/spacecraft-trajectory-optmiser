@@ -1,0 +1,24 @@
+{
+  "run_id": "gpu_device_search_v707_h100",
+  "fleet_run_id": "orphan_recovery_v595",
+  "commit": "experimental",
+  "source_revision_note": "Frozen 3175fb44 plus the complete CUDA epoch-search controller. Exact source/binary hashes and full evidence are archived in gpu-device-search-v707.",
+  "weighted_score_fixed_bonus_kg": 12810.135953048479,
+  "raw_kg_per_ship": 610.9502127786303,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB HBM3",
+    "upstream_search": "Retained historical 23-ship fleet"
+  },
+  "timing": {
+    "wall_seconds_total": 133.0990707789897,
+    "wall_human": "133.099 s recovery replay including CPU checks and export; historical fleet search excluded"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 dynamics; both complete-fleet checkers passed at unchanged tolerances",
+    "local_refine": "CUDA seed, SCvx, assembly and GPU QOCO with device-selected retry conditioning; GPU Lambert/DP and whole epoch-search graph, including generation, geometry, winner acceptance, mesh transitions and deadlines"
+  },
+  "optimisation": {
+    "strategy": "18 orders, 23,142 joint candidates and 36 converged native legs. Four GPU-controlled epoch searches replace 132 joint host calls; epoch traffic is 1,248 bytes each way. Same verified fleet score. Broader Python route/fleet orchestration and independent CPU checks remain.",
+    "proven_optimal": false
+  }
+}

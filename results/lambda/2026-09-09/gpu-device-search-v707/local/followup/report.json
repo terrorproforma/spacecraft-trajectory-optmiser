@@ -1,0 +1,77 @@
+{
+  "complete": true,
+  "success": true,
+  "pid": 1272,
+  "stages": [
+    {
+      "name": "memcheck-empty",
+      "returncode": 0,
+      "seconds": 0.9676319139999805,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint_search.py",
+        "-k",
+        "whole_search and empty"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "returncode": 0,
+      "seconds": 1.6693450379999604,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint_search.py",
+        "-k",
+        "whole_search and moves"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "returncode": 0,
+      "seconds": 1.018751318999989,
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_joint_search.py",
+        "-k",
+        "whole_search and moves"
+      ]
+    },
+    {
+      "name": "benchmark",
+      "returncode": 0,
+      "seconds": 1.3201766029999362,
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "/home/angus/spacepdhcg-joint-search-v702/benchmark.py",
+        "/home/angus/spacepdhcg-joint-search-v702/followup-v704/benchmark.json"
+      ]
+    }
+  ],
+  "stage": "benchmark",
+  "child_pid": 1343,
+  "benchmark_success": true
+}
