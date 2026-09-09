@@ -1648,3 +1648,5 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_destroy(
 }
 
 }  // extern "C"
+
+#include "gtoc12_ephemeris.cuh"

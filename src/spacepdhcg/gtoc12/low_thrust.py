@@ -96,6 +96,14 @@ class ScvxSettings:
     outer_loop_backend: str = "python"  # "cuda" retains trajectories and decisions on device
     seed_backend: str = "auto"  # auto follows outer_loop_backend; numpy is an explicit ablation
     certification_backend: str = "auto"  # native outer loop uses CUDA DOP853; cpu is an ablation
+    ephemeris_backend: str = "auto"  # native routes batch their boundary states on CUDA
+
+    def selected_ephemeris_backend(self) -> str:
+        if self.ephemeris_backend not in {"auto", "cpu", "cuda"}:
+            raise ValueError("ephemeris_backend must be auto, cpu or cuda")
+        if self.ephemeris_backend == "auto":
+            return "cuda" if self.outer_loop_backend == "cuda" else "cpu"
+        return self.ephemeris_backend
 
     def selected_certification_backend(self) -> str:
         if self.certification_backend not in {"auto", "cpu", "cuda"}:
@@ -679,7 +687,8 @@ def _solve_leg(
     if settings.seed_backend == "cuda" and settings.outer_loop_backend != "cuda":
         raise ValueError("CUDA seed requires CUDA outer loop")
     if settings.outer_loop_backend == "cuda" and (
-        settings.discretisation_backend != "cuda" or settings.assembly_backend != "cuda"
+        settings.discretisation_backend != "cuda"
+        or settings.assembly_backend != "cuda"
         or settings.convex_solver_backend != "qoco"
     ):
         raise ValueError("CUDA outer loop requires CUDA dynamics, CUDA assembly and QOCO")
@@ -754,25 +763,65 @@ def _solve_leg(
         from .gpu_scvx import solve_native
 
         if seed is not None:
-            return solve_native(boundary, settings, model, node_times, node_days, bnd, fuel_weights,
-                                states, controls, started, seed=seed)
-        return solve_native(boundary, settings, model, node_times, node_days, bnd, fuel_weights,
-                            states, controls, started)
+            return solve_native(
+                boundary,
+                settings,
+                model,
+                node_times,
+                node_days,
+                bnd,
+                fuel_weights,
+                states,
+                controls,
+                started,
+                seed=seed,
+            )
+        return solve_native(
+            boundary,
+            settings,
+            model,
+            node_times,
+            node_days,
+            bnd,
+            fuel_weights,
+            states,
+            controls,
+            started,
+        )
     if settings.convex_solver_backend == "qoco":
         from .gpu_qoco import GpuQocoProblem
 
-        problem = resources.enter_context(closing(GpuQocoProblem(
-            model, node_times, settings.hold, boundary.free_departure_vinf,
-            boundary.free_arrival_vinf, bnd, fuel_weights, settings.clarabel_tolerance,
-            settings.qoco_ruiz_iterations,
-        )))
+        problem = resources.enter_context(
+            closing(
+                GpuQocoProblem(
+                    model,
+                    node_times,
+                    settings.hold,
+                    boundary.free_departure_vinf,
+                    boundary.free_arrival_vinf,
+                    bnd,
+                    fuel_weights,
+                    settings.clarabel_tolerance,
+                    settings.qoco_ruiz_iterations,
+                )
+            )
+        )
     elif settings.assembly_backend == "cuda":
         from .gpu_conic import GpuConvexProblem
 
-        problem = resources.enter_context(closing(GpuConvexProblem(
-            model, node_times, settings.hold, boundary.free_departure_vinf,
-            boundary.free_arrival_vinf, bnd, fuel_weights,
-        )))
+        problem = resources.enter_context(
+            closing(
+                GpuConvexProblem(
+                    model,
+                    node_times,
+                    settings.hold,
+                    boundary.free_departure_vinf,
+                    boundary.free_arrival_vinf,
+                    bnd,
+                    fuel_weights,
+                )
+            )
+        )
 
     def fuel(ct: FloatArray) -> float:
         return float(np.dot(fuel_weights, ct[:, 3]))
@@ -806,15 +855,29 @@ def _solve_leg(
         iterations = iteration + 1
         if settings.convex_solver_backend == "qoco":
             ok, solver_status, x = problem.solve_linearised(
-                states, controls, disc.substeps, trust_state, trust_control,
-                settings.virtual_weight, minimum_mass, radius_floor, vinf_max,
+                states,
+                controls,
+                disc.substeps,
+                trust_state,
+                trust_control,
+                settings.virtual_weight,
+                minimum_mass,
+                radius_floor,
+                vinf_max,
                 settings.smoothness_weight,
             )
             solver_reports.append({"outer_iteration": iterations, **problem.last_report})
         elif settings.assembly_backend == "cuda":
             a_matrix, b, q, cones, p_matrix = problem.build_linearised(
-                states, controls, disc.substeps, trust_state, trust_control,
-                settings.virtual_weight, minimum_mass, radius_floor, vinf_max,
+                states,
+                controls,
+                disc.substeps,
+                trust_state,
+                trust_control,
+                settings.virtual_weight,
+                minimum_mass,
+                radius_floor,
+                vinf_max,
                 settings.smoothness_weight,
             )
         else:

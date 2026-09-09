@@ -20,14 +20,36 @@ alternatives all certify; composing the best two into the preceding fleet adds
 **23.880058 weighted kg**. Fleet selection can accept a ship with less raw cargo
 when its weighted contribution improves and the complete fleet still meets the
 original ship-count rule. Both original full-fleet physics checkers pass.
-The result is loaded in the existing visualiser; missing dense coast samples are
-shown as gaps. [Exact result, work counts, evidence and display instructions](docs/GPU_MASS_BUDGETED_FRONTIER.md).
+The original frontier display marks missing dense coast samples as gaps.
+[Exact result, work counts and evidence](docs/GPU_MASS_BUDGETED_FRONTIER.md).
+
+The latest H100 replay retains **13,023.705 weighted kg** and passes both
+full-fleet checkers locally and on Lambda. Immutable catalogue ownership removes
+99.7% of repeated catalogue hashes, improving measured whole-search throughput
+by **7.3–7.5% on H100** and **0.9–3.7% on RTX 5090** across two paired route
+benchmarks. Candidate files match exactly. The integrated runtime passes 161
+tests per GPU and CUDA safety checks. Its downloaded dense verifier replay is
+displayed in the web visualiser, including the coast intervals.
+[Measurements, source ownership, remaining CPU work and loading instructions](docs/GPU_CATALOGUE_OWNERSHIP.md).
+
+The next three-route test leaves that score unchanged: 24 native leg calls and
+157 SCvx iterations produce no newly certified complete route. Production
+admission now uses the actual fleet mass budget, and route-boundary states run
+on CUDA, but the rejected trajectories still have dynamics defects. The new
+orbital-state tests pass; their small fresh-workspace batches do not show a
+complete preparation speedup. [Mission failure evidence](docs/GPU_FLEET_BUDGET_ADMISSION.md),
+[CUDA state accuracy and timing](docs/GPU_ROUTE_EPHEMERIDES.md).
 
 The PDHCG core also has a successful standalone GPU dual correction on one saved
 problem: both independent original-equation audits pass with the primal unchanged.
 Native PDHCG still reports its earlier iteration limit. This is a numerical
 milestone, with comparative performance and broader reliability still to prove.
 [GPU correction, retained failures and measured costs](docs/PDHCG_CONSTRAINED_DUAL_POLISH.md#v629-exact-isolated-coordinate-elimination).
+
+The subsequent cold-start comparison qualifies **0/4 PDHCG outputs and 1/4 QOCO
+outputs** under the same strict original-equation gates. Retaining allocations
+does not fix cold primal convergence; the dual correction is ineligible for all
+four PDHCG points. [Complete timings, failure localization and next core investigation](docs/GPU_CORE_RETAINED_COLD_STARTS.md).
 
 The preceding combined fleet reaches **12,999.825 weighted kg / 14,279.288 raw kg**,
 with 23 ships and 199 asteroids. Both full-fleet physics checkers pass locally

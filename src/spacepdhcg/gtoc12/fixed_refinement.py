@@ -268,12 +268,17 @@ def refine_fixed(
     runner = runner_factory(settings)
     telemetry, master_ok = {}, False
     try:
+        body_states, ephemeris_telemetry = p.prepare_route_states(catalogue, flown, settings)
         for index, leg in enumerate(flown):
             if time.perf_counter() >= deadline:
                 failures.append({"leg": index, "status": "campaign_deadline_before_leg"})
                 break
-            r0, v0 = p.body_state(catalogue, leg.from_id, leg.departure_epoch)
-            rf, vf = p.body_state(catalogue, leg.to_id, leg.arrival_epoch)
+            if body_states is None:
+                r0, v0 = p.body_state(catalogue, leg.from_id, leg.departure_epoch)
+                rf, vf = p.body_state(catalogue, leg.to_id, leg.arrival_epoch)
+            else:
+                r0, v0 = body_states[(leg.from_id, leg.departure_epoch)]
+                rf, vf = body_states[(leg.to_id, leg.arrival_epoch)]
             carried = sum(cargo[a] for a in cargo if plan.collect_epochs[a] <= leg.departure_epoch)
             boundary = p.LegBoundary(
                 leg.departure_epoch,
@@ -375,7 +380,7 @@ def refine_fixed(
             master_ok = runner.certify_route(plan, refined)
             if not master_ok:
                 failures.append({"status": "independent_route_master_rejected"})
-        telemetry = runner.telemetry
+        telemetry = dict(runner.telemetry, boundary_ephemeris=ephemeris_telemetry)
     finally:
         runner.close()
     if (

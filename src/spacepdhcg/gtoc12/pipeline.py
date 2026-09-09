@@ -73,6 +73,35 @@ def _hash_int(text: str) -> int:
     return int.from_bytes(hashlib.sha256(text.encode()).digest()[:8], "big") | 1
 
 
+def prepare_route_states(catalogue, legs, settings):
+    """Prepare each distinct GPU boundary once, before sequential mass handoffs.
+
+    CPU routes retain their existing lazy body_state path. Native routes perform
+    one parallel ephemeris batch; returned host states bridge the current boundary
+    API. This does not change the independent full-fleet verifier.
+    """
+    backend = settings.selected_ephemeris_backend()
+    if backend == "cpu":
+        return None, {"backend": "cpu", "batches": 0}
+    keys = list(
+        dict.fromkeys(
+            key
+            for leg in legs
+            for key in ((leg.from_id, leg.departure_epoch), (leg.to_id, leg.arrival_epoch))
+        )
+    )
+    if not keys:
+        return {}, {"backend": "cuda", "batches": 0, "state_requests": 0}
+    from .gpu_ephemeris import GpuEphemeris
+
+    with GpuEphemeris(catalogue, [body for body, _ in keys], len(keys)) as workspace:
+        positions, velocities = workspace.states(
+            [body for body, _ in keys], [epoch for _, epoch in keys]
+        )
+        telemetry = dict(workspace.telemetry)
+    return {key: (positions[i], velocities[i]) for i, key in enumerate(keys)}, telemetry
+
+
 @dataclass(slots=True)
 class LegRecord:
     request: ArcRequest
@@ -141,7 +170,8 @@ class Gtoc12ScvxDriver:
         try:
             solution = (
                 solve_leg(record.boundary, self.settings, seed=record.seed)
-                if record.seed is not None else solve_leg(record.boundary, self.settings)
+                if record.seed is not None
+                else solve_leg(record.boundary, self.settings)
             )
         except Exception as error:
             return G3Solve(
@@ -161,9 +191,9 @@ class Gtoc12ScvxDriver:
 
                 if self._certificate_workspace is None:
                     self._certificate_workspace = GpuVerifierSession()
-                certificate = certify_legs_cuda(
-                    [solution], workspace=self._certificate_workspace
-                )[0]
+                certificate = certify_legs_cuda([solution], workspace=self._certificate_workspace)[
+                    0
+                ]
             else:
                 certificate = certify_leg(solution)
         except Exception as error:
@@ -300,18 +330,22 @@ class RefinedRoute:
                     "scvx_iterations": None if leg.solution is None else leg.solution.iterations,
                     "solve_seconds": None if leg.solution is None else leg.solution.solve_seconds,
                     "discretisation_backend": None
-                    if leg.solution is None else leg.solution.discretisation_backend,
+                    if leg.solution is None
+                    else leg.solution.discretisation_backend,
                     "assembly_backend": None
-                    if leg.solution is None else leg.solution.assembly_backend,
+                    if leg.solution is None
+                    else leg.solution.assembly_backend,
                     "convex_solver_backend": None
                     if leg.solution is None or leg.solution.iterations == 0
                     else leg.solution.convex_solver_backend,
                     "conic_reports": [] if leg.solution is None else leg.solution.solver_reports,
                     "outer_loop_backend": None
-                    if leg.solution is None else leg.solution.outer_loop_backend,
+                    if leg.solution is None
+                    else leg.solution.outer_loop_backend,
                     "seed_backend": None if leg.solution is None else leg.solution.seed_backend,
                     "outer_transfer_bytes": {}
-                    if leg.solution is None else leg.solution.outer_transfer_bytes,
+                    if leg.solution is None
+                    else leg.solution.outer_transfer_bytes,
                     "position_error_km": None
                     if leg.certificate is None
                     else leg.certificate.position_error_km,
@@ -365,14 +399,21 @@ def refine_route(
     final_mass = math.nan
     passes = 0
     telemetry: dict[str, Any] = {}
+    body_states, ephemeris_telemetry = prepare_route_states(
+        catalogue, legs_to_fly if max_passes > 0 else [], scvx
+    )
     while passes < max_passes:
         passes += 1
         refined = []
         mass = C.MAX_INITIAL_MASS_KG
         route_ok = True
         for index, leg in enumerate(legs_to_fly):
-            r0, v0 = body_state(catalogue, leg.from_id, leg.departure_epoch)
-            rf, vf = body_state(catalogue, leg.to_id, leg.arrival_epoch)
+            if body_states is None:
+                r0, v0 = body_state(catalogue, leg.from_id, leg.departure_epoch)
+                rf, vf = body_state(catalogue, leg.to_id, leg.arrival_epoch)
+            else:
+                r0, v0 = body_states[(leg.from_id, leg.departure_epoch)]
+                rf, vf = body_states[(leg.to_id, leg.arrival_epoch)]
             carried = sum(collected[a] for a in collect if collect[a] <= leg.departure_epoch)
             boundary = LegBoundary(
                 leg.departure_epoch,
@@ -474,6 +515,7 @@ def refine_route(
             "batches": scheduler.telemetry.batches,
             "workspace_creations": adapter.workspace_creations,
             "numeric_updates": adapter.numeric_updates,
+            "boundary_ephemeris": ephemeris_telemetry,
         }
         if not route_ok:
             final_mass = mass

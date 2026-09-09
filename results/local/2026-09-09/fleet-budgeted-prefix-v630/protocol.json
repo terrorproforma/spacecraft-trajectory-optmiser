@@ -1,0 +1,434 @@
+{
+  "KILL_reap_seconds": 30,
+  "TERM_grace_seconds": 10,
+  "baseline_Result_sha256": "765cb7ef97d38926317dbbf4ae8700626dffec06c48af3d6f68dae47c154f3da",
+  "baseline_raw_kg": 14291.006160165,
+  "baseline_weighted_kg": 13023.704900978004,
+  "candidates": [
+    {
+      "asteroids": [
+        9443,
+        32613,
+        35344,
+        58408,
+        45822,
+        20860,
+        30893,
+        47168
+      ],
+      "canonical_plan_sha256": "b092d389594a4b7cbeb8cd27bdd40ab34945c48f664cb6da8a2bf7dec22dead3",
+      "first_seed": "ship-22-earth-seed.npz",
+      "historical_failures": [
+        {
+          "attempt_id": "local-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "id": "local-v794-ship22-rank0000",
+      "input_file": "local-v794-ship22-rank0000.json",
+      "input_sha256": "2e5ffc855fcb05904308c7d8df8f46071331903e6f4e5b4f3faccc7082764d79",
+      "miners": 8,
+      "native_flights": 16,
+      "new_geometry": false,
+      "production_admission": {
+        "objective_gain_kg": 7.698960992113143,
+        "proposed_fleet_raw_kg": 14286.433949350501,
+        "raw_gain_kg": -4.57221081449859,
+        "score_kind": "weighted_fixed_bonus_kg",
+        "ship_count": 23
+      },
+      "rank": 0,
+      "raw_delta_kg": -4.57221081449859,
+      "request_sha256": "8cbeb4f32a0006010e5a567c0ecd4cd99f06ae5b95ef11eeb74c01590d8188ae",
+      "ship": 22,
+      "source_archive": "results/lambda/2026-09-09/gpu-regeneration-v799/local.tar.gz",
+      "source_member": "v794/ship-22/plans.json",
+      "source_member_sha256": "7868ee842c942761a71f51c7ca18633ba58c214e58a9c08248f5a9fe03e8297b",
+      "unattempted_under_corrected_endpoint_core": true,
+      "waits": [
+        {
+          "after_flight": 7,
+          "asteroid": 47168,
+          "id": "wait-07",
+          "kind": "after_deployment",
+          "next_flight": 8,
+          "t0": 66473.0,
+          "tf": 67763.0
+        }
+      ],
+      "weighted_delta_kg": 7.698960992113143
+    },
+    {
+      "asteroids": [
+        8913,
+        36739,
+        4438,
+        17126,
+        11353,
+        57016,
+        41383,
+        11539,
+        59079
+      ],
+      "canonical_plan_sha256": "1075722ebe68e44191a5843a605c001a102ed89032eea840cb37b2f799a30a66",
+      "first_seed": "ship-10-earth-seed.npz",
+      "historical_failures": [
+        {
+          "attempt_id": "local-v794-ship10-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 17,
+          "flight": [
+            17126,
+            0,
+            69263.0,
+            69713.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship10-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 17,
+          "flight": [
+            17126,
+            0,
+            69263.0,
+            69713.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "local-v802-ship10-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 17,
+          "flight": [
+            17126,
+            0,
+            69263.0,
+            69713.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship10-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 17,
+          "flight": [
+            17126,
+            0,
+            69263.0,
+            69713.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "id": "local-v794-ship10-rank0000",
+      "input_file": "local-v794-ship10-rank0000.json",
+      "input_sha256": "e431ae17d4a94e3773d1fa343b33f94b7ea487c99bd493eee5f2136f8b2309d7",
+      "miners": 9,
+      "native_flights": 18,
+      "new_geometry": false,
+      "production_admission": {
+        "objective_gain_kg": 5.528863601559237,
+        "proposed_fleet_raw_kg": 14296.755646817825,
+        "raw_gain_kg": 5.749486652824999,
+        "score_kind": "weighted_fixed_bonus_kg",
+        "ship_count": 23
+      },
+      "rank": 0,
+      "raw_delta_kg": 5.749486652824999,
+      "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+      "ship": 10,
+      "source_archive": "results/lambda/2026-09-09/gpu-regeneration-v799/local.tar.gz",
+      "source_member": "v794/ship-10/plans.json",
+      "source_member_sha256": "b695cb21e57152f4ebc36cb0c88157afb3277b3d31d6b5f0a0e72922e3def169",
+      "unattempted_under_corrected_endpoint_core": true,
+      "waits": [
+        {
+          "after_flight": 8,
+          "asteroid": 59079,
+          "id": "wait-08",
+          "kind": "after_deployment",
+          "next_flight": 9,
+          "t0": 66728.0,
+          "tf": 67733.0
+        }
+      ],
+      "weighted_delta_kg": 5.528863601559237
+    },
+    {
+      "asteroids": [
+        47630,
+        37322,
+        51417,
+        22760,
+        20594,
+        22937,
+        54492,
+        8746
+      ],
+      "canonical_plan_sha256": "dc0f65179454a607baa54ad8bbaf2fa566069609b2061e126fe35f65433cd08c",
+      "first_seed": "ship-19-earth-seed.npz",
+      "historical_failures": [
+        {
+          "attempt_id": "local-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "id": "local-v802-ship19-rank0000",
+      "input_file": "local-v802-ship19-rank0000.json",
+      "input_sha256": "74eea9f1f821048117432e1b1e4ce226dcfe53767912075b82d434f97d9de074",
+      "miners": 8,
+      "native_flights": 16,
+      "new_geometry": false,
+      "production_admission": {
+        "objective_gain_kg": 15.368123680613508,
+        "proposed_fleet_raw_kg": 14325.09240246486,
+        "raw_gain_kg": 34.08624229985924,
+        "score_kind": "weighted_fixed_bonus_kg",
+        "ship_count": 23
+      },
+      "rank": 0,
+      "raw_delta_kg": 34.08624229985924,
+      "request_sha256": "731c4cac5b231e83d0bc39a650265e7665b01b6382a7c57f49eea80731a26365",
+      "ship": 19,
+      "source_archive": "results/lambda/2026-09-09/gpu-collect-reuse-v806/local.tar.gz",
+      "source_member": "v802/ship-19/plans.json",
+      "source_member_sha256": "521721a0d7116458704e994a4260d38ec081b5571f9285567a6bd048fe151a83",
+      "unattempted_under_corrected_endpoint_core": true,
+      "waits": [
+        {
+          "after_flight": 7,
+          "asteroid": 8746,
+          "id": "wait-07",
+          "kind": "after_deployment",
+          "next_flight": 8,
+          "t0": 66458.0,
+          "tf": 68108.0
+        }
+      ],
+      "weighted_delta_kg": 15.368123680613508
+    }
+  ],
+  "future_hard_worker_seconds": 600,
+  "hypothesis": "Exercise fleet-budget-aware fixed-cargo production admission on three historically failed prefixes using corrected endpoint merit; one representative per prefix, not a new geometry search",
+  "input_sources": {
+    "build/performance/frontier-opportunities-v630/index.json": "222ac04f22081a4fb2966dda7de545ad03895b0f004e52f9dfe9eb821056c0b0",
+    "results/lambda/2026-09-09/gpu-collect-reuse-v806/local-files.json": "4ebc72c1d162332d40e9b70ed030827e5bcb6cae9e747f8e0e1ab09789e86dd6",
+    "results/lambda/2026-09-09/gpu-collect-reuse-v806/local.tar.gz": "f0364115d8c765416e4f6e5ff5350f876492334bca49fd4a7edb8dcdb3dfc076",
+    "results/lambda/2026-09-09/gpu-regeneration-v799/local-files.json": "5a53fea72ebde654e658086abb782634bb1f56263a112c29fa9e13824d36b6b3",
+    "results/lambda/2026-09-09/gpu-regeneration-v799/local.tar.gz": "77c8bcaa7bd12b39c8b26496df2e2daaf99fce9bfdbd877423805de2757f2970",
+    "results/local/2026-09-09/mass-budgeted-frontier-v629/checker-binding.json": "786165e3bd7f04acda14b17be845bd0b55ffbcbbbdff9b7c739084657b5a1ef7"
+  },
+  "max_candidate_combinations": 8,
+  "max_final_original_fullfleet_check_pairs": 1,
+  "max_first_leg_seeded_calls": 3,
+  "max_flight_certificates": 50,
+  "max_native_leg_calls": 50,
+  "max_outer_iterations": 2200,
+  "max_remaining_native_cold_calls": 47,
+  "max_wait_certificates": 3,
+  "max_whole_routes": 3,
+  "prescribed_all_pass_raw_kg": 14326.269678303186,
+  "prescribed_all_pass_weighted_kg": 13052.30084925229,
+  "retry_or_shrink_or_retime": false,
+  "runtime_profile": {
+    "path": "profile.json",
+    "sha256": "4e944bb6036111dfd5e08a225b9790ba67d9410a70d9e3d337086b856b64d67a"
+  },
+  "score_kind": "weighted_fixed_bonus_kg",
+  "settings": {
+    "assembly_backend": "cuda",
+    "certification_backend": "cuda",
+    "clarabel_tolerance": 1e-09,
+    "convex_solver_backend": "qoco",
+    "defect_tolerance": 5e-09,
+    "discretisation_backend": "cuda",
+    "ephemeris_backend": "auto",
+    "grow_factor": 1.6,
+    "hold": "zoh",
+    "initial_trust_control": 1.0,
+    "initial_trust_state": 0.2,
+    "max_iterations": 40,
+    "maximum_trust": 2.0,
+    "minimum_trust": 1e-06,
+    "node_days": 2.0,
+    "objective_tolerance": 1e-06,
+    "outer_loop_backend": "cuda",
+    "polish_iterations": 4,
+    "polish_substeps": 16,
+    "qoco_ruiz_iterations": 0,
+    "ratio_grow": 0.7,
+    "ratio_reject": 0.0,
+    "ratio_shrink": 0.25,
+    "seed_backend": "cuda",
+    "shrink_factor": 0.5,
+    "smoothness_weight": 0.0,
+    "step_tolerance": 1e-07,
+    "substeps": 8,
+    "time_limit_s": 900.0,
+    "virtual_weight": 10000.0
+  },
+  "stage": "prepared_CPU_validated_GPU_prerequisites_passed_not_launched",
+  "work": {
+    "Earth_seed_ZOH_mappings": 3,
+    "Lambert": 0,
+    "forward_proxy": 0,
+    "geometry": 0,
+    "native": 0,
+    "propagation": 0,
+    "saved_prescriptions_validated": 3
+  }
+}

@@ -1,0 +1,8855 @@
+[
+  {
+    "aliases": [
+      "local-v802-ship19-rank0000",
+      "h100-v802-ship19-rank0000"
+    ],
+    "asteroids": [
+      8746,
+      20594,
+      22760,
+      22937,
+      37322,
+      47630,
+      51417,
+      54492
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "dc0f65179454a607baa54ad8bbaf2fa566069609b2061e126fe35f65433cd08c",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        51417,
+        65258.0,
+        65498.0
+      ],
+      [
+        51417,
+        22760,
+        65498.0,
+        65648.0
+      ],
+      [
+        22760,
+        20594,
+        65648.0,
+        65768.0
+      ],
+      [
+        20594,
+        22937,
+        65768.0,
+        65918.0
+      ],
+      [
+        22937,
+        54492,
+        65918.0,
+        66098.0
+      ],
+      [
+        54492,
+        8746,
+        66098.0,
+        66458.0
+      ],
+      [
+        8746,
+        20594,
+        68108.0,
+        68318.0
+      ],
+      [
+        20594,
+        54492,
+        68318.0,
+        68528.0
+      ],
+      [
+        54492,
+        37322,
+        68528.0,
+        68678.0
+      ],
+      [
+        37322,
+        51417,
+        68678.0,
+        68858.0
+      ],
+      [
+        51417,
+        22760,
+        68858.0,
+        69008.0
+      ],
+      [
+        22760,
+        47630,
+        69008.0,
+        69218.0
+      ],
+      [
+        47630,
+        22937,
+        69218.0,
+        69368.0
+      ],
+      [
+        22937,
+        0,
+        69368.0,
+        69788.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "0f30faa64863fa58687809f309e78d683628e42046d3667869275952133b2c7f",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 1.847015847116495
+    },
+    "no_conflict": true,
+    "previous_attempts": [
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 1.496e-03",
+            "from": 51417,
+            "leg": 3,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 22760
+          }
+        ],
+        "hardware": "local",
+        "id": "local-v802-ship19-rank0000",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "731c4cac5b231e83d0bc39a650265e7665b01b6382a7c57f49eea80731a26365",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 19,
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+        "stage": "v803"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 1.496e-03",
+            "from": 51417,
+            "leg": 3,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 22760
+          }
+        ],
+        "hardware": "h100",
+        "id": "h100-v802-ship19-rank0000",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "731c4cac5b231e83d0bc39a650265e7665b01b6382a7c57f49eea80731a26365",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 19,
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+        "stage": "v803"
+      }
+    ],
+    "raw_delta_kg": 34.08624229985924,
+    "raw_kg": 668.5831622176592,
+    "raw_slack_after_kg": 281.59694909193354,
+    "request": {
+      "cargo": [
+        [
+          8746,
+          45.17453798767967
+        ],
+        [
+          20594,
+          69.81519507186859
+        ],
+        [
+          22760,
+          91.9917864476386
+        ],
+        [
+          22937,
+          94.45585215605749
+        ],
+        [
+          37322,
+          93.63449691991786
+        ],
+        [
+          47630,
+          114.98973305954826
+        ],
+        [
+          51417,
+          91.9917864476386
+        ],
+        [
+          54492,
+          66.52977412731006
+        ]
+      ],
+      "collect": [
+        [
+          8746,
+          68108.0
+        ],
+        [
+          20594,
+          68318.0
+        ],
+        [
+          22760,
+          69008.0
+        ],
+        [
+          22937,
+          69368.0
+        ],
+        [
+          37322,
+          68678.0
+        ],
+        [
+          47630,
+          69218.0
+        ],
+        [
+          51417,
+          68858.0
+        ],
+        [
+          54492,
+          68528.0
+        ]
+      ],
+      "deploy": [
+        [
+          8746,
+          66458.0
+        ],
+        [
+          20594,
+          65768.0
+        ],
+        [
+          22760,
+          65648.0
+        ],
+        [
+          22937,
+          65918.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          51417,
+          65498.0
+        ],
+        [
+          54492,
+          66098.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          51417,
+          65258.0,
+          65498.0
+        ],
+        [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        [
+          22760,
+          20594,
+          65648.0,
+          65768.0
+        ],
+        [
+          20594,
+          22937,
+          65768.0,
+          65918.0
+        ],
+        [
+          22937,
+          54492,
+          65918.0,
+          66098.0
+        ],
+        [
+          54492,
+          8746,
+          66098.0,
+          66458.0
+        ],
+        [
+          8746,
+          20594,
+          68108.0,
+          68318.0
+        ],
+        [
+          20594,
+          54492,
+          68318.0,
+          68528.0
+        ],
+        [
+          54492,
+          37322,
+          68528.0,
+          68678.0
+        ],
+        [
+          37322,
+          51417,
+          68678.0,
+          68858.0
+        ],
+        [
+          51417,
+          22760,
+          68858.0,
+          69008.0
+        ],
+        [
+          22760,
+          47630,
+          69008.0,
+          69218.0
+        ],
+        [
+          47630,
+          22937,
+          69218.0,
+          69368.0
+        ],
+        [
+          22937,
+          0,
+          69368.0,
+          69788.0
+        ]
+      ]
+    },
+    "request_sha256": "731c4cac5b231e83d0bc39a650265e7665b01b6382a7c57f49eea80731a26365",
+    "ship": 19,
+    "weighted_delta_kg": 15.368123680613508,
+    "weighted_kg": 549.0641122262602,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship19-rank0000",
+      "h100-v794-ship19-rank0000"
+    ],
+    "asteroids": [
+      6783,
+      20732,
+      37066,
+      37322,
+      47630,
+      49218,
+      49502,
+      54492,
+      57913
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "daca1a196ca867f58b5de0670aa26c96167b1e905da5908045e763d90d272071",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        37066,
+        65258.0,
+        65438.0
+      ],
+      [
+        37066,
+        49502,
+        65438.0,
+        65618.0
+      ],
+      [
+        49502,
+        49218,
+        65618.0,
+        65798.0
+      ],
+      [
+        49218,
+        6783,
+        65798.0,
+        66038.0
+      ],
+      [
+        6783,
+        54492,
+        66038.0,
+        66398.0
+      ],
+      [
+        54492,
+        20732,
+        66398.0,
+        66518.0
+      ],
+      [
+        20732,
+        57913,
+        66518.0,
+        66818.0
+      ],
+      [
+        57913,
+        6783,
+        66863.0,
+        67313.0
+      ],
+      [
+        6783,
+        49502,
+        67313.0,
+        67763.0
+      ],
+      [
+        49502,
+        49218,
+        67763.0,
+        68003.0
+      ],
+      [
+        49218,
+        47630,
+        68003.0,
+        68363.0
+      ],
+      [
+        47630,
+        37322,
+        68363.0,
+        68513.0
+      ],
+      [
+        37322,
+        54492,
+        68513.0,
+        68633.0
+      ],
+      [
+        54492,
+        57913,
+        68633.0,
+        68933.0
+      ],
+      [
+        57913,
+        37066,
+        68933.0,
+        69083.0
+      ],
+      [
+        37066,
+        20732,
+        69083.0,
+        69323.0
+      ],
+      [
+        20732,
+        0,
+        69323.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      }
+    ],
+    "itinerary_sha256": "9d58b9c1d99e14d644563b8f4f63f8504fad83d3465c3358dfc16a5c2d6b39e9",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 52.32184026241487
+    },
+    "no_conflict": true,
+    "previous_attempts": [
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 6.408e-03",
+            "from": 37322,
+            "leg": 2,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 37066
+          }
+        ],
+        "hardware": "local",
+        "id": "local-v794-ship19-rank0000",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "5a4a1de4cf26a8f7fc46febb87e5eca6cb515a06928f0793d974d4bbbfa86985",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 19,
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+        "stage": "v795"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 6.408e-03",
+            "from": 37322,
+            "leg": 2,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 37066
+          }
+        ],
+        "hardware": "h100",
+        "id": "h100-v794-ship19-rank0000",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "5a4a1de4cf26a8f7fc46febb87e5eca6cb515a06928f0793d974d4bbbfa86985",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 19,
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+        "stage": "v795"
+      }
+    ],
+    "raw_delta_kg": -4.106776180633574,
+    "raw_kg": 630.3901437371663,
+    "raw_slack_after_kg": 243.40393061144076,
+    "request": {
+      "cargo": [
+        [
+          6783,
+          34.90759753593429
+        ],
+        [
+          20732,
+          76.79671457905545
+        ],
+        [
+          37066,
+          99.79466119096509
+        ],
+        [
+          37322,
+          89.11704312114989
+        ],
+        [
+          47630,
+          91.58110882956879
+        ],
+        [
+          49218,
+          60.369609856262834
+        ],
+        [
+          49502,
+          58.72689938398357
+        ],
+        [
+          54492,
+          61.190965092402465
+        ],
+        [
+          57913,
+          57.90554414784394
+        ]
+      ],
+      "collect": [
+        [
+          6783,
+          67313.0
+        ],
+        [
+          20732,
+          69323.0
+        ],
+        [
+          37066,
+          69083.0
+        ],
+        [
+          37322,
+          68513.0
+        ],
+        [
+          47630,
+          68363.0
+        ],
+        [
+          49218,
+          68003.0
+        ],
+        [
+          49502,
+          67763.0
+        ],
+        [
+          54492,
+          68633.0
+        ],
+        [
+          57913,
+          68933.0
+        ]
+      ],
+      "deploy": [
+        [
+          6783,
+          66038.0
+        ],
+        [
+          20732,
+          66518.0
+        ],
+        [
+          37066,
+          65438.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          49218,
+          65798.0
+        ],
+        [
+          49502,
+          65618.0
+        ],
+        [
+          54492,
+          66398.0
+        ],
+        [
+          57913,
+          66818.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        [
+          37066,
+          49502,
+          65438.0,
+          65618.0
+        ],
+        [
+          49502,
+          49218,
+          65618.0,
+          65798.0
+        ],
+        [
+          49218,
+          6783,
+          65798.0,
+          66038.0
+        ],
+        [
+          6783,
+          54492,
+          66038.0,
+          66398.0
+        ],
+        [
+          54492,
+          20732,
+          66398.0,
+          66518.0
+        ],
+        [
+          20732,
+          57913,
+          66518.0,
+          66818.0
+        ],
+        [
+          57913,
+          6783,
+          66863.0,
+          67313.0
+        ],
+        [
+          6783,
+          49502,
+          67313.0,
+          67763.0
+        ],
+        [
+          49502,
+          49218,
+          67763.0,
+          68003.0
+        ],
+        [
+          49218,
+          47630,
+          68003.0,
+          68363.0
+        ],
+        [
+          47630,
+          37322,
+          68363.0,
+          68513.0
+        ],
+        [
+          37322,
+          54492,
+          68513.0,
+          68633.0
+        ],
+        [
+          54492,
+          57913,
+          68633.0,
+          68933.0
+        ],
+        [
+          57913,
+          37066,
+          68933.0,
+          69083.0
+        ],
+        [
+          37066,
+          20732,
+          69083.0,
+          69323.0
+        ],
+        [
+          20732,
+          0,
+          69323.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "5a4a1de4cf26a8f7fc46febb87e5eca6cb515a06928f0793d974d4bbbfa86985",
+    "ship": 19,
+    "weighted_delta_kg": 9.35486695431689,
+    "weighted_kg": 543.0508554999636,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v802-ship19-rank0001",
+      "h100-v802-ship19-rank0001"
+    ],
+    "asteroids": [
+      6783,
+      20594,
+      22760,
+      22937,
+      37322,
+      47630,
+      51417,
+      54492
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "c9369cf28516b932584007728fc64dc10ddadeeb62b7ce79c88cab70fec9d5ad",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        51417,
+        65258.0,
+        65498.0
+      ],
+      [
+        51417,
+        22760,
+        65498.0,
+        65648.0
+      ],
+      [
+        22760,
+        20594,
+        65648.0,
+        65768.0
+      ],
+      [
+        20594,
+        22937,
+        65768.0,
+        65918.0
+      ],
+      [
+        22937,
+        54492,
+        65918.0,
+        66098.0
+      ],
+      [
+        54492,
+        6783,
+        66098.0,
+        66458.0
+      ],
+      [
+        6783,
+        20594,
+        67868.0,
+        68318.0
+      ],
+      [
+        20594,
+        54492,
+        68318.0,
+        68528.0
+      ],
+      [
+        54492,
+        37322,
+        68528.0,
+        68678.0
+      ],
+      [
+        37322,
+        51417,
+        68678.0,
+        68858.0
+      ],
+      [
+        51417,
+        22760,
+        68858.0,
+        69008.0
+      ],
+      [
+        22760,
+        47630,
+        69008.0,
+        69218.0
+      ],
+      [
+        47630,
+        22937,
+        69218.0,
+        69368.0
+      ],
+      [
+        22937,
+        0,
+        69368.0,
+        69788.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "d652b6867b8e281485d0f15bba67f2da58cdce04e75595db9522dcffd5301bbd",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 8.90538565784982
+    },
+    "no_conflict": true,
+    "previous_attempts": [
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 1.496e-03",
+            "from": 51417,
+            "leg": 3,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 22760
+          }
+        ],
+        "hardware": "local",
+        "id": "local-v802-ship19-rank0001",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "7acef8f7ccceb7bbede441c897e45f14226fd4c9ae8868bb8180a16fb31450f7",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 19,
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+        "stage": "v803"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 1.496e-03",
+            "from": 51417,
+            "leg": 3,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 22760
+          }
+        ],
+        "hardware": "h100",
+        "id": "h100-v802-ship19-rank0001",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "7acef8f7ccceb7bbede441c897e45f14226fd4c9ae8868bb8180a16fb31450f7",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 19,
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+        "stage": "v803"
+      }
+    ],
+    "raw_delta_kg": 27.51540041074213,
+    "raw_kg": 662.012320328542,
+    "raw_slack_after_kg": 275.02610720281643,
+    "request": {
+      "cargo": [
+        [
+          6783,
+          38.60369609856263
+        ],
+        [
+          20594,
+          69.81519507186859
+        ],
+        [
+          22760,
+          91.9917864476386
+        ],
+        [
+          22937,
+          94.45585215605749
+        ],
+        [
+          37322,
+          93.63449691991786
+        ],
+        [
+          47630,
+          114.98973305954826
+        ],
+        [
+          51417,
+          91.9917864476386
+        ],
+        [
+          54492,
+          66.52977412731006
+        ]
+      ],
+      "collect": [
+        [
+          6783,
+          67868.0
+        ],
+        [
+          20594,
+          68318.0
+        ],
+        [
+          22760,
+          69008.0
+        ],
+        [
+          22937,
+          69368.0
+        ],
+        [
+          37322,
+          68678.0
+        ],
+        [
+          47630,
+          69218.0
+        ],
+        [
+          51417,
+          68858.0
+        ],
+        [
+          54492,
+          68528.0
+        ]
+      ],
+      "deploy": [
+        [
+          6783,
+          66458.0
+        ],
+        [
+          20594,
+          65768.0
+        ],
+        [
+          22760,
+          65648.0
+        ],
+        [
+          22937,
+          65918.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          51417,
+          65498.0
+        ],
+        [
+          54492,
+          66098.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          51417,
+          65258.0,
+          65498.0
+        ],
+        [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        [
+          22760,
+          20594,
+          65648.0,
+          65768.0
+        ],
+        [
+          20594,
+          22937,
+          65768.0,
+          65918.0
+        ],
+        [
+          22937,
+          54492,
+          65918.0,
+          66098.0
+        ],
+        [
+          54492,
+          6783,
+          66098.0,
+          66458.0
+        ],
+        [
+          6783,
+          20594,
+          67868.0,
+          68318.0
+        ],
+        [
+          20594,
+          54492,
+          68318.0,
+          68528.0
+        ],
+        [
+          54492,
+          37322,
+          68528.0,
+          68678.0
+        ],
+        [
+          37322,
+          51417,
+          68678.0,
+          68858.0
+        ],
+        [
+          51417,
+          22760,
+          68858.0,
+          69008.0
+        ],
+        [
+          22760,
+          47630,
+          69008.0,
+          69218.0
+        ],
+        [
+          47630,
+          22937,
+          69218.0,
+          69368.0
+        ],
+        [
+          22937,
+          0,
+          69368.0,
+          69788.0
+        ]
+      ]
+    },
+    "request_sha256": "7acef8f7ccceb7bbede441c897e45f14226fd4c9ae8868bb8180a16fb31450f7",
+    "ship": 19,
+    "weighted_delta_kg": 8.797281791496516,
+    "weighted_kg": 542.4932703371433,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship22-rank0000",
+      "h100-v794-ship22-rank0000",
+      "local-v802-ship22-rank0000",
+      "h100-v802-ship22-rank0000"
+    ],
+    "asteroids": [
+      9443,
+      20860,
+      30893,
+      32613,
+      35344,
+      45822,
+      47168,
+      58408
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "b092d389594a4b7cbeb8cd27bdd40ab34945c48f664cb6da8a2bf7dec22dead3",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        9443,
+        64508.0,
+        65093.0
+      ],
+      [
+        9443,
+        32613,
+        65093.0,
+        65273.0
+      ],
+      [
+        32613,
+        35344,
+        65273.0,
+        65453.0
+      ],
+      [
+        35344,
+        58408,
+        65453.0,
+        65633.0
+      ],
+      [
+        58408,
+        45822,
+        65633.0,
+        65753.0
+      ],
+      [
+        45822,
+        20860,
+        65753.0,
+        66053.0
+      ],
+      [
+        20860,
+        30893,
+        66053.0,
+        66233.0
+      ],
+      [
+        30893,
+        47168,
+        66233.0,
+        66473.0
+      ],
+      [
+        47168,
+        30893,
+        67763.0,
+        68003.0
+      ],
+      [
+        30893,
+        20860,
+        68003.0,
+        68183.0
+      ],
+      [
+        20860,
+        32613,
+        68183.0,
+        68423.0
+      ],
+      [
+        32613,
+        45822,
+        68423.0,
+        68723.0
+      ],
+      [
+        45822,
+        58408,
+        68723.0,
+        68933.0
+      ],
+      [
+        58408,
+        35344,
+        68933.0,
+        69173.0
+      ],
+      [
+        35344,
+        9443,
+        69173.0,
+        69323.0
+      ],
+      [
+        9443,
+        0,
+        69323.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "local-v802-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "4d4701b6a6bf33550335c0e0716e62d10aa48172ac36b43de71d892c16f1f096",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 11.158776867212396
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": -4.57221081449859,
+    "raw_kg": 617.6591375770021,
+    "raw_slack_after_kg": 242.93849597757574,
+    "request": {
+      "cargo": [
+        [
+          9443,
+          115.81108829568788
+        ],
+        [
+          20860,
+          58.31622176591376
+        ],
+        [
+          30893,
+          48.459958932238195
+        ],
+        [
+          32613,
+          86.24229979466119
+        ],
+        [
+          35344,
+          101.84804928131418
+        ],
+        [
+          45822,
+          81.3141683778234
+        ],
+        [
+          47168,
+          35.318275154004105
+        ],
+        [
+          58408,
+          90.34907597535934
+        ]
+      ],
+      "collect": [
+        [
+          9443,
+          69323.0
+        ],
+        [
+          20860,
+          68183.0
+        ],
+        [
+          30893,
+          68003.0
+        ],
+        [
+          32613,
+          68423.0
+        ],
+        [
+          35344,
+          69173.0
+        ],
+        [
+          45822,
+          68723.0
+        ],
+        [
+          47168,
+          67763.0
+        ],
+        [
+          58408,
+          68933.0
+        ]
+      ],
+      "deploy": [
+        [
+          9443,
+          65093.0
+        ],
+        [
+          20860,
+          66053.0
+        ],
+        [
+          30893,
+          66233.0
+        ],
+        [
+          32613,
+          65273.0
+        ],
+        [
+          35344,
+          65453.0
+        ],
+        [
+          45822,
+          65753.0
+        ],
+        [
+          47168,
+          66473.0
+        ],
+        [
+          58408,
+          65633.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ],
+        [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        [
+          32613,
+          35344,
+          65273.0,
+          65453.0
+        ],
+        [
+          35344,
+          58408,
+          65453.0,
+          65633.0
+        ],
+        [
+          58408,
+          45822,
+          65633.0,
+          65753.0
+        ],
+        [
+          45822,
+          20860,
+          65753.0,
+          66053.0
+        ],
+        [
+          20860,
+          30893,
+          66053.0,
+          66233.0
+        ],
+        [
+          30893,
+          47168,
+          66233.0,
+          66473.0
+        ],
+        [
+          47168,
+          30893,
+          67763.0,
+          68003.0
+        ],
+        [
+          30893,
+          20860,
+          68003.0,
+          68183.0
+        ],
+        [
+          20860,
+          32613,
+          68183.0,
+          68423.0
+        ],
+        [
+          32613,
+          45822,
+          68423.0,
+          68723.0
+        ],
+        [
+          45822,
+          58408,
+          68723.0,
+          68933.0
+        ],
+        [
+          58408,
+          35344,
+          68933.0,
+          69173.0
+        ],
+        [
+          35344,
+          9443,
+          69173.0,
+          69323.0
+        ],
+        [
+          9443,
+          0,
+          69323.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "8cbeb4f32a0006010e5a567c0ecd4cd99f06ae5b95ef11eeb74c01590d8188ae",
+    "ship": 22,
+    "weighted_delta_kg": 7.698960992113143,
+    "weighted_kg": 533.8192156128217,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship19-rank0001",
+      "h100-v794-ship19-rank0001"
+    ],
+    "asteroids": [
+      6783,
+      20732,
+      37066,
+      37322,
+      47630,
+      49218,
+      49502,
+      54492,
+      57913
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "4246be39498aa953bc74f2c1fe84373eebfd5525034204e5eb1ac03813143fec",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        37066,
+        65258.0,
+        65438.0
+      ],
+      [
+        37066,
+        49502,
+        65438.0,
+        65618.0
+      ],
+      [
+        49502,
+        49218,
+        65618.0,
+        65798.0
+      ],
+      [
+        49218,
+        6783,
+        65798.0,
+        66038.0
+      ],
+      [
+        6783,
+        54492,
+        66038.0,
+        66398.0
+      ],
+      [
+        54492,
+        20732,
+        66398.0,
+        66518.0
+      ],
+      [
+        20732,
+        57913,
+        66518.0,
+        66758.0
+      ],
+      [
+        57913,
+        6783,
+        66803.0,
+        67253.0
+      ],
+      [
+        6783,
+        49502,
+        67253.0,
+        67703.0
+      ],
+      [
+        49502,
+        49218,
+        67703.0,
+        68003.0
+      ],
+      [
+        49218,
+        47630,
+        68003.0,
+        68363.0
+      ],
+      [
+        47630,
+        37322,
+        68363.0,
+        68513.0
+      ],
+      [
+        37322,
+        54492,
+        68513.0,
+        68633.0
+      ],
+      [
+        54492,
+        57913,
+        68633.0,
+        68933.0
+      ],
+      [
+        57913,
+        37066,
+        68933.0,
+        69083.0
+      ],
+      [
+        37066,
+        20732,
+        69083.0,
+        69323.0
+      ],
+      [
+        20732,
+        0,
+        69323.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      }
+    ],
+    "itinerary_sha256": "4a807f61d87f731b46be9c8246faa4d30bfa10ca2c3be5b12772e39705accdf3",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 57.91711540010476
+    },
+    "no_conflict": true,
+    "previous_attempts": [
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 6.408e-03",
+            "from": 37322,
+            "leg": 2,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 37066
+          }
+        ],
+        "hardware": "local",
+        "id": "local-v794-ship19-rank0001",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "d287e0483943623dde0e562f373c301e8a6f8411dd454d7685f0cdad77123faa",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 19,
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+        "stage": "v795"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 6.408e-03",
+            "from": 37322,
+            "leg": 2,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 37066
+          }
+        ],
+        "hardware": "h100",
+        "id": "h100-v794-ship19-rank0001",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "d287e0483943623dde0e562f373c301e8a6f8411dd454d7685f0cdad77123faa",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 19,
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+        "stage": "v795"
+      }
+    ],
+    "raw_delta_kg": -5.7494866529128785,
+    "raw_kg": 628.747433264887,
+    "raw_slack_after_kg": 241.76122013916145,
+    "request": {
+      "cargo": [
+        [
+          6783,
+          33.26488706365503
+        ],
+        [
+          20732,
+          76.79671457905545
+        ],
+        [
+          37066,
+          99.79466119096509
+        ],
+        [
+          37322,
+          89.11704312114989
+        ],
+        [
+          47630,
+          91.58110882956879
+        ],
+        [
+          49218,
+          60.369609856262834
+        ],
+        [
+          49502,
+          57.08418891170431
+        ],
+        [
+          54492,
+          61.190965092402465
+        ],
+        [
+          57913,
+          59.5482546201232
+        ]
+      ],
+      "collect": [
+        [
+          6783,
+          67253.0
+        ],
+        [
+          20732,
+          69323.0
+        ],
+        [
+          37066,
+          69083.0
+        ],
+        [
+          37322,
+          68513.0
+        ],
+        [
+          47630,
+          68363.0
+        ],
+        [
+          49218,
+          68003.0
+        ],
+        [
+          49502,
+          67703.0
+        ],
+        [
+          54492,
+          68633.0
+        ],
+        [
+          57913,
+          68933.0
+        ]
+      ],
+      "deploy": [
+        [
+          6783,
+          66038.0
+        ],
+        [
+          20732,
+          66518.0
+        ],
+        [
+          37066,
+          65438.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          49218,
+          65798.0
+        ],
+        [
+          49502,
+          65618.0
+        ],
+        [
+          54492,
+          66398.0
+        ],
+        [
+          57913,
+          66758.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        [
+          37066,
+          49502,
+          65438.0,
+          65618.0
+        ],
+        [
+          49502,
+          49218,
+          65618.0,
+          65798.0
+        ],
+        [
+          49218,
+          6783,
+          65798.0,
+          66038.0
+        ],
+        [
+          6783,
+          54492,
+          66038.0,
+          66398.0
+        ],
+        [
+          54492,
+          20732,
+          66398.0,
+          66518.0
+        ],
+        [
+          20732,
+          57913,
+          66518.0,
+          66758.0
+        ],
+        [
+          57913,
+          6783,
+          66803.0,
+          67253.0
+        ],
+        [
+          6783,
+          49502,
+          67253.0,
+          67703.0
+        ],
+        [
+          49502,
+          49218,
+          67703.0,
+          68003.0
+        ],
+        [
+          49218,
+          47630,
+          68003.0,
+          68363.0
+        ],
+        [
+          47630,
+          37322,
+          68363.0,
+          68513.0
+        ],
+        [
+          37322,
+          54492,
+          68513.0,
+          68633.0
+        ],
+        [
+          54492,
+          57913,
+          68633.0,
+          68933.0
+        ],
+        [
+          57913,
+          37066,
+          68933.0,
+          69083.0
+        ],
+        [
+          37066,
+          20732,
+          69083.0,
+          69323.0
+        ],
+        [
+          20732,
+          0,
+          69323.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "d287e0483943623dde0e562f373c301e8a6f8411dd454d7685f0cdad77123faa",
+    "ship": 19,
+    "weighted_delta_kg": 7.406984236284984,
+    "weighted_kg": 541.1029727819317,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v802-ship19-rank0002",
+      "h100-v802-ship19-rank0002"
+    ],
+    "asteroids": [
+      6783,
+      20594,
+      22760,
+      22937,
+      37322,
+      47630,
+      51417,
+      54492
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "b3cff49b5234186d37f407031e2dadd7acab5fff9ce3862885b0d5b22c08e8fe",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        51417,
+        65258.0,
+        65498.0
+      ],
+      [
+        51417,
+        22760,
+        65498.0,
+        65648.0
+      ],
+      [
+        22760,
+        20594,
+        65648.0,
+        65768.0
+      ],
+      [
+        20594,
+        22937,
+        65768.0,
+        65918.0
+      ],
+      [
+        22937,
+        54492,
+        65918.0,
+        66098.0
+      ],
+      [
+        54492,
+        6783,
+        66098.0,
+        66518.0
+      ],
+      [
+        6783,
+        20594,
+        67868.0,
+        68318.0
+      ],
+      [
+        20594,
+        54492,
+        68318.0,
+        68528.0
+      ],
+      [
+        54492,
+        37322,
+        68528.0,
+        68678.0
+      ],
+      [
+        37322,
+        51417,
+        68678.0,
+        68858.0
+      ],
+      [
+        51417,
+        22760,
+        68858.0,
+        69008.0
+      ],
+      [
+        22760,
+        47630,
+        69008.0,
+        69218.0
+      ],
+      [
+        47630,
+        22937,
+        69218.0,
+        69368.0
+      ],
+      [
+        22937,
+        0,
+        69368.0,
+        69788.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "1ca53eed50e5d6e8fd9c3142e4135c5adf97efd5fe8d53dca4ef4d2a04e39543",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 12.79840310530551
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": 25.87268993846294,
+    "raw_kg": 660.3696098562629,
+    "raw_slack_after_kg": 273.38339673053724,
+    "request": {
+      "cargo": [
+        [
+          6783,
+          36.96098562628337
+        ],
+        [
+          20594,
+          69.81519507186859
+        ],
+        [
+          22760,
+          91.9917864476386
+        ],
+        [
+          22937,
+          94.45585215605749
+        ],
+        [
+          37322,
+          93.63449691991786
+        ],
+        [
+          47630,
+          114.98973305954826
+        ],
+        [
+          51417,
+          91.9917864476386
+        ],
+        [
+          54492,
+          66.52977412731006
+        ]
+      ],
+      "collect": [
+        [
+          6783,
+          67868.0
+        ],
+        [
+          20594,
+          68318.0
+        ],
+        [
+          22760,
+          69008.0
+        ],
+        [
+          22937,
+          69368.0
+        ],
+        [
+          37322,
+          68678.0
+        ],
+        [
+          47630,
+          69218.0
+        ],
+        [
+          51417,
+          68858.0
+        ],
+        [
+          54492,
+          68528.0
+        ]
+      ],
+      "deploy": [
+        [
+          6783,
+          66518.0
+        ],
+        [
+          20594,
+          65768.0
+        ],
+        [
+          22760,
+          65648.0
+        ],
+        [
+          22937,
+          65918.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          51417,
+          65498.0
+        ],
+        [
+          54492,
+          66098.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          51417,
+          65258.0,
+          65498.0
+        ],
+        [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        [
+          22760,
+          20594,
+          65648.0,
+          65768.0
+        ],
+        [
+          20594,
+          22937,
+          65768.0,
+          65918.0
+        ],
+        [
+          22937,
+          54492,
+          65918.0,
+          66098.0
+        ],
+        [
+          54492,
+          6783,
+          66098.0,
+          66518.0
+        ],
+        [
+          6783,
+          20594,
+          67868.0,
+          68318.0
+        ],
+        [
+          20594,
+          54492,
+          68318.0,
+          68528.0
+        ],
+        [
+          54492,
+          37322,
+          68528.0,
+          68678.0
+        ],
+        [
+          37322,
+          51417,
+          68678.0,
+          68858.0
+        ],
+        [
+          51417,
+          22760,
+          68858.0,
+          69008.0
+        ],
+        [
+          22760,
+          47630,
+          69008.0,
+          69218.0
+        ],
+        [
+          47630,
+          22937,
+          69218.0,
+          69368.0
+        ],
+        [
+          22937,
+          0,
+          69368.0,
+          69788.0
+        ]
+      ]
+    },
+    "request_sha256": "4d262cc037dfb587f396e2faaf83e6a6fff5f5565c9ae643dd27b08ca85a693e",
+    "ship": 19,
+    "weighted_delta_kg": 7.154571319217212,
+    "weighted_kg": 540.850559864864,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship22-rank0001",
+      "h100-v794-ship22-rank0001",
+      "local-v802-ship22-rank0001",
+      "h100-v802-ship22-rank0001"
+    ],
+    "asteroids": [
+      9443,
+      11253,
+      12944,
+      30797,
+      32613,
+      35344,
+      41150,
+      44409,
+      57877
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "cf4f616d052cea24314ef54961e2456063b301d9cb4d4083fab262bab2984f97",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        9443,
+        64508.0,
+        65093.0
+      ],
+      [
+        9443,
+        32613,
+        65093.0,
+        65273.0
+      ],
+      [
+        32613,
+        35344,
+        65273.0,
+        65453.0
+      ],
+      [
+        35344,
+        44409,
+        65453.0,
+        65603.0
+      ],
+      [
+        44409,
+        30797,
+        65603.0,
+        65843.0
+      ],
+      [
+        30797,
+        12944,
+        65843.0,
+        66143.0
+      ],
+      [
+        12944,
+        11253,
+        66143.0,
+        66383.0
+      ],
+      [
+        11253,
+        57877,
+        66383.0,
+        66623.0
+      ],
+      [
+        57877,
+        41150,
+        66623.0,
+        66803.0
+      ],
+      [
+        41150,
+        30797,
+        67283.0,
+        67733.0
+      ],
+      [
+        30797,
+        12944,
+        67733.0,
+        67973.0
+      ],
+      [
+        12944,
+        57877,
+        67973.0,
+        68213.0
+      ],
+      [
+        57877,
+        44409,
+        68213.0,
+        68513.0
+      ],
+      [
+        44409,
+        32613,
+        68513.0,
+        68753.0
+      ],
+      [
+        32613,
+        11253,
+        68753.0,
+        69113.0
+      ],
+      [
+        11253,
+        9443,
+        69113.0,
+        69203.0
+      ],
+      [
+        9443,
+        35344,
+        69203.0,
+        69353.0
+      ],
+      [
+        35344,
+        0,
+        69353.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "local-v802-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "de22f7c0132daa82b02f17d1243293e4b5c82955fc33856452639cbd9909348b",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 23.723578847142335
+    },
+    "no_conflict": true,
+    "previous_attempts": [
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+            "from": 9443,
+            "leg": 1,
+            "pass": 1,
+            "status": "numerical_failure",
+            "to": 32613
+          }
+        ],
+        "hardware": "local",
+        "id": "local-v794-ship22-rank0001",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "a12fbc28db5dae0af83e58d21fe66f109fcadac6bee0f03bcba4d302bd18e2a2",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 22,
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+        "stage": "v795"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+            "from": 9443,
+            "leg": 1,
+            "pass": 1,
+            "status": "numerical_failure",
+            "to": 32613
+          }
+        ],
+        "hardware": "h100",
+        "id": "h100-v794-ship22-rank0001",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "a12fbc28db5dae0af83e58d21fe66f109fcadac6bee0f03bcba4d302bd18e2a2",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 22,
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+        "stage": "v795"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+            "from": 9443,
+            "leg": 1,
+            "pass": 1,
+            "status": "numerical_failure",
+            "to": 32613
+          }
+        ],
+        "hardware": "local",
+        "id": "local-v802-ship22-rank0001",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "a12fbc28db5dae0af83e58d21fe66f109fcadac6bee0f03bcba4d302bd18e2a2",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 22,
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+        "stage": "v803"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+            "from": 9443,
+            "leg": 1,
+            "pass": 1,
+            "status": "numerical_failure",
+            "to": 32613
+          }
+        ],
+        "hardware": "h100",
+        "id": "h100-v802-ship22-rank0001",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "a12fbc28db5dae0af83e58d21fe66f109fcadac6bee0f03bcba4d302bd18e2a2",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 22,
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+        "stage": "v803"
+      }
+    ],
+    "raw_delta_kg": 5.284052019176897,
+    "raw_kg": 627.5154004106776,
+    "raw_slack_after_kg": 252.79475881125123,
+    "request": {
+      "cargo": [
+        [
+          9443,
+          112.52566735112936
+        ],
+        [
+          11253,
+          74.74332648870636
+        ],
+        [
+          12944,
+          50.10266940451746
+        ],
+        [
+          30797,
+          51.74537987679671
+        ],
+        [
+          32613,
+          95.27720739219713
+        ],
+        [
+          35344,
+          106.77618069815195
+        ],
+        [
+          41150,
+          13.141683778234086
+        ],
+        [
+          44409,
+          79.67145790554414
+        ],
+        [
+          57877,
+          43.53182751540041
+        ]
+      ],
+      "collect": [
+        [
+          9443,
+          69203.0
+        ],
+        [
+          11253,
+          69113.0
+        ],
+        [
+          12944,
+          67973.0
+        ],
+        [
+          30797,
+          67733.0
+        ],
+        [
+          32613,
+          68753.0
+        ],
+        [
+          35344,
+          69353.0
+        ],
+        [
+          41150,
+          67283.0
+        ],
+        [
+          44409,
+          68513.0
+        ],
+        [
+          57877,
+          68213.0
+        ]
+      ],
+      "deploy": [
+        [
+          9443,
+          65093.0
+        ],
+        [
+          11253,
+          66383.0
+        ],
+        [
+          12944,
+          66143.0
+        ],
+        [
+          30797,
+          65843.0
+        ],
+        [
+          32613,
+          65273.0
+        ],
+        [
+          35344,
+          65453.0
+        ],
+        [
+          41150,
+          66803.0
+        ],
+        [
+          44409,
+          65603.0
+        ],
+        [
+          57877,
+          66623.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ],
+        [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        [
+          32613,
+          35344,
+          65273.0,
+          65453.0
+        ],
+        [
+          35344,
+          44409,
+          65453.0,
+          65603.0
+        ],
+        [
+          44409,
+          30797,
+          65603.0,
+          65843.0
+        ],
+        [
+          30797,
+          12944,
+          65843.0,
+          66143.0
+        ],
+        [
+          12944,
+          11253,
+          66143.0,
+          66383.0
+        ],
+        [
+          11253,
+          57877,
+          66383.0,
+          66623.0
+        ],
+        [
+          57877,
+          41150,
+          66623.0,
+          66803.0
+        ],
+        [
+          41150,
+          30797,
+          67283.0,
+          67733.0
+        ],
+        [
+          30797,
+          12944,
+          67733.0,
+          67973.0
+        ],
+        [
+          12944,
+          57877,
+          67973.0,
+          68213.0
+        ],
+        [
+          57877,
+          44409,
+          68213.0,
+          68513.0
+        ],
+        [
+          44409,
+          32613,
+          68513.0,
+          68753.0
+        ],
+        [
+          32613,
+          11253,
+          68753.0,
+          69113.0
+        ],
+        [
+          11253,
+          9443,
+          69113.0,
+          69203.0
+        ],
+        [
+          9443,
+          35344,
+          69203.0,
+          69353.0
+        ],
+        [
+          35344,
+          0,
+          69353.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "a12fbc28db5dae0af83e58d21fe66f109fcadac6bee0f03bcba4d302bd18e2a2",
+    "ship": 22,
+    "weighted_delta_kg": 6.588042245312067,
+    "weighted_kg": 532.7082968660206,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship22-rank0002",
+      "h100-v794-ship22-rank0002",
+      "local-v802-ship22-rank0002",
+      "h100-v802-ship22-rank0002"
+    ],
+    "asteroids": [
+      3828,
+      9443,
+      13232,
+      32613,
+      33086,
+      35344,
+      47616,
+      48431
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "57f298fe11809e5e35427cddad864c380ee6c9c7c456ea9df1856607455a3d79",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        9443,
+        64508.0,
+        65093.0
+      ],
+      [
+        9443,
+        32613,
+        65093.0,
+        65273.0
+      ],
+      [
+        32613,
+        35344,
+        65273.0,
+        65453.0
+      ],
+      [
+        35344,
+        13232,
+        65453.0,
+        65633.0
+      ],
+      [
+        13232,
+        48431,
+        65663.0,
+        65963.0
+      ],
+      [
+        48431,
+        3828,
+        65963.0,
+        66083.0
+      ],
+      [
+        3828,
+        33086,
+        66083.0,
+        66263.0
+      ],
+      [
+        33086,
+        47616,
+        66263.0,
+        66503.0
+      ],
+      [
+        47616,
+        33086,
+        67733.0,
+        67913.0
+      ],
+      [
+        33086,
+        13232,
+        67913.0,
+        68273.0
+      ],
+      [
+        13232,
+        48431,
+        68273.0,
+        68573.0
+      ],
+      [
+        48431,
+        32613,
+        68573.0,
+        68873.0
+      ],
+      [
+        32613,
+        3828,
+        68873.0,
+        69083.0
+      ],
+      [
+        3828,
+        35344,
+        69083.0,
+        69233.0
+      ],
+      [
+        35344,
+        9443,
+        69233.0,
+        69353.0
+      ],
+      [
+        9443,
+        0,
+        69353.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "local-v802-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "eab788315d87b97788202148e97e3d990356a68145fdb6132138af855fd38f8d",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 8.649688327861668
+    },
+    "no_conflict": true,
+    "previous_attempts": [
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+            "from": 9443,
+            "leg": 1,
+            "pass": 1,
+            "status": "numerical_failure",
+            "to": 32613
+          }
+        ],
+        "hardware": "local",
+        "id": "local-v794-ship22-rank0002",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "39a5a81f13e2f2e79984d0ccd158eb2a47a1a2300074404c5ba31c91adfd7cd5",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 22,
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+        "stage": "v795"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 2.136e-03",
+            "from": 9443,
+            "leg": 1,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 32613
+          }
+        ],
+        "hardware": "h100",
+        "id": "h100-v794-ship22-rank0002",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "39a5a81f13e2f2e79984d0ccd158eb2a47a1a2300074404c5ba31c91adfd7cd5",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 22,
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+        "stage": "v795"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+            "from": 9443,
+            "leg": 1,
+            "pass": 1,
+            "status": "numerical_failure",
+            "to": 32613
+          }
+        ],
+        "hardware": "local",
+        "id": "local-v802-ship22-rank0002",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "39a5a81f13e2f2e79984d0ccd158eb2a47a1a2300074404c5ba31c91adfd7cd5",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 22,
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+        "stage": "v803"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+            "from": 9443,
+            "leg": 1,
+            "pass": 1,
+            "status": "numerical_failure",
+            "to": 32613
+          }
+        ],
+        "hardware": "h100",
+        "id": "h100-v802-ship22-rank0002",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "39a5a81f13e2f2e79984d0ccd158eb2a47a1a2300074404c5ba31c91adfd7cd5",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 22,
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+        "stage": "v803"
+      }
+    ],
+    "raw_delta_kg": 1.177275838478863,
+    "raw_kg": 623.4086242299795,
+    "raw_slack_after_kg": 248.6879826305532,
+    "request": {
+      "cargo": [
+        [
+          3828,
+          82.13552361396304
+        ],
+        [
+          9443,
+          116.63244353182752
+        ],
+        [
+          13232,
+          72.27926078028747
+        ],
+        [
+          32613,
+          98.56262833675565
+        ],
+        [
+          33086,
+          45.17453798767967
+        ],
+        [
+          35344,
+          103.49075975359342
+        ],
+        [
+          47616,
+          33.67556468172484
+        ],
+        [
+          48431,
+          71.45790554414785
+        ]
+      ],
+      "collect": [
+        [
+          3828,
+          69083.0
+        ],
+        [
+          9443,
+          69353.0
+        ],
+        [
+          13232,
+          68273.0
+        ],
+        [
+          32613,
+          68873.0
+        ],
+        [
+          33086,
+          67913.0
+        ],
+        [
+          35344,
+          69233.0
+        ],
+        [
+          47616,
+          67733.0
+        ],
+        [
+          48431,
+          68573.0
+        ]
+      ],
+      "deploy": [
+        [
+          3828,
+          66083.0
+        ],
+        [
+          9443,
+          65093.0
+        ],
+        [
+          13232,
+          65633.0
+        ],
+        [
+          32613,
+          65273.0
+        ],
+        [
+          33086,
+          66263.0
+        ],
+        [
+          35344,
+          65453.0
+        ],
+        [
+          47616,
+          66503.0
+        ],
+        [
+          48431,
+          65963.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ],
+        [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        [
+          32613,
+          35344,
+          65273.0,
+          65453.0
+        ],
+        [
+          35344,
+          13232,
+          65453.0,
+          65633.0
+        ],
+        [
+          13232,
+          48431,
+          65663.0,
+          65963.0
+        ],
+        [
+          48431,
+          3828,
+          65963.0,
+          66083.0
+        ],
+        [
+          3828,
+          33086,
+          66083.0,
+          66263.0
+        ],
+        [
+          33086,
+          47616,
+          66263.0,
+          66503.0
+        ],
+        [
+          47616,
+          33086,
+          67733.0,
+          67913.0
+        ],
+        [
+          33086,
+          13232,
+          67913.0,
+          68273.0
+        ],
+        [
+          13232,
+          48431,
+          68273.0,
+          68573.0
+        ],
+        [
+          48431,
+          32613,
+          68573.0,
+          68873.0
+        ],
+        [
+          32613,
+          3828,
+          68873.0,
+          69083.0
+        ],
+        [
+          3828,
+          35344,
+          69083.0,
+          69233.0
+        ],
+        [
+          35344,
+          9443,
+          69233.0,
+          69353.0
+        ],
+        [
+          9443,
+          0,
+          69353.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "39a5a81f13e2f2e79984d0ccd158eb2a47a1a2300074404c5ba31c91adfd7cd5",
+    "ship": 22,
+    "weighted_delta_kg": 6.541353758518994,
+    "weighted_kg": 532.6616083792276,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship22-rank0003",
+      "h100-v794-ship22-rank0003",
+      "local-v802-ship22-rank0003",
+      "h100-v802-ship22-rank0003"
+    ],
+    "asteroids": [
+      9443,
+      20860,
+      30893,
+      32613,
+      35344,
+      45822,
+      47168,
+      58408
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "2959e1d83dd6b9b77967fac925540e3eeefc08e55089592a9868519831da86c0",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        9443,
+        64508.0,
+        65093.0
+      ],
+      [
+        9443,
+        32613,
+        65093.0,
+        65273.0
+      ],
+      [
+        32613,
+        35344,
+        65273.0,
+        65453.0
+      ],
+      [
+        35344,
+        58408,
+        65453.0,
+        65633.0
+      ],
+      [
+        58408,
+        45822,
+        65633.0,
+        65753.0
+      ],
+      [
+        45822,
+        20860,
+        65753.0,
+        66053.0
+      ],
+      [
+        20860,
+        30893,
+        66053.0,
+        66233.0
+      ],
+      [
+        30893,
+        47168,
+        66233.0,
+        66533.0
+      ],
+      [
+        47168,
+        30893,
+        67763.0,
+        68003.0
+      ],
+      [
+        30893,
+        20860,
+        68003.0,
+        68183.0
+      ],
+      [
+        20860,
+        32613,
+        68183.0,
+        68423.0
+      ],
+      [
+        32613,
+        45822,
+        68423.0,
+        68723.0
+      ],
+      [
+        45822,
+        58408,
+        68723.0,
+        68933.0
+      ],
+      [
+        58408,
+        35344,
+        68933.0,
+        69173.0
+      ],
+      [
+        35344,
+        9443,
+        69173.0,
+        69323.0
+      ],
+      [
+        9443,
+        0,
+        69323.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "local-v802-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "f707469585924fd04d2f5349308d7165dba320eec2079528296b8b3cf6a62fd5",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 15.083737423933258
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": -6.214921286777894,
+    "raw_kg": 616.0164271047228,
+    "raw_slack_after_kg": 241.29578550529644,
+    "request": {
+      "cargo": [
+        [
+          9443,
+          115.81108829568788
+        ],
+        [
+          20860,
+          58.31622176591376
+        ],
+        [
+          30893,
+          48.459958932238195
+        ],
+        [
+          32613,
+          86.24229979466119
+        ],
+        [
+          35344,
+          101.84804928131418
+        ],
+        [
+          45822,
+          81.3141683778234
+        ],
+        [
+          47168,
+          33.67556468172484
+        ],
+        [
+          58408,
+          90.34907597535934
+        ]
+      ],
+      "collect": [
+        [
+          9443,
+          69323.0
+        ],
+        [
+          20860,
+          68183.0
+        ],
+        [
+          30893,
+          68003.0
+        ],
+        [
+          32613,
+          68423.0
+        ],
+        [
+          35344,
+          69173.0
+        ],
+        [
+          45822,
+          68723.0
+        ],
+        [
+          47168,
+          67763.0
+        ],
+        [
+          58408,
+          68933.0
+        ]
+      ],
+      "deploy": [
+        [
+          9443,
+          65093.0
+        ],
+        [
+          20860,
+          66053.0
+        ],
+        [
+          30893,
+          66233.0
+        ],
+        [
+          32613,
+          65273.0
+        ],
+        [
+          35344,
+          65453.0
+        ],
+        [
+          45822,
+          65753.0
+        ],
+        [
+          47168,
+          66533.0
+        ],
+        [
+          58408,
+          65633.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ],
+        [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        [
+          32613,
+          35344,
+          65273.0,
+          65453.0
+        ],
+        [
+          35344,
+          58408,
+          65453.0,
+          65633.0
+        ],
+        [
+          58408,
+          45822,
+          65633.0,
+          65753.0
+        ],
+        [
+          45822,
+          20860,
+          65753.0,
+          66053.0
+        ],
+        [
+          20860,
+          30893,
+          66053.0,
+          66233.0
+        ],
+        [
+          30893,
+          47168,
+          66233.0,
+          66533.0
+        ],
+        [
+          47168,
+          30893,
+          67763.0,
+          68003.0
+        ],
+        [
+          30893,
+          20860,
+          68003.0,
+          68183.0
+        ],
+        [
+          20860,
+          32613,
+          68183.0,
+          68423.0
+        ],
+        [
+          32613,
+          45822,
+          68423.0,
+          68723.0
+        ],
+        [
+          45822,
+          58408,
+          68723.0,
+          68933.0
+        ],
+        [
+          58408,
+          35344,
+          68933.0,
+          69173.0
+        ],
+        [
+          35344,
+          9443,
+          69173.0,
+          69323.0
+        ],
+        [
+          9443,
+          0,
+          69323.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "224e486a945e3013896ade25321111a6ef06b5e826c58108bc06d2db35a5974a",
+    "ship": 22,
+    "weighted_delta_kg": 6.295921647433261,
+    "weighted_kg": 532.4161762681418,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship10-rank0000",
+      "h100-v794-ship10-rank0000",
+      "local-v802-ship10-rank0000",
+      "h100-v802-ship10-rank0000"
+    ],
+    "asteroids": [
+      4438,
+      8913,
+      11353,
+      11539,
+      17126,
+      36739,
+      41383,
+      57016,
+      59079
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "1075722ebe68e44191a5843a605c001a102ed89032eea840cb37b2f799a30a66",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        8913,
+        64388.0,
+        64958.0
+      ],
+      [
+        8913,
+        36739,
+        64958.0,
+        65198.0
+      ],
+      [
+        36739,
+        4438,
+        65198.0,
+        65558.0
+      ],
+      [
+        4438,
+        17126,
+        65558.0,
+        65738.0
+      ],
+      [
+        17126,
+        11353,
+        65738.0,
+        65918.0
+      ],
+      [
+        11353,
+        57016,
+        65918.0,
+        66158.0
+      ],
+      [
+        57016,
+        41383,
+        66158.0,
+        66308.0
+      ],
+      [
+        41383,
+        11539,
+        66308.0,
+        66428.0
+      ],
+      [
+        11539,
+        59079,
+        66428.0,
+        66728.0
+      ],
+      [
+        59079,
+        57016,
+        67733.0,
+        68093.0
+      ],
+      [
+        57016,
+        41383,
+        68093.0,
+        68333.0
+      ],
+      [
+        41383,
+        11539,
+        68333.0,
+        68543.0
+      ],
+      [
+        11539,
+        8913,
+        68543.0,
+        68693.0
+      ],
+      [
+        8913,
+        36739,
+        68693.0,
+        68873.0
+      ],
+      [
+        36739,
+        4438,
+        68873.0,
+        69053.0
+      ],
+      [
+        4438,
+        11353,
+        69053.0,
+        69143.0
+      ],
+      [
+        11353,
+        17126,
+        69143.0,
+        69263.0
+      ],
+      [
+        17126,
+        0,
+        69263.0,
+        69713.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship10-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 17,
+        "flight": [
+          17126,
+          0,
+          69263.0,
+          69713.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship10-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 17,
+        "flight": [
+          17126,
+          0,
+          69263.0,
+          69713.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "local-v802-ship10-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 17,
+        "flight": [
+          17126,
+          0,
+          69263.0,
+          69713.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship10-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 17,
+        "flight": [
+          17126,
+          0,
+          69263.0,
+          69713.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "9239c4dc03190e9258e95db0d4d7daa3ed4dcdc7ddbc4da6d058b77f2118aaf2",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 5.269187516121974
+    },
+    "no_conflict": true,
+    "previous_attempts": [
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+            "from": 17126,
+            "leg": 17,
+            "pass": 1,
+            "status": "numerical_failure",
+            "to": 0
+          }
+        ],
+        "hardware": "local",
+        "id": "local-v794-ship10-rank0000",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 10,
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+        "stage": "v795"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 2.782e-03",
+            "from": 17126,
+            "leg": 17,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 0
+          }
+        ],
+        "hardware": "h100",
+        "id": "h100-v794-ship10-rank0000",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 10,
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+        "stage": "v795"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "virtual control remains 2.782e-03",
+            "from": 17126,
+            "leg": 17,
+            "pass": 1,
+            "status": "infeasible",
+            "to": 0
+          }
+        ],
+        "hardware": "local",
+        "id": "local-v802-ship10-rank0000",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 10,
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+        "stage": "v803"
+      },
+      {
+        "certified": false,
+        "endpoint_merit_fix_present": false,
+        "failures": [
+          {
+            "certification": "optimizer status is not certification",
+            "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+            "from": 17126,
+            "leg": 17,
+            "pass": 1,
+            "status": "numerical_failure",
+            "to": 0
+          }
+        ],
+        "hardware": "h100",
+        "id": "h100-v802-ship10-rank0000",
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+        "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+        "ship": 10,
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+        "stage": "v803"
+      }
+    ],
+    "raw_delta_kg": 5.749486652824999,
+    "raw_kg": 677.2073921971253,
+    "raw_slack_after_kg": 253.26019344489933,
+    "request": {
+      "cargo": [
+        [
+          4438,
+          95.68788501026694
+        ],
+        [
+          8913,
+          102.25872689938399
+        ],
+        [
+          11353,
+          88.29568788501027
+        ],
+        [
+          11539,
+          57.90554414784394
+        ],
+        [
+          17126,
+          96.50924024640658
+        ],
+        [
+          36739,
+          100.61601642710473
+        ],
+        [
+          41383,
+          55.441478439425055
+        ],
+        [
+          57016,
+          52.97741273100616
+        ],
+        [
+          59079,
+          27.515400410677618
+        ]
+      ],
+      "collect": [
+        [
+          4438,
+          69053.0
+        ],
+        [
+          8913,
+          68693.0
+        ],
+        [
+          11353,
+          69143.0
+        ],
+        [
+          11539,
+          68543.0
+        ],
+        [
+          17126,
+          69263.0
+        ],
+        [
+          36739,
+          68873.0
+        ],
+        [
+          41383,
+          68333.0
+        ],
+        [
+          57016,
+          68093.0
+        ],
+        [
+          59079,
+          67733.0
+        ]
+      ],
+      "deploy": [
+        [
+          4438,
+          65558.0
+        ],
+        [
+          8913,
+          64958.0
+        ],
+        [
+          11353,
+          65918.0
+        ],
+        [
+          11539,
+          66428.0
+        ],
+        [
+          17126,
+          65738.0
+        ],
+        [
+          36739,
+          65198.0
+        ],
+        [
+          41383,
+          66308.0
+        ],
+        [
+          57016,
+          66158.0
+        ],
+        [
+          59079,
+          66728.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          8913,
+          64388.0,
+          64958.0
+        ],
+        [
+          8913,
+          36739,
+          64958.0,
+          65198.0
+        ],
+        [
+          36739,
+          4438,
+          65198.0,
+          65558.0
+        ],
+        [
+          4438,
+          17126,
+          65558.0,
+          65738.0
+        ],
+        [
+          17126,
+          11353,
+          65738.0,
+          65918.0
+        ],
+        [
+          11353,
+          57016,
+          65918.0,
+          66158.0
+        ],
+        [
+          57016,
+          41383,
+          66158.0,
+          66308.0
+        ],
+        [
+          41383,
+          11539,
+          66308.0,
+          66428.0
+        ],
+        [
+          11539,
+          59079,
+          66428.0,
+          66728.0
+        ],
+        [
+          59079,
+          57016,
+          67733.0,
+          68093.0
+        ],
+        [
+          57016,
+          41383,
+          68093.0,
+          68333.0
+        ],
+        [
+          41383,
+          11539,
+          68333.0,
+          68543.0
+        ],
+        [
+          11539,
+          8913,
+          68543.0,
+          68693.0
+        ],
+        [
+          8913,
+          36739,
+          68693.0,
+          68873.0
+        ],
+        [
+          36739,
+          4438,
+          68873.0,
+          69053.0
+        ],
+        [
+          4438,
+          11353,
+          69053.0,
+          69143.0
+        ],
+        [
+          11353,
+          17126,
+          69143.0,
+          69263.0
+        ],
+        [
+          17126,
+          0,
+          69263.0,
+          69713.0
+        ]
+      ]
+    },
+    "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+    "ship": 10,
+    "weighted_delta_kg": 5.528863601559237,
+    "weighted_kg": 579.1572244519978,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship22-rank0004",
+      "h100-v794-ship22-rank0004",
+      "local-v802-ship22-rank0004",
+      "h100-v802-ship22-rank0004"
+    ],
+    "asteroids": [
+      3828,
+      9443,
+      13232,
+      32613,
+      33086,
+      35344,
+      47616,
+      48431
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "f47eab42b9faab4ae30a6009ef8015c338d1c7da831f31a870957b7655188186",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        9443,
+        64508.0,
+        65093.0
+      ],
+      [
+        9443,
+        32613,
+        65093.0,
+        65273.0
+      ],
+      [
+        32613,
+        35344,
+        65273.0,
+        65453.0
+      ],
+      [
+        35344,
+        13232,
+        65453.0,
+        65693.0
+      ],
+      [
+        13232,
+        48431,
+        65723.0,
+        65963.0
+      ],
+      [
+        48431,
+        3828,
+        65963.0,
+        66083.0
+      ],
+      [
+        3828,
+        33086,
+        66083.0,
+        66263.0
+      ],
+      [
+        33086,
+        47616,
+        66263.0,
+        66503.0
+      ],
+      [
+        47616,
+        33086,
+        67733.0,
+        67913.0
+      ],
+      [
+        33086,
+        13232,
+        67913.0,
+        68273.0
+      ],
+      [
+        13232,
+        48431,
+        68273.0,
+        68573.0
+      ],
+      [
+        48431,
+        32613,
+        68573.0,
+        68873.0
+      ],
+      [
+        32613,
+        3828,
+        68873.0,
+        69083.0
+      ],
+      [
+        3828,
+        35344,
+        69083.0,
+        69233.0
+      ],
+      [
+        35344,
+        9443,
+        69233.0,
+        69353.0
+      ],
+      [
+        9443,
+        0,
+        69353.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "local-v802-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship22-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship22-rank0002",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 1,
+        "flight": [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "be09ddcba2520e3ecc467779d20302d6e672825f9fbbf0e88280e35623abfa44",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 13.726442161101659
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": -0.4654346338004416,
+    "raw_kg": 621.7659137577002,
+    "raw_slack_after_kg": 247.0452721582739,
+    "request": {
+      "cargo": [
+        [
+          3828,
+          82.13552361396304
+        ],
+        [
+          9443,
+          116.63244353182752
+        ],
+        [
+          13232,
+          70.63655030800821
+        ],
+        [
+          32613,
+          98.56262833675565
+        ],
+        [
+          33086,
+          45.17453798767967
+        ],
+        [
+          35344,
+          103.49075975359342
+        ],
+        [
+          47616,
+          33.67556468172484
+        ],
+        [
+          48431,
+          71.45790554414785
+        ]
+      ],
+      "collect": [
+        [
+          3828,
+          69083.0
+        ],
+        [
+          9443,
+          69353.0
+        ],
+        [
+          13232,
+          68273.0
+        ],
+        [
+          32613,
+          68873.0
+        ],
+        [
+          33086,
+          67913.0
+        ],
+        [
+          35344,
+          69233.0
+        ],
+        [
+          47616,
+          67733.0
+        ],
+        [
+          48431,
+          68573.0
+        ]
+      ],
+      "deploy": [
+        [
+          3828,
+          66083.0
+        ],
+        [
+          9443,
+          65093.0
+        ],
+        [
+          13232,
+          65693.0
+        ],
+        [
+          32613,
+          65273.0
+        ],
+        [
+          33086,
+          66263.0
+        ],
+        [
+          35344,
+          65453.0
+        ],
+        [
+          47616,
+          66503.0
+        ],
+        [
+          48431,
+          65963.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ],
+        [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ],
+        [
+          32613,
+          35344,
+          65273.0,
+          65453.0
+        ],
+        [
+          35344,
+          13232,
+          65453.0,
+          65693.0
+        ],
+        [
+          13232,
+          48431,
+          65723.0,
+          65963.0
+        ],
+        [
+          48431,
+          3828,
+          65963.0,
+          66083.0
+        ],
+        [
+          3828,
+          33086,
+          66083.0,
+          66263.0
+        ],
+        [
+          33086,
+          47616,
+          66263.0,
+          66503.0
+        ],
+        [
+          47616,
+          33086,
+          67733.0,
+          67913.0
+        ],
+        [
+          33086,
+          13232,
+          67913.0,
+          68273.0
+        ],
+        [
+          13232,
+          48431,
+          68273.0,
+          68573.0
+        ],
+        [
+          48431,
+          32613,
+          68573.0,
+          68873.0
+        ],
+        [
+          32613,
+          3828,
+          68873.0,
+          69083.0
+        ],
+        [
+          3828,
+          35344,
+          69083.0,
+          69233.0
+        ],
+        [
+          35344,
+          9443,
+          69233.0,
+          69353.0
+        ],
+        [
+          9443,
+          0,
+          69353.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "d0b10f10804736fc8725af7cf79e691b0d5e46d9277876929bd800ad382bae95",
+    "ship": 22,
+    "weighted_delta_kg": 5.124272394575087,
+    "weighted_kg": 531.2445270152837,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v802-ship19-rank0003",
+      "h100-v802-ship19-rank0003"
+    ],
+    "asteroids": [
+      20594,
+      22760,
+      22937,
+      37066,
+      37322,
+      47630,
+      51417,
+      54492
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "939857e59b2946a471efeef2a51e8445f80ffb1bec6d789807426cb4ae98f050",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        51417,
+        65258.0,
+        65498.0
+      ],
+      [
+        51417,
+        22760,
+        65498.0,
+        65648.0
+      ],
+      [
+        22760,
+        20594,
+        65648.0,
+        65768.0
+      ],
+      [
+        20594,
+        22937,
+        65768.0,
+        65918.0
+      ],
+      [
+        22937,
+        54492,
+        65918.0,
+        66098.0
+      ],
+      [
+        54492,
+        37066,
+        66098.0,
+        66398.0
+      ],
+      [
+        37066,
+        20594,
+        67838.0,
+        68288.0
+      ],
+      [
+        20594,
+        54492,
+        68288.0,
+        68528.0
+      ],
+      [
+        54492,
+        37322,
+        68528.0,
+        68678.0
+      ],
+      [
+        37322,
+        51417,
+        68678.0,
+        68858.0
+      ],
+      [
+        51417,
+        22760,
+        68858.0,
+        69008.0
+      ],
+      [
+        22760,
+        47630,
+        69008.0,
+        69218.0
+      ],
+      [
+        47630,
+        22937,
+        69218.0,
+        69368.0
+      ],
+      [
+        22937,
+        0,
+        69368.0,
+        69788.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "ebd6c44f7ea460ab2b9e697c862e7e98f955be96fa5ebb81b0fe68283d02c42c",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 6.715042740923764
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": 27.51540041074213,
+    "raw_kg": 662.012320328542,
+    "raw_slack_after_kg": 275.02610720281643,
+    "request": {
+      "cargo": [
+        [
+          20594,
+          68.99383983572895
+        ],
+        [
+          22760,
+          91.9917864476386
+        ],
+        [
+          22937,
+          94.45585215605749
+        ],
+        [
+          37066,
+          39.42505133470226
+        ],
+        [
+          37322,
+          93.63449691991786
+        ],
+        [
+          47630,
+          114.98973305954826
+        ],
+        [
+          51417,
+          91.9917864476386
+        ],
+        [
+          54492,
+          66.52977412731006
+        ]
+      ],
+      "collect": [
+        [
+          20594,
+          68288.0
+        ],
+        [
+          22760,
+          69008.0
+        ],
+        [
+          22937,
+          69368.0
+        ],
+        [
+          37066,
+          67838.0
+        ],
+        [
+          37322,
+          68678.0
+        ],
+        [
+          47630,
+          69218.0
+        ],
+        [
+          51417,
+          68858.0
+        ],
+        [
+          54492,
+          68528.0
+        ]
+      ],
+      "deploy": [
+        [
+          20594,
+          65768.0
+        ],
+        [
+          22760,
+          65648.0
+        ],
+        [
+          22937,
+          65918.0
+        ],
+        [
+          37066,
+          66398.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          51417,
+          65498.0
+        ],
+        [
+          54492,
+          66098.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          51417,
+          65258.0,
+          65498.0
+        ],
+        [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        [
+          22760,
+          20594,
+          65648.0,
+          65768.0
+        ],
+        [
+          20594,
+          22937,
+          65768.0,
+          65918.0
+        ],
+        [
+          22937,
+          54492,
+          65918.0,
+          66098.0
+        ],
+        [
+          54492,
+          37066,
+          66098.0,
+          66398.0
+        ],
+        [
+          37066,
+          20594,
+          67838.0,
+          68288.0
+        ],
+        [
+          20594,
+          54492,
+          68288.0,
+          68528.0
+        ],
+        [
+          54492,
+          37322,
+          68528.0,
+          68678.0
+        ],
+        [
+          37322,
+          51417,
+          68678.0,
+          68858.0
+        ],
+        [
+          51417,
+          22760,
+          68858.0,
+          69008.0
+        ],
+        [
+          22760,
+          47630,
+          69008.0,
+          69218.0
+        ],
+        [
+          47630,
+          22937,
+          69218.0,
+          69368.0
+        ],
+        [
+          22937,
+          0,
+          69368.0,
+          69788.0
+        ]
+      ]
+    },
+    "request_sha256": "63b9f5847152939157efe5bbc76a318b6bf0b10b79574734fd768cfbed68c469",
+    "ship": 19,
+    "weighted_delta_kg": 4.619237856911923,
+    "weighted_kg": 538.3152264025587,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship19-rank0002",
+      "h100-v794-ship19-rank0002"
+    ],
+    "asteroids": [
+      6783,
+      10285,
+      16356,
+      37066,
+      37322,
+      47630,
+      49218,
+      49502
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "0562cceb39490c746d91b28668d87dfdd05c6fd670f1620d2002068ac277bcd0",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        37066,
+        65258.0,
+        65438.0
+      ],
+      [
+        37066,
+        49502,
+        65438.0,
+        65618.0
+      ],
+      [
+        49502,
+        49218,
+        65618.0,
+        65798.0
+      ],
+      [
+        49218,
+        6783,
+        65798.0,
+        66038.0
+      ],
+      [
+        6783,
+        16356,
+        66038.0,
+        66188.0
+      ],
+      [
+        16356,
+        10285,
+        66188.0,
+        66338.0
+      ],
+      [
+        10285,
+        16356,
+        66338.0,
+        66938.0
+      ],
+      [
+        16356,
+        49502,
+        67733.0,
+        67943.0
+      ],
+      [
+        49502,
+        37066,
+        67943.0,
+        68123.0
+      ],
+      [
+        37066,
+        6783,
+        68123.0,
+        68363.0
+      ],
+      [
+        6783,
+        49218,
+        68363.0,
+        68603.0
+      ],
+      [
+        49218,
+        37322,
+        68603.0,
+        68903.0
+      ],
+      [
+        37322,
+        47630,
+        68903.0,
+        69203.0
+      ],
+      [
+        47630,
+        10285,
+        69203.0,
+        69323.0
+      ],
+      [
+        10285,
+        0,
+        69323.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      }
+    ],
+    "itinerary_sha256": "8058b68943ca99cfc7590de290026a1810ccc79c0e083d777da09a60f84463c8",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 36.74639234395693
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": -18.48049281307715,
+    "raw_kg": 616.0164271047228,
+    "raw_slack_after_kg": 229.03021397899718,
+    "request": {
+      "cargo": [
+        [
+          6783,
+          63.65503080082136
+        ],
+        [
+          10285,
+          81.72484599589322
+        ],
+        [
+          16356,
+          42.299794661190965
+        ],
+        [
+          37066,
+          73.51129363449692
+        ],
+        [
+          37322,
+          99.79466119096509
+        ],
+        [
+          47630,
+          114.57905544147845
+        ],
+        [
+          49218,
+          76.79671457905545
+        ],
+        [
+          49502,
+          63.65503080082136
+        ]
+      ],
+      "collect": [
+        [
+          6783,
+          68363.0
+        ],
+        [
+          10285,
+          69323.0
+        ],
+        [
+          16356,
+          67733.0
+        ],
+        [
+          37066,
+          68123.0
+        ],
+        [
+          37322,
+          68903.0
+        ],
+        [
+          47630,
+          69203.0
+        ],
+        [
+          49218,
+          68603.0
+        ],
+        [
+          49502,
+          67943.0
+        ]
+      ],
+      "deploy": [
+        [
+          6783,
+          66038.0
+        ],
+        [
+          10285,
+          66338.0
+        ],
+        [
+          16356,
+          66188.0
+        ],
+        [
+          37066,
+          65438.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          49218,
+          65798.0
+        ],
+        [
+          49502,
+          65618.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        [
+          37066,
+          49502,
+          65438.0,
+          65618.0
+        ],
+        [
+          49502,
+          49218,
+          65618.0,
+          65798.0
+        ],
+        [
+          49218,
+          6783,
+          65798.0,
+          66038.0
+        ],
+        [
+          6783,
+          16356,
+          66038.0,
+          66188.0
+        ],
+        [
+          16356,
+          10285,
+          66188.0,
+          66338.0
+        ],
+        [
+          10285,
+          16356,
+          66338.0,
+          66938.0
+        ],
+        [
+          16356,
+          49502,
+          67733.0,
+          67943.0
+        ],
+        [
+          49502,
+          37066,
+          67943.0,
+          68123.0
+        ],
+        [
+          37066,
+          6783,
+          68123.0,
+          68363.0
+        ],
+        [
+          6783,
+          49218,
+          68363.0,
+          68603.0
+        ],
+        [
+          49218,
+          37322,
+          68603.0,
+          68903.0
+        ],
+        [
+          37322,
+          47630,
+          68903.0,
+          69203.0
+        ],
+        [
+          47630,
+          10285,
+          69203.0,
+          69323.0
+        ],
+        [
+          10285,
+          0,
+          69323.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "338f4170dad7bd3ad02e40d5f263447307719551e43ca71653f30aaa5b98f5b4",
+    "ship": 19,
+    "weighted_delta_kg": 4.50114247341412,
+    "weighted_kg": 538.1971310190609,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship19-rank0003",
+      "h100-v794-ship19-rank0003"
+    ],
+    "asteroids": [
+      6783,
+      10285,
+      16356,
+      37066,
+      37322,
+      47630,
+      49218,
+      49502
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "2c2b4554e8268381f017488a99b82764886283c3ae0151f42a6d392dd1e0215e",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        37066,
+        65258.0,
+        65438.0
+      ],
+      [
+        37066,
+        49502,
+        65438.0,
+        65618.0
+      ],
+      [
+        49502,
+        49218,
+        65618.0,
+        65798.0
+      ],
+      [
+        49218,
+        6783,
+        65798.0,
+        66038.0
+      ],
+      [
+        6783,
+        16356,
+        66038.0,
+        66188.0
+      ],
+      [
+        16356,
+        10285,
+        66188.0,
+        66368.0
+      ],
+      [
+        10285,
+        16356,
+        66368.0,
+        66968.0
+      ],
+      [
+        16356,
+        49502,
+        67733.0,
+        67943.0
+      ],
+      [
+        49502,
+        37066,
+        67943.0,
+        68123.0
+      ],
+      [
+        37066,
+        6783,
+        68123.0,
+        68363.0
+      ],
+      [
+        6783,
+        49218,
+        68363.0,
+        68603.0
+      ],
+      [
+        49218,
+        37322,
+        68603.0,
+        68903.0
+      ],
+      [
+        37322,
+        47630,
+        68903.0,
+        69203.0
+      ],
+      [
+        47630,
+        10285,
+        69203.0,
+        69323.0
+      ],
+      [
+        10285,
+        0,
+        69323.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      }
+    ],
+    "itinerary_sha256": "025908a25dae794a46626d61d22aa27b1985c78d04395ee6a16925bd57ae54b2",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 35.443779653014644
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": -19.301848049216687,
+    "raw_kg": 615.1950718685832,
+    "raw_slack_after_kg": 228.20885874285764,
+    "request": {
+      "cargo": [
+        [
+          6783,
+          63.65503080082136
+        ],
+        [
+          10285,
+          80.9034907597536
+        ],
+        [
+          16356,
+          42.299794661190965
+        ],
+        [
+          37066,
+          73.51129363449692
+        ],
+        [
+          37322,
+          99.79466119096509
+        ],
+        [
+          47630,
+          114.57905544147845
+        ],
+        [
+          49218,
+          76.79671457905545
+        ],
+        [
+          49502,
+          63.65503080082136
+        ]
+      ],
+      "collect": [
+        [
+          6783,
+          68363.0
+        ],
+        [
+          10285,
+          69323.0
+        ],
+        [
+          16356,
+          67733.0
+        ],
+        [
+          37066,
+          68123.0
+        ],
+        [
+          37322,
+          68903.0
+        ],
+        [
+          47630,
+          69203.0
+        ],
+        [
+          49218,
+          68603.0
+        ],
+        [
+          49502,
+          67943.0
+        ]
+      ],
+      "deploy": [
+        [
+          6783,
+          66038.0
+        ],
+        [
+          10285,
+          66368.0
+        ],
+        [
+          16356,
+          66188.0
+        ],
+        [
+          37066,
+          65438.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          49218,
+          65798.0
+        ],
+        [
+          49502,
+          65618.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        [
+          37066,
+          49502,
+          65438.0,
+          65618.0
+        ],
+        [
+          49502,
+          49218,
+          65618.0,
+          65798.0
+        ],
+        [
+          49218,
+          6783,
+          65798.0,
+          66038.0
+        ],
+        [
+          6783,
+          16356,
+          66038.0,
+          66188.0
+        ],
+        [
+          16356,
+          10285,
+          66188.0,
+          66368.0
+        ],
+        [
+          10285,
+          16356,
+          66368.0,
+          66968.0
+        ],
+        [
+          16356,
+          49502,
+          67733.0,
+          67943.0
+        ],
+        [
+          49502,
+          37066,
+          67943.0,
+          68123.0
+        ],
+        [
+          37066,
+          6783,
+          68123.0,
+          68363.0
+        ],
+        [
+          6783,
+          49218,
+          68363.0,
+          68603.0
+        ],
+        [
+          49218,
+          37322,
+          68603.0,
+          68903.0
+        ],
+        [
+          37322,
+          47630,
+          68903.0,
+          69203.0
+        ],
+        [
+          47630,
+          10285,
+          69203.0,
+          69323.0
+        ],
+        [
+          10285,
+          0,
+          69323.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "d45fac583f53787b57e9eda3cb53058a35a7d07be4e5ae94fbc71349dbcdbdd5",
+    "ship": 19,
+    "weighted_delta_kg": 3.8559325599676413,
+    "weighted_kg": 537.5519211056144,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v802-ship19-rank0004",
+      "h100-v802-ship19-rank0004"
+    ],
+    "asteroids": [
+      20594,
+      22760,
+      22937,
+      37322,
+      47630,
+      47674,
+      51417,
+      54492
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "9ad030e4574723b7b6ee26d4614d625dc5eea7f1da3aca66860e7ba647a81049",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        51417,
+        65258.0,
+        65498.0
+      ],
+      [
+        51417,
+        22760,
+        65498.0,
+        65648.0
+      ],
+      [
+        22760,
+        20594,
+        65648.0,
+        65768.0
+      ],
+      [
+        20594,
+        22937,
+        65768.0,
+        65918.0
+      ],
+      [
+        22937,
+        54492,
+        65918.0,
+        66098.0
+      ],
+      [
+        54492,
+        47674,
+        66098.0,
+        66398.0
+      ],
+      [
+        47674,
+        20594,
+        67868.0,
+        68318.0
+      ],
+      [
+        20594,
+        54492,
+        68318.0,
+        68528.0
+      ],
+      [
+        54492,
+        37322,
+        68528.0,
+        68678.0
+      ],
+      [
+        37322,
+        51417,
+        68678.0,
+        68858.0
+      ],
+      [
+        51417,
+        22760,
+        68858.0,
+        69008.0
+      ],
+      [
+        22760,
+        47630,
+        69008.0,
+        69218.0
+      ],
+      [
+        47630,
+        22937,
+        69218.0,
+        69368.0
+      ],
+      [
+        22937,
+        0,
+        69368.0,
+        69788.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "dee69a527deb96d008b5182f7aa2604dda6cbf2dbe548f9471057a1fa7d02209",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 2.443941904205076
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": 29.158110883021436,
+    "raw_kg": 663.6550308008214,
+    "raw_slack_after_kg": 276.66881767509574,
+    "request": {
+      "cargo": [
+        [
+          20594,
+          69.81519507186859
+        ],
+        [
+          22760,
+          91.9917864476386
+        ],
+        [
+          22937,
+          94.45585215605749
+        ],
+        [
+          37322,
+          93.63449691991786
+        ],
+        [
+          47630,
+          114.98973305954826
+        ],
+        [
+          47674,
+          40.24640657084189
+        ],
+        [
+          51417,
+          91.9917864476386
+        ],
+        [
+          54492,
+          66.52977412731006
+        ]
+      ],
+      "collect": [
+        [
+          20594,
+          68318.0
+        ],
+        [
+          22760,
+          69008.0
+        ],
+        [
+          22937,
+          69368.0
+        ],
+        [
+          37322,
+          68678.0
+        ],
+        [
+          47630,
+          69218.0
+        ],
+        [
+          47674,
+          67868.0
+        ],
+        [
+          51417,
+          68858.0
+        ],
+        [
+          54492,
+          68528.0
+        ]
+      ],
+      "deploy": [
+        [
+          20594,
+          65768.0
+        ],
+        [
+          22760,
+          65648.0
+        ],
+        [
+          22937,
+          65918.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          47674,
+          66398.0
+        ],
+        [
+          51417,
+          65498.0
+        ],
+        [
+          54492,
+          66098.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          51417,
+          65258.0,
+          65498.0
+        ],
+        [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        [
+          22760,
+          20594,
+          65648.0,
+          65768.0
+        ],
+        [
+          20594,
+          22937,
+          65768.0,
+          65918.0
+        ],
+        [
+          22937,
+          54492,
+          65918.0,
+          66098.0
+        ],
+        [
+          54492,
+          47674,
+          66098.0,
+          66398.0
+        ],
+        [
+          47674,
+          20594,
+          67868.0,
+          68318.0
+        ],
+        [
+          20594,
+          54492,
+          68318.0,
+          68528.0
+        ],
+        [
+          54492,
+          37322,
+          68528.0,
+          68678.0
+        ],
+        [
+          37322,
+          51417,
+          68678.0,
+          68858.0
+        ],
+        [
+          51417,
+          22760,
+          68858.0,
+          69008.0
+        ],
+        [
+          22760,
+          47630,
+          69008.0,
+          69218.0
+        ],
+        [
+          47630,
+          22937,
+          69218.0,
+          69368.0
+        ],
+        [
+          22937,
+          0,
+          69368.0,
+          69788.0
+        ]
+      ]
+    },
+    "request_sha256": "d93c5e0d864a29ad13d01d1aae79cd1e1491b5143e7a22ea7a77eb4d86b7e1d2",
+    "ship": 19,
+    "weighted_delta_kg": 3.345017585906362,
+    "weighted_kg": 537.0410061315531,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v802-ship19-rank0005",
+      "h100-v802-ship19-rank0005"
+    ],
+    "asteroids": [
+      20594,
+      22760,
+      22937,
+      37066,
+      37322,
+      47630,
+      51417,
+      54492
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "b22872740ddda56704a3e2e7ba738d0528c2a9766661272b349a0acc02915fb5",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        51417,
+        65258.0,
+        65498.0
+      ],
+      [
+        51417,
+        22760,
+        65498.0,
+        65648.0
+      ],
+      [
+        22760,
+        20594,
+        65648.0,
+        65768.0
+      ],
+      [
+        20594,
+        22937,
+        65768.0,
+        65918.0
+      ],
+      [
+        22937,
+        54492,
+        65918.0,
+        66098.0
+      ],
+      [
+        54492,
+        37066,
+        66098.0,
+        66458.0
+      ],
+      [
+        37066,
+        20594,
+        67838.0,
+        68288.0
+      ],
+      [
+        20594,
+        54492,
+        68288.0,
+        68528.0
+      ],
+      [
+        54492,
+        37322,
+        68528.0,
+        68678.0
+      ],
+      [
+        37322,
+        51417,
+        68678.0,
+        68858.0
+      ],
+      [
+        51417,
+        22760,
+        68858.0,
+        69008.0
+      ],
+      [
+        22760,
+        47630,
+        69008.0,
+        69218.0
+      ],
+      [
+        47630,
+        22937,
+        69218.0,
+        69368.0
+      ],
+      [
+        22937,
+        0,
+        69368.0,
+        69788.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "ae061dec4a3fd7dc937e348d5280c221150f75651865ca957d004eb979b89ed5",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 12.873388854545624
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": 25.87268993846294,
+    "raw_kg": 660.3696098562629,
+    "raw_slack_after_kg": 273.38339673053724,
+    "request": {
+      "cargo": [
+        [
+          20594,
+          68.99383983572895
+        ],
+        [
+          22760,
+          91.9917864476386
+        ],
+        [
+          22937,
+          94.45585215605749
+        ],
+        [
+          37066,
+          37.782340862423
+        ],
+        [
+          37322,
+          93.63449691991786
+        ],
+        [
+          47630,
+          114.98973305954826
+        ],
+        [
+          51417,
+          91.9917864476386
+        ],
+        [
+          54492,
+          66.52977412731006
+        ]
+      ],
+      "collect": [
+        [
+          20594,
+          68288.0
+        ],
+        [
+          22760,
+          69008.0
+        ],
+        [
+          22937,
+          69368.0
+        ],
+        [
+          37066,
+          67838.0
+        ],
+        [
+          37322,
+          68678.0
+        ],
+        [
+          47630,
+          69218.0
+        ],
+        [
+          51417,
+          68858.0
+        ],
+        [
+          54492,
+          68528.0
+        ]
+      ],
+      "deploy": [
+        [
+          20594,
+          65768.0
+        ],
+        [
+          22760,
+          65648.0
+        ],
+        [
+          22937,
+          65918.0
+        ],
+        [
+          37066,
+          66458.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          51417,
+          65498.0
+        ],
+        [
+          54492,
+          66098.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          51417,
+          65258.0,
+          65498.0
+        ],
+        [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        [
+          22760,
+          20594,
+          65648.0,
+          65768.0
+        ],
+        [
+          20594,
+          22937,
+          65768.0,
+          65918.0
+        ],
+        [
+          22937,
+          54492,
+          65918.0,
+          66098.0
+        ],
+        [
+          54492,
+          37066,
+          66098.0,
+          66458.0
+        ],
+        [
+          37066,
+          20594,
+          67838.0,
+          68288.0
+        ],
+        [
+          20594,
+          54492,
+          68288.0,
+          68528.0
+        ],
+        [
+          54492,
+          37322,
+          68528.0,
+          68678.0
+        ],
+        [
+          37322,
+          51417,
+          68678.0,
+          68858.0
+        ],
+        [
+          51417,
+          22760,
+          68858.0,
+          69008.0
+        ],
+        [
+          22760,
+          47630,
+          69008.0,
+          69218.0
+        ],
+        [
+          47630,
+          22937,
+          69218.0,
+          69368.0
+        ],
+        [
+          22937,
+          0,
+          69368.0,
+          69788.0
+        ]
+      ]
+    },
+    "request_sha256": "b0713bb01130ed8fc42a11dd6ab549a6110920977a5ec6fadba82fc5926b3666",
+    "ship": 19,
+    "weighted_delta_kg": 3.15631066109745,
+    "weighted_kg": 536.8522992067442,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v802-ship19-rank0006",
+      "h100-v802-ship19-rank0006"
+    ],
+    "asteroids": [
+      20594,
+      22760,
+      22937,
+      37322,
+      47630,
+      47674,
+      51417,
+      54492
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "3b029d64a7dd9dcaf0db4a4a07e3280b1d19f1e3043479c85a751daa3ce60e84",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        51417,
+        65258.0,
+        65498.0
+      ],
+      [
+        51417,
+        22760,
+        65498.0,
+        65648.0
+      ],
+      [
+        22760,
+        20594,
+        65648.0,
+        65768.0
+      ],
+      [
+        20594,
+        22937,
+        65768.0,
+        65918.0
+      ],
+      [
+        22937,
+        54492,
+        65918.0,
+        66098.0
+      ],
+      [
+        54492,
+        47674,
+        66098.0,
+        66458.0
+      ],
+      [
+        47674,
+        20594,
+        67868.0,
+        68318.0
+      ],
+      [
+        20594,
+        54492,
+        68318.0,
+        68528.0
+      ],
+      [
+        54492,
+        37322,
+        68528.0,
+        68678.0
+      ],
+      [
+        37322,
+        51417,
+        68678.0,
+        68858.0
+      ],
+      [
+        51417,
+        22760,
+        68858.0,
+        69008.0
+      ],
+      [
+        22760,
+        47630,
+        69008.0,
+        69218.0
+      ],
+      [
+        47630,
+        22937,
+        69218.0,
+        69368.0
+      ],
+      [
+        22937,
+        0,
+        69368.0,
+        69788.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "45a95d2de58a2f3f7f1098ae94ca638301a8822bd257db179ad6666be93eac04",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 8.030299397783438
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": 27.51540041074213,
+    "raw_kg": 662.012320328542,
+    "raw_slack_after_kg": 275.02610720281643,
+    "request": {
+      "cargo": [
+        [
+          20594,
+          69.81519507186859
+        ],
+        [
+          22760,
+          91.9917864476386
+        ],
+        [
+          22937,
+          94.45585215605749
+        ],
+        [
+          37322,
+          93.63449691991786
+        ],
+        [
+          47630,
+          114.98973305954826
+        ],
+        [
+          47674,
+          38.60369609856263
+        ],
+        [
+          51417,
+          91.9917864476386
+        ],
+        [
+          54492,
+          66.52977412731006
+        ]
+      ],
+      "collect": [
+        [
+          20594,
+          68318.0
+        ],
+        [
+          22760,
+          69008.0
+        ],
+        [
+          22937,
+          69368.0
+        ],
+        [
+          37322,
+          68678.0
+        ],
+        [
+          47630,
+          69218.0
+        ],
+        [
+          47674,
+          67868.0
+        ],
+        [
+          51417,
+          68858.0
+        ],
+        [
+          54492,
+          68528.0
+        ]
+      ],
+      "deploy": [
+        [
+          20594,
+          65768.0
+        ],
+        [
+          22760,
+          65648.0
+        ],
+        [
+          22937,
+          65918.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          47674,
+          66458.0
+        ],
+        [
+          51417,
+          65498.0
+        ],
+        [
+          54492,
+          66098.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          51417,
+          65258.0,
+          65498.0
+        ],
+        [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        [
+          22760,
+          20594,
+          65648.0,
+          65768.0
+        ],
+        [
+          20594,
+          22937,
+          65768.0,
+          65918.0
+        ],
+        [
+          22937,
+          54492,
+          65918.0,
+          66098.0
+        ],
+        [
+          54492,
+          47674,
+          66098.0,
+          66458.0
+        ],
+        [
+          47674,
+          20594,
+          67868.0,
+          68318.0
+        ],
+        [
+          20594,
+          54492,
+          68318.0,
+          68528.0
+        ],
+        [
+          54492,
+          37322,
+          68528.0,
+          68678.0
+        ],
+        [
+          37322,
+          51417,
+          68678.0,
+          68858.0
+        ],
+        [
+          51417,
+          22760,
+          68858.0,
+          69008.0
+        ],
+        [
+          22760,
+          47630,
+          69008.0,
+          69218.0
+        ],
+        [
+          47630,
+          22937,
+          69218.0,
+          69368.0
+        ],
+        [
+          22937,
+          0,
+          69368.0,
+          69788.0
+        ]
+      ]
+    },
+    "request_sha256": "0d16cfb8eb530aaedc6c74dc4cd8195f01722866374a1eaf4d95acd8ad786f81",
+    "ship": 19,
+    "weighted_delta_kg": 1.991897916805442,
+    "weighted_kg": 535.6878864624522,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship19-rank0004",
+      "h100-v794-ship19-rank0004"
+    ],
+    "asteroids": [
+      6783,
+      20732,
+      37066,
+      37322,
+      47630,
+      49218,
+      49502,
+      54492,
+      57844
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "fefec72963620aa05eae39e52d5362fa3085ed3920e7eb296b7e35080ad7d844",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        37066,
+        65258.0,
+        65438.0
+      ],
+      [
+        37066,
+        49502,
+        65438.0,
+        65618.0
+      ],
+      [
+        49502,
+        49218,
+        65618.0,
+        65798.0
+      ],
+      [
+        49218,
+        6783,
+        65798.0,
+        66038.0
+      ],
+      [
+        6783,
+        54492,
+        66038.0,
+        66398.0
+      ],
+      [
+        54492,
+        20732,
+        66398.0,
+        66518.0
+      ],
+      [
+        20732,
+        57844,
+        66518.0,
+        66878.0
+      ],
+      [
+        57844,
+        6783,
+        66878.0,
+        67328.0
+      ],
+      [
+        6783,
+        49502,
+        67328.0,
+        67778.0
+      ],
+      [
+        49502,
+        37066,
+        67793.0,
+        67943.0
+      ],
+      [
+        37066,
+        37322,
+        67943.0,
+        68303.0
+      ],
+      [
+        37322,
+        47630,
+        68303.0,
+        68393.0
+      ],
+      [
+        47630,
+        49218,
+        68393.0,
+        68633.0
+      ],
+      [
+        49218,
+        54492,
+        68633.0,
+        68933.0
+      ],
+      [
+        54492,
+        57844,
+        68933.0,
+        69023.0
+      ],
+      [
+        57844,
+        20732,
+        69023.0,
+        69323.0
+      ],
+      [
+        20732,
+        0,
+        69323.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      }
+    ],
+    "itinerary_sha256": "a0523586163476aea20ae696c41dced3c09f3946b3142d98253002cb941b0d50",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 68.96625098864888
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": -12.731006160099696,
+    "raw_kg": 621.7659137577002,
+    "raw_slack_after_kg": 234.77970063197463,
+    "request": {
+      "cargo": [
+        [
+          6783,
+          35.318275154004105
+        ],
+        [
+          20732,
+          76.79671457905545
+        ],
+        [
+          37066,
+          68.58316221765914
+        ],
+        [
+          37322,
+          83.36755646817248
+        ],
+        [
+          47630,
+          92.40246406570841
+        ],
+        [
+          49218,
+          77.61806981519507
+        ],
+        [
+          49502,
+          59.5482546201232
+        ],
+        [
+          54492,
+          69.40451745379877
+        ],
+        [
+          57844,
+          58.72689938398357
+        ]
+      ],
+      "collect": [
+        [
+          6783,
+          67328.0
+        ],
+        [
+          20732,
+          69323.0
+        ],
+        [
+          37066,
+          67943.0
+        ],
+        [
+          37322,
+          68303.0
+        ],
+        [
+          47630,
+          68393.0
+        ],
+        [
+          49218,
+          68633.0
+        ],
+        [
+          49502,
+          67793.0
+        ],
+        [
+          54492,
+          68933.0
+        ],
+        [
+          57844,
+          69023.0
+        ]
+      ],
+      "deploy": [
+        [
+          6783,
+          66038.0
+        ],
+        [
+          20732,
+          66518.0
+        ],
+        [
+          37066,
+          65438.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          49218,
+          65798.0
+        ],
+        [
+          49502,
+          65618.0
+        ],
+        [
+          54492,
+          66398.0
+        ],
+        [
+          57844,
+          66878.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        [
+          37066,
+          49502,
+          65438.0,
+          65618.0
+        ],
+        [
+          49502,
+          49218,
+          65618.0,
+          65798.0
+        ],
+        [
+          49218,
+          6783,
+          65798.0,
+          66038.0
+        ],
+        [
+          6783,
+          54492,
+          66038.0,
+          66398.0
+        ],
+        [
+          54492,
+          20732,
+          66398.0,
+          66518.0
+        ],
+        [
+          20732,
+          57844,
+          66518.0,
+          66878.0
+        ],
+        [
+          57844,
+          6783,
+          66878.0,
+          67328.0
+        ],
+        [
+          6783,
+          49502,
+          67328.0,
+          67778.0
+        ],
+        [
+          49502,
+          37066,
+          67793.0,
+          67943.0
+        ],
+        [
+          37066,
+          37322,
+          67943.0,
+          68303.0
+        ],
+        [
+          37322,
+          47630,
+          68303.0,
+          68393.0
+        ],
+        [
+          47630,
+          49218,
+          68393.0,
+          68633.0
+        ],
+        [
+          49218,
+          54492,
+          68633.0,
+          68933.0
+        ],
+        [
+          54492,
+          57844,
+          68933.0,
+          69023.0
+        ],
+        [
+          57844,
+          20732,
+          69023.0,
+          69323.0
+        ],
+        [
+          20732,
+          0,
+          69323.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "05a13a2f6f812b87358270b9be9bf039ca944c561dba674225786cdb952a33c0",
+    "ship": 19,
+    "weighted_delta_kg": 1.577165711674752,
+    "weighted_kg": 535.2731542573215,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v802-ship19-rank0007",
+      "h100-v802-ship19-rank0007"
+    ],
+    "asteroids": [
+      10285,
+      16356,
+      20594,
+      22760,
+      22937,
+      37322,
+      47630,
+      51417
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "f8a6b907022d863fd76490333ff7df85fe98edcefacee0a7226a80756e471871",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        51417,
+        65258.0,
+        65498.0
+      ],
+      [
+        51417,
+        22760,
+        65498.0,
+        65648.0
+      ],
+      [
+        22760,
+        20594,
+        65648.0,
+        65768.0
+      ],
+      [
+        20594,
+        22937,
+        65768.0,
+        65918.0
+      ],
+      [
+        22937,
+        10285,
+        65918.0,
+        66098.0
+      ],
+      [
+        10285,
+        16356,
+        66098.0,
+        66338.0
+      ],
+      [
+        16356,
+        20594,
+        67868.0,
+        68228.0
+      ],
+      [
+        20594,
+        47630,
+        68228.0,
+        68468.0
+      ],
+      [
+        47630,
+        37322,
+        68468.0,
+        68678.0
+      ],
+      [
+        37322,
+        51417,
+        68678.0,
+        68858.0
+      ],
+      [
+        51417,
+        22760,
+        68858.0,
+        69008.0
+      ],
+      [
+        22760,
+        10285,
+        69008.0,
+        69218.0
+      ],
+      [
+        10285,
+        22937,
+        69218.0,
+        69368.0
+      ],
+      [
+        22937,
+        0,
+        69368.0,
+        69788.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "local-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      },
+      {
+        "attempt_id": "h100-v802-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 3,
+        "flight": [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+      }
+    ],
+    "itinerary_sha256": "beb659a4f5c559ff71c13565a6ae28e14d0c7b097af6aa97b8fb78f290e3913f",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 46.17373213580163
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": 26.69404517460248,
+    "raw_kg": 661.1909650924024,
+    "raw_slack_after_kg": 274.2047519666768,
+    "request": {
+      "cargo": [
+        [
+          10285,
+          85.42094455852155
+        ],
+        [
+          16356,
+          41.889117043121146
+        ],
+        [
+          20594,
+          67.35112936344969
+        ],
+        [
+          22760,
+          91.9917864476386
+        ],
+        [
+          22937,
+          94.45585215605749
+        ],
+        [
+          37322,
+          93.63449691991786
+        ],
+        [
+          47630,
+          94.45585215605749
+        ],
+        [
+          51417,
+          91.9917864476386
+        ]
+      ],
+      "collect": [
+        [
+          10285,
+          69218.0
+        ],
+        [
+          16356,
+          67868.0
+        ],
+        [
+          20594,
+          68228.0
+        ],
+        [
+          22760,
+          69008.0
+        ],
+        [
+          22937,
+          69368.0
+        ],
+        [
+          37322,
+          68678.0
+        ],
+        [
+          47630,
+          68468.0
+        ],
+        [
+          51417,
+          68858.0
+        ]
+      ],
+      "deploy": [
+        [
+          10285,
+          66098.0
+        ],
+        [
+          16356,
+          66338.0
+        ],
+        [
+          20594,
+          65768.0
+        ],
+        [
+          22760,
+          65648.0
+        ],
+        [
+          22937,
+          65918.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          51417,
+          65498.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          51417,
+          65258.0,
+          65498.0
+        ],
+        [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ],
+        [
+          22760,
+          20594,
+          65648.0,
+          65768.0
+        ],
+        [
+          20594,
+          22937,
+          65768.0,
+          65918.0
+        ],
+        [
+          22937,
+          10285,
+          65918.0,
+          66098.0
+        ],
+        [
+          10285,
+          16356,
+          66098.0,
+          66338.0
+        ],
+        [
+          16356,
+          20594,
+          67868.0,
+          68228.0
+        ],
+        [
+          20594,
+          47630,
+          68228.0,
+          68468.0
+        ],
+        [
+          47630,
+          37322,
+          68468.0,
+          68678.0
+        ],
+        [
+          37322,
+          51417,
+          68678.0,
+          68858.0
+        ],
+        [
+          51417,
+          22760,
+          68858.0,
+          69008.0
+        ],
+        [
+          22760,
+          10285,
+          69008.0,
+          69218.0
+        ],
+        [
+          10285,
+          22937,
+          69218.0,
+          69368.0
+        ],
+        [
+          22937,
+          0,
+          69368.0,
+          69788.0
+        ]
+      ]
+    },
+    "request_sha256": "5194f2f107c8304a44988aa89d0d4b159f9ab9f903da1e04ddc3acc65803b35b",
+    "ship": 19,
+    "weighted_delta_kg": 1.0334714844915425,
+    "weighted_kg": 534.7294600301383,
+    "within_fleet_raw_budget": true
+  },
+  {
+    "aliases": [
+      "local-v794-ship19-rank0005",
+      "h100-v794-ship19-rank0005"
+    ],
+    "asteroids": [
+      6783,
+      20732,
+      37066,
+      37322,
+      47630,
+      49218,
+      49502,
+      54492,
+      57844
+    ],
+    "attempted_under_current_endpoint_core": false,
+    "canonical_plan_sha256": "8cc0f141b71aa891f3ef0be093c6970ae9be062ff00ed1d8f5b1ff9fb3630f24",
+    "conflicts": {},
+    "eligible_fixed_cargo_arithmetic": true,
+    "first_leg_exact_current": true,
+    "flights": [
+      [
+        0,
+        47630,
+        64478.0,
+        65018.0
+      ],
+      [
+        47630,
+        37322,
+        65018.0,
+        65258.0
+      ],
+      [
+        37322,
+        37066,
+        65258.0,
+        65438.0
+      ],
+      [
+        37066,
+        49502,
+        65438.0,
+        65618.0
+      ],
+      [
+        49502,
+        49218,
+        65618.0,
+        65798.0
+      ],
+      [
+        49218,
+        6783,
+        65798.0,
+        66038.0
+      ],
+      [
+        6783,
+        54492,
+        66038.0,
+        66398.0
+      ],
+      [
+        54492,
+        20732,
+        66398.0,
+        66518.0
+      ],
+      [
+        20732,
+        57844,
+        66518.0,
+        66818.0
+      ],
+      [
+        57844,
+        6783,
+        66818.0,
+        67268.0
+      ],
+      [
+        6783,
+        49502,
+        67268.0,
+        67718.0
+      ],
+      [
+        49502,
+        37066,
+        67763.0,
+        67943.0
+      ],
+      [
+        37066,
+        37322,
+        67943.0,
+        68303.0
+      ],
+      [
+        37322,
+        47630,
+        68303.0,
+        68393.0
+      ],
+      [
+        47630,
+        49218,
+        68393.0,
+        68633.0
+      ],
+      [
+        49218,
+        54492,
+        68633.0,
+        68933.0
+      ],
+      [
+        54492,
+        57844,
+        68933.0,
+        69023.0
+      ],
+      [
+        57844,
+        20732,
+        69023.0,
+        69323.0
+      ],
+      [
+        20732,
+        0,
+        69323.0,
+        69803.0
+      ]
+    ],
+    "historically_failed_flight_prefix_matches": [
+      {
+        "attempt_id": "local-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "local-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0000",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      },
+      {
+        "attempt_id": "h100-v794-ship19-rank0001",
+        "endpoint_merit_fix_present": false,
+        "failed_leg": 2,
+        "flight": [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        "policy": "historical refinement; pre-endpoint-merit core",
+        "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+      }
+    ],
+    "itinerary_sha256": "53907ad91f7f971dce476eb8b135260e9fd84e7d8d4a77f65ac7a236f6c6d417",
+    "material_positive": true,
+    "mining_and_proxy": {
+      "feasible_proxy": true,
+      "proxy_final_fuel_kg": 76.05392315229142
+    },
+    "no_conflict": true,
+    "previous_attempts": [],
+    "raw_delta_kg": -13.552361396239348,
+    "raw_kg": 620.9445585215606,
+    "raw_slack_after_kg": 233.95834539583498,
+    "request": {
+      "cargo": [
+        [
+          6783,
+          33.67556468172484
+        ],
+        [
+          20732,
+          76.79671457905545
+        ],
+        [
+          37066,
+          68.58316221765914
+        ],
+        [
+          37322,
+          83.36755646817248
+        ],
+        [
+          47630,
+          92.40246406570841
+        ],
+        [
+          49218,
+          77.61806981519507
+        ],
+        [
+          49502,
+          58.72689938398357
+        ],
+        [
+          54492,
+          69.40451745379877
+        ],
+        [
+          57844,
+          60.369609856262834
+        ]
+      ],
+      "collect": [
+        [
+          6783,
+          67268.0
+        ],
+        [
+          20732,
+          69323.0
+        ],
+        [
+          37066,
+          67943.0
+        ],
+        [
+          37322,
+          68303.0
+        ],
+        [
+          47630,
+          68393.0
+        ],
+        [
+          49218,
+          68633.0
+        ],
+        [
+          49502,
+          67763.0
+        ],
+        [
+          54492,
+          68933.0
+        ],
+        [
+          57844,
+          69023.0
+        ]
+      ],
+      "deploy": [
+        [
+          6783,
+          66038.0
+        ],
+        [
+          20732,
+          66518.0
+        ],
+        [
+          37066,
+          65438.0
+        ],
+        [
+          37322,
+          65258.0
+        ],
+        [
+          47630,
+          65018.0
+        ],
+        [
+          49218,
+          65798.0
+        ],
+        [
+          49502,
+          65618.0
+        ],
+        [
+          54492,
+          66398.0
+        ],
+        [
+          57844,
+          66818.0
+        ]
+      ],
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ],
+        [
+          37066,
+          49502,
+          65438.0,
+          65618.0
+        ],
+        [
+          49502,
+          49218,
+          65618.0,
+          65798.0
+        ],
+        [
+          49218,
+          6783,
+          65798.0,
+          66038.0
+        ],
+        [
+          6783,
+          54492,
+          66038.0,
+          66398.0
+        ],
+        [
+          54492,
+          20732,
+          66398.0,
+          66518.0
+        ],
+        [
+          20732,
+          57844,
+          66518.0,
+          66818.0
+        ],
+        [
+          57844,
+          6783,
+          66818.0,
+          67268.0
+        ],
+        [
+          6783,
+          49502,
+          67268.0,
+          67718.0
+        ],
+        [
+          49502,
+          37066,
+          67763.0,
+          67943.0
+        ],
+        [
+          37066,
+          37322,
+          67943.0,
+          68303.0
+        ],
+        [
+          37322,
+          47630,
+          68303.0,
+          68393.0
+        ],
+        [
+          47630,
+          49218,
+          68393.0,
+          68633.0
+        ],
+        [
+          49218,
+          54492,
+          68633.0,
+          68933.0
+        ],
+        [
+          54492,
+          57844,
+          68933.0,
+          69023.0
+        ],
+        [
+          57844,
+          20732,
+          69023.0,
+          69323.0
+        ],
+        [
+          20732,
+          0,
+          69323.0,
+          69803.0
+        ]
+      ]
+    },
+    "request_sha256": "21bcb9a3bb94d7974743de575780a6266d8e6e536dbbfced3d5b4e42cf7ae34e",
+    "ship": 19,
+    "weighted_delta_kg": 0.4477986770498319,
+    "weighted_kg": 534.1437872226966,
+    "within_fleet_raw_budget": true
+  }
+]

@@ -14,6 +14,31 @@ establish a competitive PDHCG mission backend.
 
 ## Current checkpoint and next work
 
+The subsequent v630 tests leave that verified fleet unchanged. Production
+fleet-budget admission now permits weighted gains with a tolerable raw-mass
+loss, but none of three additional archived route prescriptions certifies.
+Their 24 native leg calls and 157 SCvx iterations expose three specific failed
+transfers. The next mission intervention must improve initialization or change
+the coupled itinerary around those transfers, rather than repeat admission of
+the same requests. [Production policy and failure evidence](GPU_FLEET_BUDGET_ADMISSION.md).
+
+CUDA route-boundary ephemerides pass independent state and archived-seed checks,
+with a maximum 1.765 mm position difference. Their complete preparation step is
+slightly slower for these small fresh-workspace batches. This removes CPU
+orbital-state arithmetic, but does not justify a solver speedup claim; retaining
+the native workspace and removing its host bridge are the relevant next steps.
+[Measured costs and integration scope](GPU_ROUTE_EPHEMERIDES.md).
+
+The complete cold-start diagnostic is also a reliability warning: PDHCG meets
+the original common gates on zero of four outputs, and QOCO on one of four.
+Both independent original-equation auditors agree. All four PDHCG outputs fail
+primal feasibility, so the fixed-primal dual correction is correctly skipped.
+The two captures are stages of one fixture, not four independent problems.
+Work on primal feasibility and conditioning must precede a competitive
+qualified-latency claim. These results do not overturn the earlier saved warm
+point's successful dual correction, whose starting conditions differ.
+[Complete cold and retained costs and localized failures](GPU_CORE_RETAINED_COLD_STARTS.md).
+
 The latest locally checked fleet, frontier v629, scores **13,023.704901 weighted
 kg** and returns **14,291.006160 raw kg**, or **621.348094 raw kg per ship**, with
 23 ships and 199 asteroids. Four fixed-cargo alternatives all certify on RTX 5090;
@@ -50,7 +75,7 @@ raw-mass budget. One selected alternative gains 12.676890 weighted kg while losi
 | --- | --- | --- |
 | 1. Convert reliability into better missions | Expand Earth-leg seeds, changed asteroid sets and compatible cross-ship replacements. Rank weighted gains against the shared fleet raw-mass budget, including feasible fleet growth. Keep fixed-cargo controls and both full-fleet checks. | Compare verified best score versus total elapsed time from the same incumbent. Count unique candidates, rejected routes and all refinement time. Retain improvements to weighted score while meeting the raw-mass ship rule. |
 | 2. Remove the remaining host bottlenecks | Collection-DP buffer reuse is measured and implemented. Move completion packing and beam expansion/control into C++/CUDA. The newer local search still spends 28.793 s packing against 1.007 s in its completion kernel; the four-route batch retains 153 CPU ephemeris calls. | Reproduce route decisions and qualified scores, then reduce complete search time. More kernel evaluations are useful only if they yield more certified competitive routes within the same budget. |
-| 3. Make PDHCG qualify reliably | Exact isolated-coordinate elimination now passes the standalone GPU correction and independent original audits on one saved point. Retest representative cold and changed warm captures, including nonzero-Q cases; measure retained-workspace costs before integration. | Every original acceptance gate must pass. The new diagnostic accepts, but inherited native PDHCG termination is still iteration-limited. Earlier rejected runs remain rejected; physics gates are unchanged. |
+| 3. Make PDHCG qualify reliably | The cold/retained test localizes coupled initial-boundary, dynamics and thrust-cone failures. Validate a targeted feasibility/conditioning intervention while preserving the virtual-control objective. The earlier saved warm point passes dual correction. | Every original acceptance gate must pass. The earlier saved warm point's diagnostic accepts, but inherited native PDHCG termination remains iteration-limited and the four new cold points fail. Physics gates are unchanged. |
 | 4. Demonstrate the core's advantage | Connect a qualified PDHCG path to native GTOC12 SCvx, including retained starts and explicit recovery. Compare pure PDHCG, QOCO and any declared hybrid on identical inputs; then compare complete trajectory systems. | Measure median/p95 total latency, certified legs/s, reliability, objective and memory. Count setup, transfers, failed attempts and correction. Use the existing repeated-run and claim rules below. |
 | 5. Spend demonstrated throughput on broader search | Batch independent qualified trajectories, use interval-structured operators where profiling supports them, and expand diverse route pools under equal compute budgets. | Better score-time curves and stable gains on held-out missions, followed by comparison against published fleets rescored with the same bonus table. |
 

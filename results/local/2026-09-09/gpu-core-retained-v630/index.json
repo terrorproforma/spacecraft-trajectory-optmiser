@@ -1,0 +1,467 @@
+{
+  "archive_bytes": 1603522,
+  "archive_sha256": "17a8f02c6916db8711afec77ecd330b0f43325cd8dde1f39fbc9443f25f39dd5",
+  "external_runtime_binaries": [
+    {
+      "bytes": 1133600,
+      "path": "/home/angus/spacepdhcg-core-retained-v630a/persistent_chain",
+      "sha256": "c5013521f57c01b3a6f583e20e0114be1f04df2758ff4ab77038a08d269cbdce"
+    },
+    {
+      "bytes": 1048976,
+      "path": "/home/angus/spacepdhcg-core-retained-v630a/qoco_retained",
+      "sha256": "c108c90ddeef1844207265a3bb3915e05836dfbb19de35d9a8fa237d3c71736b"
+    },
+    {
+      "bytes": 21880,
+      "path": "/home/angus/spacepdhcg-core-retained-v630a/zero_faces_test",
+      "sha256": "237d3ecc767c047916cc0877cb50599a06049b03fe4f828210be6dea4063849d"
+    },
+    {
+      "bytes": 149210177,
+      "path": "/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib/libcudss.so.0",
+      "sha256": "0740250950abbbbc7690c4edb1506f8432558658764d6c1f7cba29615acb3dfc"
+    },
+    {
+      "bytes": 792696,
+      "path": "/home/angus/spacepdhcg-gpu-dual-polish-v629a/build/libgpu_dual_qr.so",
+      "sha256": "8854aa8eb4bd1e7a07208c77ccb270f722332106a98e18b45910217d18b224e4"
+    },
+    {
+      "bytes": 23551448,
+      "path": "/home/angus/spacepdhcg-combined-v622a/build/cuda/libspacepdhcg_cuda.so",
+      "sha256": "6b32c2b5c4f87cd8990ee95816b00c0cb5dc863c7225cb244a17993ef344d8b1"
+    },
+    {
+      "bytes": 4524200,
+      "path": "/home/angus/spacepdhcg-retry-conditioning-v683/final/libqoco.so",
+      "sha256": "5b1b1a047f9d5041f821b64490562a3d598f51b47fedb08d89cdae211728940a"
+    }
+  ],
+  "file_count": 97,
+  "files": {
+    "build/performance/audit_core_retained_package_v630.py": {
+      "bytes": 10644,
+      "sha256": "de6410ae52a5b2230751ae16d808b78b7951b54d240546d721b132c40652a031"
+    },
+    "build/performance/gpu-core-retained-v630/DESIGN.md": {
+      "bytes": 13431,
+      "sha256": "d5d73ae6a00492f831b16fbf33253dc9235419b8b4b6b5b3e46c833e530196b6"
+    },
+    "build/performance/gpu-core-retained-v630/REPORT.md": {
+      "bytes": 6242,
+      "sha256": "033aec3a19a69ab4f2fe75603f404de03f02fda4513315d57ae0fe82fa646ebf"
+    },
+    "build/performance/gpu-core-retained-v630/analysis-source/gtoc12_conic.cu": {
+      "bytes": 17378,
+      "sha256": "66574b9efda823ba3faae063f41d66a76330d58225da7fe69c15e99e924e9bfd"
+    },
+    "build/performance/gpu-core-retained-v630/analysis-source/low_thrust.py": {
+      "bytes": 41893,
+      "sha256": "61ef30856411692c23e280e71d50cd2c453a4cf4a6f46960538eaddd34b56161"
+    },
+    "build/performance/gpu-core-retained-v630/analysis-source/source-provenance.json": {
+      "bytes": 610,
+      "sha256": "0736d223d3a8ef1c26181b1b5d8dcdacfb23eca06392c81050068d054d2007d6"
+    },
+    "build/performance/gpu-core-retained-v630/audit-findings.json": {
+      "bytes": 76736,
+      "sha256": "ad5db3aa98540bd0cd1fa24710f590c5e34f42ac8c6a04313cc94f2bb8534a90"
+    },
+    "build/performance/gpu-core-retained-v630/audit-inputs/decimal_auditor.py": {
+      "bytes": 13014,
+      "sha256": "b8697eedc3d91ed48849725b4fd8e17dc7515c020f5f3d30f1aa151794a5dbc4"
+    },
+    "build/performance/gpu-core-retained-v630/audit-inputs/long_double_auditor.py": {
+      "bytes": 11208,
+      "sha256": "0d944f768ad9c089499cc6e95cd1313677e153f650eced2c7d84b9815c00c7ff"
+    },
+    "build/performance/gpu-core-retained-v630/audit_saved.py": {
+      "bytes": 14875,
+      "sha256": "e6615e428269fdd5ef356ffcca36ce04d3715558300dc57d96838ed57d7b9f42"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/compile-cpu-zero-faces.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/compile-persistent.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/compile-qoco.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/cpu-zero-faces.log": {
+      "bytes": 60,
+      "sha256": "3c1eb7288d15bc7614ba08bcd0ba6b39217a962b66cf87cc5a72f44c80555dcd"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/host-compiler.log": {
+      "bytes": 246,
+      "sha256": "9eaf9b7f4b11c2e84e2478c2ceb0e4f48f4ba88565bcfc832b3bce49847dda6d"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/ldd-dual.log": {
+      "bytes": 1113,
+      "sha256": "708907b3d162933259b32f14f6555c637b1525192ac88685bb14dfb3a784a626"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/ldd-persistent.log": {
+      "bytes": 853,
+      "sha256": "9dad745ad2e76cf739e8d58951b11c7f7af830e86ccb8a68dd1276ce6659df75"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/ldd-qoco.log": {
+      "bytes": 374,
+      "sha256": "476f698bc4db9b3a2fd5abe16a8cb83b44ca557be1bb9851623cf1cd7bdbd06a"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/manifest.json": {
+      "bytes": 17941,
+      "sha256": "44baa8f8356b52166fb3940d221e4c2ad34daae60c4d032c064e77735544491b"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/nvcc-version.log": {
+      "bytes": 208,
+      "sha256": "68f8b0a1301428031e307cf5260142a517bff25cc232a09eae2734be475d721f"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/reject-persistent-no-input.log": {
+      "bytes": 161,
+      "sha256": "66d8aa01c120345f09b8655db600d2cbf4a9a1acb5f5e747d499de6c90735dbf"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/reject-persistent-shifted.log": {
+      "bytes": 141,
+      "sha256": "60abc7e5b10e949eb322393c85660f08391323bd4fe0411025308e1473a41e8c"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/reject-persistent-unexpected-mode.log": {
+      "bytes": 161,
+      "sha256": "66d8aa01c120345f09b8655db600d2cbf4a9a1acb5f5e747d499de6c90735dbf"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/reject-qoco-no-input.log": {
+      "bytes": 452,
+      "sha256": "8fe7332fe2447ba130bcd46a4b8ff805f9524c7e4d832c7c291078a0094347e4"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/reject-qoco-shifted.log": {
+      "bytes": 455,
+      "sha256": "ae6196cf91d566f4d868330a53ebd76de96934e34b09f56d2c2f2ee53948720e"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/reject-qoco-unexpected-mode.log": {
+      "bytes": 452,
+      "sha256": "8fe7332fe2447ba130bcd46a4b8ff805f9524c7e4d832c7c291078a0094347e4"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/reject-qoco_replay_regularization.log": {
+      "bytes": 446,
+      "sha256": "aabfecb5d5f2778d7ceaa1488257ec25eaa918b7142fcd8849ea9e7ba00c2f19"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/reject-qoco_replay_tolerance.log": {
+      "bytes": 446,
+      "sha256": "aabfecb5d5f2778d7ceaa1488257ec25eaa918b7142fcd8849ea9e7ba00c2f19"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/source-sha256.json": {
+      "bytes": 4021,
+      "sha256": "507ecc03cfdbfdd34de0d156f6e81a8330b6e7068f6a3b2788bbc9b854fefbd4"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/source.tar.gz": {
+      "bytes": 43695,
+      "sha256": "803091f65bb34696c8544fa97d1ed5f7e46e47fcfc1897cfbb3b1baa9f269057"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/validate-persistent-early.log": {
+      "bytes": 673,
+      "sha256": "ceffe15736caa512fa70c1b3a3a61460b774a3d7da82b688a53f4b7973e45a98"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/validate-persistent-near_converged.log": {
+      "bytes": 673,
+      "sha256": "eab7a5674135798cbf61deb39ffe62fe71d343a42e3e0354f80be24d2688fc46"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/validate-qoco-early.log": {
+      "bytes": 677,
+      "sha256": "172f9888d0aa913cc973b80572f859765fa9bf32020c53cf47b8a159b91ef70d"
+    },
+    "build/performance/gpu-core-retained-v630/build-a/validate-qoco-near_converged.log": {
+      "bytes": 677,
+      "sha256": "172f9888d0aa913cc973b80572f859765fa9bf32020c53cf47b8a159b91ef70d"
+    },
+    "build/performance/gpu-core-retained-v630/build_hidden.py": {
+      "bytes": 10000,
+      "sha256": "1c6221949f02ac6571310f5cba07bb180ea27652679cfce98c50f93291e7ed06"
+    },
+    "build/performance/gpu-core-retained-v630/compare_qoco_saved.py": {
+      "bytes": 6067,
+      "sha256": "5bf5a0f2ea1d206780001fd36533d7ce5fc60519fae72d9245ae6cd80908cfe3"
+    },
+    "build/performance/gpu-core-retained-v630/comparison-inputs/v629-audit-findings.json": {
+      "bytes": 5904,
+      "sha256": "eda8bf6fd6c64246edd69f66e5143f37296bdf5ad962565135fd2a738fa881ca"
+    },
+    "build/performance/gpu-core-retained-v630/comparison-inputs/v629-build-manifest.json": {
+      "bytes": 9575,
+      "sha256": "b43e8c4397da9c57cfc6603c817b1e9afc96c983fff1ccd62375b137ecbce89a"
+    },
+    "build/performance/gpu-core-retained-v630/comparison-inputs/v629-package-index.json": {
+      "bytes": 13617,
+      "sha256": "ce9dba9cfd3ecff0a716c43f5ad0ac670b601c8f270b0f6fb2addf893ac0fa89"
+    },
+    "build/performance/gpu-core-retained-v630/comparison-inputs/v629-records.json": {
+      "bytes": 272267,
+      "sha256": "b620bc9dd12afc5b1a7b7c9a58c7f8298c4cacd8d740b6f595d276fe838a66b1"
+    },
+    "build/performance/gpu-core-retained-v630/comparison-inputs/v629-replay.cu": {
+      "bytes": 11386,
+      "sha256": "054891665272db4b46ce6abfc147baee5c520a98d7c49d8c1f1137b70e2e8d13"
+    },
+    "build/performance/gpu-core-retained-v630/comparison-inputs/v629-run-report.json": {
+      "bytes": 3570,
+      "sha256": "a0fdfc00da6b41d6a68e91ab9978818a3da5b3e901fc489020ce232e85eed520"
+    },
+    "build/performance/gpu-core-retained-v630/headers/cuda_test_support.hpp": {
+      "bytes": 17344,
+      "sha256": "6623b3ca99926d46a8b425f9da738fbfca096d5168f4c3c1e4e3580279be48e3"
+    },
+    "build/performance/gpu-core-retained-v630/headers/data.hpp": {
+      "bytes": 3181,
+      "sha256": "6d96f01f67dbf74669b6077f8086de35cb8e0a44506532511840725df4bdf505"
+    },
+    "build/performance/gpu-core-retained-v630/headers/dual_qr.h": {
+      "bytes": 2822,
+      "sha256": "fa85fb004e2c33326b686160b09b81ad6bb929f43333b31aa3baeb16174f01a2"
+    },
+    "build/performance/gpu-core-retained-v630/headers/persistent_l1_snapshot.hpp": {
+      "bytes": 3371,
+      "sha256": "d20a7617e36ff7a180fcbbaaa75216b6e3c16a41a14ff91c1d9c749c13708be5"
+    },
+    "build/performance/gpu-core-retained-v630/headers/persistent_snapshot.hpp": {
+      "bytes": 28744,
+      "sha256": "30f62411df0f9d0dd7e75c20302f8ed2d143dd294b1c68b94e8231f5f10ab0df"
+    },
+    "build/performance/gpu-core-retained-v630/headers/spacepdhcg/accelerator_c_api.h": {
+      "bytes": 3081,
+      "sha256": "af05a48e54933e45419622caab261ce98058e5674853e5b9552a4209cbbb5346"
+    },
+    "build/performance/gpu-core-retained-v630/headers/spacepdhcg/cuda/persistent_pdhcg_c_api.h": {
+      "bytes": 23831,
+      "sha256": "458142e1c1524c6bf6c445382f586df5379c49b774c74088ecf4d5257fd0a4cf"
+    },
+    "build/performance/gpu-core-retained-v630/inputs/early.txt": {
+      "bytes": 267519,
+      "sha256": "034ab3abbfbebd8def85fa502d106ea44dfcd0b15e29d704d4d28e8491d35460"
+    },
+    "build/performance/gpu-core-retained-v630/inputs/near_converged.txt": {
+      "bytes": 267213,
+      "sha256": "4d3b8c1641722c0e44fa5e9518e5bf0311dbc8ad3847f45eaf9cc2af2f6eede5"
+    },
+    "build/performance/gpu-core-retained-v630/inventory.json": {
+      "bytes": 11807,
+      "sha256": "f18c5c6aa91bee62dd7b9e9e2bf26a9d3581cde3a31fbdfa8dd577d934aaf730"
+    },
+    "build/performance/gpu-core-retained-v630/inventory_saved.py": {
+      "bytes": 5352,
+      "sha256": "b5c668e74d94df207de51a80aecf7b05aa109803f6de70c3b175f3ddb69e8026"
+    },
+    "build/performance/gpu-core-retained-v630/localization.json": {
+      "bytes": 19123,
+      "sha256": "b53a546de0b9d469c42b4b17988433669930c33eff44aab20643f26d4a87d820"
+    },
+    "build/performance/gpu-core-retained-v630/localize_saved.py": {
+      "bytes": 6523,
+      "sha256": "0f0ae836cb25e5ba349f80edfc274b3a24e911e7092197ffd48d6bf493a8306a"
+    },
+    "build/performance/gpu-core-retained-v630/packaging-attempt-a/failure.json": {
+      "bytes": 322,
+      "sha256": "dc9c97b799a9102ae5dc596b37841e52d6f931cfb1bb213e6960b40ed905eae7"
+    },
+    "build/performance/gpu-core-retained-v630/packaging-attempt-a/package_core_retained_v630.py": {
+      "bytes": 7439,
+      "sha256": "fcd1027d56218e82221af9dc098a28ed3ad26185a90d4dc0ae315fabfc89a186"
+    },
+    "build/performance/gpu-core-retained-v630/packaging-attempt-b/audit_package.py": {
+      "bytes": 10460,
+      "sha256": "49b47726bfa6d417677e19636865c3f49f16c40a8466fd8c7da611e2d29b5b74"
+    },
+    "build/performance/gpu-core-retained-v630/packaging-attempt-b/failure.json": {
+      "bytes": 632,
+      "sha256": "c19c41326bd166e40188fb53afaed40894ab8ec994cbc8faf067f1ce2d55e873"
+    },
+    "build/performance/gpu-core-retained-v630/packaging-attempt-b/index.json": {
+      "bytes": 21088,
+      "sha256": "492f9c301c897a09cd08c52599d5b70b964895dbbd02ce0527533f32f87ba5eb"
+    },
+    "build/performance/gpu-core-retained-v630/persistent_chain.cu": {
+      "bytes": 15651,
+      "sha256": "7823ca2b3896897847d1e691ce059e7f7ac1867afb92c9e19a3612cce002e97d"
+    },
+    "build/performance/gpu-core-retained-v630/plan.json": {
+      "bytes": 4151,
+      "sha256": "9fff152e78fc167481402c046980cf08fbf837012cefff68d481ab87cfa9fec2"
+    },
+    "build/performance/gpu-core-retained-v630/preparation-a/run-preflight.json": {
+      "bytes": 2630,
+      "sha256": "7fdfaae8a66cf0ff06f519c40a0267688ac003436fc03e5b1edf71d2f09c7c31"
+    },
+    "build/performance/gpu-core-retained-v630/preparation-a/run_batch.py": {
+      "bytes": 18179,
+      "sha256": "def9af03a32219cb0a9773e9ecbbc36764e4bd43c3683783e5fb157452542680"
+    },
+    "build/performance/gpu-core-retained-v630/prepare_inputs.py": {
+      "bytes": 3514,
+      "sha256": "2c6fa76decb24e1555668b67c9895dcfcabc6a48f0222cca2dc18d7842bc7057"
+    },
+    "build/performance/gpu-core-retained-v630/prepare_qoco_driver.py": {
+      "bytes": 2809,
+      "sha256": "dbae53a2a08265a7533ad42b596cd18740a40ea9d375d963f35dd9eff42ef528"
+    },
+    "build/performance/gpu-core-retained-v630/process_guard.py": {
+      "bytes": 3462,
+      "sha256": "c7039b63b8ba8e1745d77fcb759c83460f6eca309879d304bb60ae3e671f4422"
+    },
+    "build/performance/gpu-core-retained-v630/qoco-comparison.json": {
+      "bytes": 6454,
+      "sha256": "ea15756aaa437bf4d1ef520e4aa84bc451e3f43e209106a8a5fe34b0fbe1d437"
+    },
+    "build/performance/gpu-core-retained-v630/qoco_retained.cu": {
+      "bytes": 12208,
+      "sha256": "8371793c7b8856b56a1193cc107a4f79b286174bba6cbcdf4c21befc91d0d3c5"
+    },
+    "build/performance/gpu-core-retained-v630/run-a/build-manifest.json": {
+      "bytes": 17941,
+      "sha256": "44baa8f8356b52166fb3940d221e4c2ad34daae60c4d032c064e77735544491b"
+    },
+    "build/performance/gpu-core-retained-v630/run-a/plan.json": {
+      "bytes": 4151,
+      "sha256": "9fff152e78fc167481402c046980cf08fbf837012cefff68d481ab87cfa9fec2"
+    },
+    "build/performance/gpu-core-retained-v630/run-a/process_guard.py": {
+      "bytes": 3462,
+      "sha256": "c7039b63b8ba8e1745d77fcb759c83460f6eca309879d304bb60ae3e671f4422"
+    },
+    "build/performance/gpu-core-retained-v630/run-a/report.json": {
+      "bytes": 2907,
+      "sha256": "b1ed12442416c9afeeefb170f1f4d1a5b7130e8ace14486afa087d3984f09f03"
+    },
+    "build/performance/gpu-core-retained-v630/run-a/run_batch.py": {
+      "bytes": 18179,
+      "sha256": "def9af03a32219cb0a9773e9ecbbc36764e4bd43c3683783e5fb157452542680"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/0-early-persistent_chain/records.json": {
+      "bytes": 457906,
+      "sha256": "290869d741b9d32a6781e5955562c429f2130b2d3b9d6c955199e64a8db76ce3"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/0-early-persistent_chain/replay.log": {
+      "bytes": 301608,
+      "sha256": "0cecae96ac17ff3e09df525664a93a4ae372c4d4eb9747cc049b56c5c51fa0cf"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/1-early-qoco_retained/records.json": {
+      "bytes": 545917,
+      "sha256": "6b9f78a1e4117f6d9c12b1614ec8758e27d4901cd56720978bb55d0e87f4d5d0"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/1-early-qoco_retained/replay.log": {
+      "bytes": 392902,
+      "sha256": "07cd3467d0bb7b67afe400f10b28970ce130f9ec6409b36b0488c0c18330bec4"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/2-near_converged-qoco_retained/records.json": {
+      "bytes": 547061,
+      "sha256": "da7fb76821abd43f8e975aa6a1cc07ea47075e4484a0f6ea2ff3697f498a7762"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/2-near_converged-qoco_retained/replay.log": {
+      "bytes": 392671,
+      "sha256": "8b7598631d7694b807b5cdcd525cfcf23d280292121d839e802849d0247a3806"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/3-near_converged-persistent_chain/records.json": {
+      "bytes": 456638,
+      "sha256": "f4647ea1ba1504af85b9ad7fbf95057da84052e24bdeb8199eb3ae71ea5a45bf"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/3-near_converged-persistent_chain/replay.log": {
+      "bytes": 300917,
+      "sha256": "ffcf5e8d28f77cad06e82291e5ba11cf72f25204deb0cfb0c5e1539415ff4d35"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/build-manifest.json": {
+      "bytes": 17941,
+      "sha256": "44baa8f8356b52166fb3940d221e4c2ad34daae60c4d032c064e77735544491b"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/plan.json": {
+      "bytes": 4151,
+      "sha256": "9fff152e78fc167481402c046980cf08fbf837012cefff68d481ab87cfa9fec2"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/process_guard.py": {
+      "bytes": 3462,
+      "sha256": "c7039b63b8ba8e1745d77fcb759c83460f6eca309879d304bb60ae3e671f4422"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/report.json": {
+      "bytes": 22974,
+      "sha256": "460e79d92b9b1940af925d408a17a26168b26f42cb6f6411d0f14dc3ee450169"
+    },
+    "build/performance/gpu-core-retained-v630/run-b/run_batch.py": {
+      "bytes": 18179,
+      "sha256": "619405c53b2513164c93e453e0cb23f9a4a63ab07d21c7bec6836c979e41d42b"
+    },
+    "build/performance/gpu-core-retained-v630/run-preflight.json": {
+      "bytes": 2630,
+      "sha256": "d0a0883cb4c33837f88a157166b4eb03f1f6b148388391992f61575caa8d0783"
+    },
+    "build/performance/gpu-core-retained-v630/run_batch.py": {
+      "bytes": 18179,
+      "sha256": "619405c53b2513164c93e453e0cb23f9a4a63ab07d21c7bec6836c979e41d42b"
+    },
+    "build/performance/gpu-core-retained-v630/test_run_batch.py": {
+      "bytes": 8056,
+      "sha256": "5b9d6d588057a77743d31828c3083f9c1162a86e02db3140ce0a03cb7ab2dae3"
+    },
+    "build/performance/gpu-core-retained-v630/validate_preparation.py": {
+      "bytes": 2130,
+      "sha256": "241ab27143d61c0d7087eccd8601f910f30e7609aac89358d08829b950eaccb7"
+    },
+    "build/performance/gpu-core-retained-v630/validation/record-tests.log": {
+      "bytes": 2140,
+      "sha256": "ca2c3892959cb90cc639b94477a993cd33d238b40759cc0077bf100273c2e8cc"
+    },
+    "build/performance/gpu-core-retained-v630/validation/report.json": {
+      "bytes": 1529,
+      "sha256": "7fa2ad048f2280c51cd26e1b9175070d4274b3670d29008fa723fff6fcc4bb98"
+    },
+    "build/performance/gpu-core-retained-v630/zero_faces.hpp": {
+      "bytes": 1195,
+      "sha256": "34a666185cc8af0296eedbe1d7060d7766a38b1986c092727402d351b14367ed"
+    },
+    "build/performance/gpu-core-retained-v630/zero_faces_test.cpp": {
+      "bytes": 1309,
+      "sha256": "0c58f8f64eaeeaca317e046c7c760fded1c7d7150e5e053713878112c82612a4"
+    },
+    "build/performance/package_core_retained_v630.py": {
+      "bytes": 7933,
+      "sha256": "b9ce643b05946dba5a5769d77a23a6177ca1a88147d05a6943e273dcf87e7297"
+    },
+    "docs/GPU_CORE_RETAINED_COLD_STARTS.md": {
+      "bytes": 6242,
+      "sha256": "033aec3a19a69ab4f2fe75603f404de03f02fda4513315d57ae0fe82fa646ebf"
+    }
+  },
+  "omitted_generated_caches": {
+    "build/performance/gpu-core-retained-v630/__pycache__/process_guard.cpython-310.pyc": {
+      "bytes": 3322,
+      "reason": "Generated Python bytecode cache; source retained.",
+      "sha256": "506334e0192d22d1ebee07ff35bfcc1d2a7716b8c43d73c9dfc4b05eeca7f005"
+    }
+  },
+  "package_GPU_calls": 0,
+  "package_numerical_audits": 0,
+  "prior_package_indexes": {
+    "../gpu-dual-isolation-v629/index.json": "b2545f43947175e15454bd3cc64c6c226566d690596e9c1f6c0d455cc819cb11",
+    "../qoco-exact-comparison-v629/index.json": "ce9dba9cfd3ecff0a716c43f5ad0ac670b601c8f270b0f6fb2addf893ac0fa89"
+  },
+  "qualified": {
+    "persistent_chain": 0,
+    "qoco_retained": 1
+  },
+  "recorded_corrections": 0,
+  "recorded_primary_solves": 8,
+  "schema": "gpu-core-retained-v630/1",
+  "top_files": {
+    ".gitattributes": {
+      "bytes": 20,
+      "sha256": "e97602ab9cac70102245345c5ab0fc9830df8b17f1072b188265a662a3a547ae"
+    },
+    "README.md": {
+      "bytes": 4342,
+      "sha256": "6e6c0db6a09d2692427d1bcac0cfb06d8e2e5cd71ba84442be5646478ae2e3a6"
+    },
+    "audit_package.py": {
+      "bytes": 10644,
+      "sha256": "de6410ae52a5b2230751ae16d808b78b7951b54d240546d721b132c40652a031"
+    }
+  },
+  "total_bytes": 4941562
+}

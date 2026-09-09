@@ -1,5 +1,13 @@
 # GTOC12 score progress — 9 September 2026
 
+The latest H100 performance replay retains **13,023.704901 weighted kg /
+14,291.006160 raw kg**, with 23 ships and 199 asteroids. Both full-fleet checkers
+pass locally and on Lambda. Retained immutable catalogue fingerprints improve
+paired whole-search throughput by 7.3–7.5% on H100, with exact candidate files;
+the final integrated runtime passes 161 tests per GPU and CUDA safety checks.
+This is a speed and verification checkpoint, not another score gain.
+[Paired measurements and downloaded dense replay](GPU_CATALOGUE_OWNERSHIP.md).
+
 The latest locally verified checkpoint is **13,023.704901 weighted kg /
 14,291.006160 raw kg**, with 23 ships, 199 asteroids and **621.348094 raw kg per
 ship**. All four fixed-cargo route alternatives certify on RTX 5090. The best two
@@ -8,6 +16,16 @@ both original full-fleet checkers accept the exact result and the other 21 ship
 sections remain unchanged. This latest improvement has local GPU provenance;
 it has not been rerun on H100.
 [Work counts, fleet-budget tradeoff, exact evidence and loaded visualiser](GPU_MASS_BUDGETED_FRONTIER.md).
+
+The subsequent v630 production-admission test attempts three further archived
+routes using CUDA boundary states and native refinement. None completes with a
+trajectory certificate, so the fleet above remains the incumbent. The batch
+takes 20.406 seconds for 24 leg calls and 157 SCvx iterations. Saved endpoint
+nodes match, but dynamics defects remain on the failed transfers; they are not
+proven infeasible. [Policy changes, exact rejected transfers and retained evidence](GPU_FLEET_BUDGET_ADMISSION.md).
+The [CUDA orbital-state implementation](GPU_ROUTE_EPHEMERIDES.md) passes state,
+seed-compatibility, graph and memory tests, but fresh-workspace overhead makes
+the complete small-batch preparation slightly slower in this local comparison.
 
 The preceding combined checkpoint is **12,999.824843 weighted kg / 14,279.288159
 raw kg**, with 23 ships and 199 asteroids. Both full-fleet checkers pass locally

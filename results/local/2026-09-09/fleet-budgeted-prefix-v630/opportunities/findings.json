@@ -1,0 +1,5402 @@
+{
+  "GPU_calls": 0,
+  "baseline_Result_sha256": "765cb7ef97d38926317dbbf4ae8700626dffec06c48af3d6f68dae47c154f3da",
+  "baseline_raw_kg": 14291.006160165,
+  "baseline_weighted_kg": 13023.704900978004,
+  "current_endpoint_core_sha256": "9597a56e2b3c033d419287bc1d6da6cca43b1f084475c42a2b7f4b64d301aeff",
+  "distinct_failed_prefix_frontier": [
+    {
+      "endpoint_merit_present_in_failures": [
+        false
+      ],
+      "failed_leg": 3,
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          51417,
+          65258.0,
+          65498.0
+        ],
+        [
+          51417,
+          22760,
+          65498.0,
+          65648.0
+        ]
+      ],
+      "historical_core_sha256": [
+        "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+        "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+      ],
+      "maximum_exact_unattempted_request": {
+        "aliases": [
+          "local-v802-ship19-rank0002",
+          "h100-v802-ship19-rank0002"
+        ],
+        "asteroids": [
+          6783,
+          20594,
+          22760,
+          22937,
+          37322,
+          47630,
+          51417,
+          54492
+        ],
+        "historically_failed_flight_prefix_matches": [
+          {
+            "attempt_id": "local-v802-ship19-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 3,
+            "flight": [
+              51417,
+              22760,
+              65498.0,
+              65648.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+          },
+          {
+            "attempt_id": "local-v802-ship19-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 3,
+            "flight": [
+              51417,
+              22760,
+              65498.0,
+              65648.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+          },
+          {
+            "attempt_id": "h100-v802-ship19-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 3,
+            "flight": [
+              51417,
+              22760,
+              65498.0,
+              65648.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+          },
+          {
+            "attempt_id": "h100-v802-ship19-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 3,
+            "flight": [
+              51417,
+              22760,
+              65498.0,
+              65648.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+          }
+        ],
+        "previous_attempts": [],
+        "raw_delta_kg": 25.87268993846294,
+        "raw_slack_after_kg": 273.38339673053724,
+        "request_sha256": "4d262cc037dfb587f396e2faaf83e6a6fff5f5565c9ae643dd27b08ca85a693e",
+        "ship": 19,
+        "weighted_delta_kg": 7.154571319217212
+      },
+      "maximum_gain_request": {
+        "aliases": [
+          "local-v802-ship19-rank0000",
+          "h100-v802-ship19-rank0000"
+        ],
+        "asteroids": [
+          8746,
+          20594,
+          22760,
+          22937,
+          37322,
+          47630,
+          51417,
+          54492
+        ],
+        "historically_failed_flight_prefix_matches": [
+          {
+            "attempt_id": "local-v802-ship19-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 3,
+            "flight": [
+              51417,
+              22760,
+              65498.0,
+              65648.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+          },
+          {
+            "attempt_id": "local-v802-ship19-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 3,
+            "flight": [
+              51417,
+              22760,
+              65498.0,
+              65648.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+          },
+          {
+            "attempt_id": "h100-v802-ship19-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 3,
+            "flight": [
+              51417,
+              22760,
+              65498.0,
+              65648.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+          },
+          {
+            "attempt_id": "h100-v802-ship19-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 3,
+            "flight": [
+              51417,
+              22760,
+              65498.0,
+              65648.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+          }
+        ],
+        "previous_attempts": [
+          {
+            "certified": false,
+            "endpoint_merit_fix_present": false,
+            "failures": [
+              {
+                "certification": "optimizer status is not certification",
+                "diagnostic": "virtual control remains 1.496e-03",
+                "from": 51417,
+                "leg": 3,
+                "pass": 1,
+                "status": "infeasible",
+                "to": 22760
+              }
+            ],
+            "hardware": "local",
+            "id": "local-v802-ship19-rank0000",
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "request_sha256": "731c4cac5b231e83d0bc39a650265e7665b01b6382a7c57f49eea80731a26365",
+            "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+            "ship": 19,
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+            "stage": "v803"
+          },
+          {
+            "certified": false,
+            "endpoint_merit_fix_present": false,
+            "failures": [
+              {
+                "certification": "optimizer status is not certification",
+                "diagnostic": "virtual control remains 1.496e-03",
+                "from": 51417,
+                "leg": 3,
+                "pass": 1,
+                "status": "infeasible",
+                "to": 22760
+              }
+            ],
+            "hardware": "h100",
+            "id": "h100-v802-ship19-rank0000",
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "request_sha256": "731c4cac5b231e83d0bc39a650265e7665b01b6382a7c57f49eea80731a26365",
+            "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+            "ship": 19,
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+            "stage": "v803"
+          }
+        ],
+        "raw_delta_kg": 34.08624229985924,
+        "raw_slack_after_kg": 281.59694909193354,
+        "request_sha256": "731c4cac5b231e83d0bc39a650265e7665b01b6382a7c57f49eea80731a26365",
+        "ship": 19,
+        "weighted_delta_kg": 15.368123680613508
+      },
+      "positive_requests": 8,
+      "prefix_sha256": "b494f17f136a438567f8436e06422342fa5744cdaf47b7acc31083257d492364",
+      "ship": 19
+    },
+    {
+      "endpoint_merit_present_in_failures": [
+        false
+      ],
+      "failed_leg": 2,
+      "flights": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ],
+        [
+          47630,
+          37322,
+          65018.0,
+          65258.0
+        ],
+        [
+          37322,
+          37066,
+          65258.0,
+          65438.0
+        ]
+      ],
+      "historical_core_sha256": [
+        "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+        "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      ],
+      "maximum_exact_unattempted_request": {
+        "aliases": [
+          "local-v794-ship19-rank0002",
+          "h100-v794-ship19-rank0002"
+        ],
+        "asteroids": [
+          6783,
+          10285,
+          16356,
+          37066,
+          37322,
+          47630,
+          49218,
+          49502
+        ],
+        "historically_failed_flight_prefix_matches": [
+          {
+            "attempt_id": "local-v794-ship19-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 2,
+            "flight": [
+              37322,
+              37066,
+              65258.0,
+              65438.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+          },
+          {
+            "attempt_id": "local-v794-ship19-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 2,
+            "flight": [
+              37322,
+              37066,
+              65258.0,
+              65438.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+          },
+          {
+            "attempt_id": "h100-v794-ship19-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 2,
+            "flight": [
+              37322,
+              37066,
+              65258.0,
+              65438.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+          },
+          {
+            "attempt_id": "h100-v794-ship19-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 2,
+            "flight": [
+              37322,
+              37066,
+              65258.0,
+              65438.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+          }
+        ],
+        "previous_attempts": [],
+        "raw_delta_kg": -18.48049281307715,
+        "raw_slack_after_kg": 229.03021397899718,
+        "request_sha256": "338f4170dad7bd3ad02e40d5f263447307719551e43ca71653f30aaa5b98f5b4",
+        "ship": 19,
+        "weighted_delta_kg": 4.50114247341412
+      },
+      "maximum_gain_request": {
+        "aliases": [
+          "local-v794-ship19-rank0000",
+          "h100-v794-ship19-rank0000"
+        ],
+        "asteroids": [
+          6783,
+          20732,
+          37066,
+          37322,
+          47630,
+          49218,
+          49502,
+          54492,
+          57913
+        ],
+        "historically_failed_flight_prefix_matches": [
+          {
+            "attempt_id": "local-v794-ship19-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 2,
+            "flight": [
+              37322,
+              37066,
+              65258.0,
+              65438.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+          },
+          {
+            "attempt_id": "local-v794-ship19-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 2,
+            "flight": [
+              37322,
+              37066,
+              65258.0,
+              65438.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+          },
+          {
+            "attempt_id": "h100-v794-ship19-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 2,
+            "flight": [
+              37322,
+              37066,
+              65258.0,
+              65438.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+          },
+          {
+            "attempt_id": "h100-v794-ship19-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 2,
+            "flight": [
+              37322,
+              37066,
+              65258.0,
+              65438.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+          }
+        ],
+        "previous_attempts": [
+          {
+            "certified": false,
+            "endpoint_merit_fix_present": false,
+            "failures": [
+              {
+                "certification": "optimizer status is not certification",
+                "diagnostic": "virtual control remains 6.408e-03",
+                "from": 37322,
+                "leg": 2,
+                "pass": 1,
+                "status": "infeasible",
+                "to": 37066
+              }
+            ],
+            "hardware": "local",
+            "id": "local-v794-ship19-rank0000",
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "request_sha256": "5a4a1de4cf26a8f7fc46febb87e5eca6cb515a06928f0793d974d4bbbfa86985",
+            "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+            "ship": 19,
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+            "stage": "v795"
+          },
+          {
+            "certified": false,
+            "endpoint_merit_fix_present": false,
+            "failures": [
+              {
+                "certification": "optimizer status is not certification",
+                "diagnostic": "virtual control remains 6.408e-03",
+                "from": 37322,
+                "leg": 2,
+                "pass": 1,
+                "status": "infeasible",
+                "to": 37066
+              }
+            ],
+            "hardware": "h100",
+            "id": "h100-v794-ship19-rank0000",
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "request_sha256": "5a4a1de4cf26a8f7fc46febb87e5eca6cb515a06928f0793d974d4bbbfa86985",
+            "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+            "ship": 19,
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+            "stage": "v795"
+          }
+        ],
+        "raw_delta_kg": -4.106776180633574,
+        "raw_slack_after_kg": 243.40393061144076,
+        "request_sha256": "5a4a1de4cf26a8f7fc46febb87e5eca6cb515a06928f0793d974d4bbbfa86985",
+        "ship": 19,
+        "weighted_delta_kg": 9.35486695431689
+      },
+      "positive_requests": 6,
+      "prefix_sha256": "c4391f5fb4f12845383026ed4ae6912e2eb5444ec1b5cb2d9a7c1d436b8089a5",
+      "ship": 19
+    },
+    {
+      "endpoint_merit_present_in_failures": [
+        false
+      ],
+      "failed_leg": 1,
+      "flights": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ],
+        [
+          9443,
+          32613,
+          65093.0,
+          65273.0
+        ]
+      ],
+      "historical_core_sha256": [
+        "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+        "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+        "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+        "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      ],
+      "maximum_exact_unattempted_request": {
+        "aliases": [
+          "local-v794-ship22-rank0000",
+          "h100-v794-ship22-rank0000",
+          "local-v802-ship22-rank0000",
+          "h100-v802-ship22-rank0000"
+        ],
+        "asteroids": [
+          9443,
+          20860,
+          30893,
+          32613,
+          35344,
+          45822,
+          47168,
+          58408
+        ],
+        "historically_failed_flight_prefix_matches": [
+          {
+            "attempt_id": "local-v794-ship22-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+          },
+          {
+            "attempt_id": "local-v794-ship22-rank0002",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+          },
+          {
+            "attempt_id": "h100-v794-ship22-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+          },
+          {
+            "attempt_id": "h100-v794-ship22-rank0002",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+          },
+          {
+            "attempt_id": "local-v802-ship22-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+          },
+          {
+            "attempt_id": "local-v802-ship22-rank0002",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+          },
+          {
+            "attempt_id": "h100-v802-ship22-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+          },
+          {
+            "attempt_id": "h100-v802-ship22-rank0002",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+          }
+        ],
+        "previous_attempts": [],
+        "raw_delta_kg": -4.57221081449859,
+        "raw_slack_after_kg": 242.93849597757574,
+        "request_sha256": "8cbeb4f32a0006010e5a567c0ecd4cd99f06ae5b95ef11eeb74c01590d8188ae",
+        "ship": 22,
+        "weighted_delta_kg": 7.698960992113143
+      },
+      "maximum_gain_request": {
+        "aliases": [
+          "local-v794-ship22-rank0000",
+          "h100-v794-ship22-rank0000",
+          "local-v802-ship22-rank0000",
+          "h100-v802-ship22-rank0000"
+        ],
+        "asteroids": [
+          9443,
+          20860,
+          30893,
+          32613,
+          35344,
+          45822,
+          47168,
+          58408
+        ],
+        "historically_failed_flight_prefix_matches": [
+          {
+            "attempt_id": "local-v794-ship22-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+          },
+          {
+            "attempt_id": "local-v794-ship22-rank0002",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+          },
+          {
+            "attempt_id": "h100-v794-ship22-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+          },
+          {
+            "attempt_id": "h100-v794-ship22-rank0002",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+          },
+          {
+            "attempt_id": "local-v802-ship22-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+          },
+          {
+            "attempt_id": "local-v802-ship22-rank0002",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+          },
+          {
+            "attempt_id": "h100-v802-ship22-rank0001",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+          },
+          {
+            "attempt_id": "h100-v802-ship22-rank0002",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 1,
+            "flight": [
+              9443,
+              32613,
+              65093.0,
+              65273.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+          }
+        ],
+        "previous_attempts": [],
+        "raw_delta_kg": -4.57221081449859,
+        "raw_slack_after_kg": 242.93849597757574,
+        "request_sha256": "8cbeb4f32a0006010e5a567c0ecd4cd99f06ae5b95ef11eeb74c01590d8188ae",
+        "ship": 22,
+        "weighted_delta_kg": 7.698960992113143
+      },
+      "positive_requests": 5,
+      "prefix_sha256": "0b862333b0d1192cd5caf177b1a135078e5c6145fa867ad93903def0cdb52d0e",
+      "ship": 22
+    },
+    {
+      "endpoint_merit_present_in_failures": [
+        false
+      ],
+      "failed_leg": 17,
+      "flights": [
+        [
+          0,
+          8913,
+          64388.0,
+          64958.0
+        ],
+        [
+          8913,
+          36739,
+          64958.0,
+          65198.0
+        ],
+        [
+          36739,
+          4438,
+          65198.0,
+          65558.0
+        ],
+        [
+          4438,
+          17126,
+          65558.0,
+          65738.0
+        ],
+        [
+          17126,
+          11353,
+          65738.0,
+          65918.0
+        ],
+        [
+          11353,
+          57016,
+          65918.0,
+          66158.0
+        ],
+        [
+          57016,
+          41383,
+          66158.0,
+          66308.0
+        ],
+        [
+          41383,
+          11539,
+          66308.0,
+          66428.0
+        ],
+        [
+          11539,
+          59079,
+          66428.0,
+          66728.0
+        ],
+        [
+          59079,
+          57016,
+          67733.0,
+          68093.0
+        ],
+        [
+          57016,
+          41383,
+          68093.0,
+          68333.0
+        ],
+        [
+          41383,
+          11539,
+          68333.0,
+          68543.0
+        ],
+        [
+          11539,
+          8913,
+          68543.0,
+          68693.0
+        ],
+        [
+          8913,
+          36739,
+          68693.0,
+          68873.0
+        ],
+        [
+          36739,
+          4438,
+          68873.0,
+          69053.0
+        ],
+        [
+          4438,
+          11353,
+          69053.0,
+          69143.0
+        ],
+        [
+          11353,
+          17126,
+          69143.0,
+          69263.0
+        ],
+        [
+          17126,
+          0,
+          69263.0,
+          69713.0
+        ]
+      ],
+      "historical_core_sha256": [
+        "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+        "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+        "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+        "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+      ],
+      "maximum_exact_unattempted_request": null,
+      "maximum_gain_request": {
+        "aliases": [
+          "local-v794-ship10-rank0000",
+          "h100-v794-ship10-rank0000",
+          "local-v802-ship10-rank0000",
+          "h100-v802-ship10-rank0000"
+        ],
+        "asteroids": [
+          4438,
+          8913,
+          11353,
+          11539,
+          17126,
+          36739,
+          41383,
+          57016,
+          59079
+        ],
+        "historically_failed_flight_prefix_matches": [
+          {
+            "attempt_id": "local-v794-ship10-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 17,
+            "flight": [
+              17126,
+              0,
+              69263.0,
+              69713.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+          },
+          {
+            "attempt_id": "h100-v794-ship10-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 17,
+            "flight": [
+              17126,
+              0,
+              69263.0,
+              69713.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+          },
+          {
+            "attempt_id": "local-v802-ship10-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 17,
+            "flight": [
+              17126,
+              0,
+              69263.0,
+              69713.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+          },
+          {
+            "attempt_id": "h100-v802-ship10-rank0000",
+            "endpoint_merit_fix_present": false,
+            "failed_leg": 17,
+            "flight": [
+              17126,
+              0,
+              69263.0,
+              69713.0
+            ],
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+          }
+        ],
+        "previous_attempts": [
+          {
+            "certified": false,
+            "endpoint_merit_fix_present": false,
+            "failures": [
+              {
+                "certification": "optimizer status is not certification",
+                "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+                "from": 17126,
+                "leg": 17,
+                "pass": 1,
+                "status": "numerical_failure",
+                "to": 0
+              }
+            ],
+            "hardware": "local",
+            "id": "local-v794-ship10-rank0000",
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+            "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+            "ship": 10,
+            "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+            "stage": "v795"
+          },
+          {
+            "certified": false,
+            "endpoint_merit_fix_present": false,
+            "failures": [
+              {
+                "certification": "optimizer status is not certification",
+                "diagnostic": "virtual control remains 2.782e-03",
+                "from": 17126,
+                "leg": 17,
+                "pass": 1,
+                "status": "infeasible",
+                "to": 0
+              }
+            ],
+            "hardware": "h100",
+            "id": "h100-v794-ship10-rank0000",
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+            "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+            "ship": 10,
+            "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+            "stage": "v795"
+          },
+          {
+            "certified": false,
+            "endpoint_merit_fix_present": false,
+            "failures": [
+              {
+                "certification": "optimizer status is not certification",
+                "diagnostic": "virtual control remains 2.782e-03",
+                "from": 17126,
+                "leg": 17,
+                "pass": 1,
+                "status": "infeasible",
+                "to": 0
+              }
+            ],
+            "hardware": "local",
+            "id": "local-v802-ship10-rank0000",
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+            "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+            "ship": 10,
+            "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+            "stage": "v803"
+          },
+          {
+            "certified": false,
+            "endpoint_merit_fix_present": false,
+            "failures": [
+              {
+                "certification": "optimizer status is not certification",
+                "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+                "from": 17126,
+                "leg": 17,
+                "pass": 1,
+                "status": "numerical_failure",
+                "to": 0
+              }
+            ],
+            "hardware": "h100",
+            "id": "h100-v802-ship10-rank0000",
+            "policy": "historical refinement; pre-endpoint-merit core",
+            "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+            "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+            "ship": 10,
+            "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+            "stage": "v803"
+          }
+        ],
+        "raw_delta_kg": 5.749486652824999,
+        "raw_slack_after_kg": 253.26019344489933,
+        "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+        "ship": 10,
+        "weighted_delta_kg": 5.528863601559237
+      },
+      "positive_requests": 1,
+      "prefix_sha256": "decb14ec542cfd5c4147b5ce129f462688f5d7df31c6d684ce56a64bfb867cf8",
+      "ship": 10
+    }
+  ],
+  "eligible_cross_ship_pair_conflicts": [],
+  "eligible_unique": 20,
+  "ephemeris_calls": 0,
+  "failed_prefix_note": "Exact saved flight-epoch prefix only. Initial-mass/state and initialization-policy equivalence are not asserted. Historical pre-merit failures are not mathematical infeasibility certificates.",
+  "hardware_request_identity": {
+    "v792": {
+      "h100_only": 0,
+      "local_only": 0,
+      "same_requests": true
+    },
+    "v794": {
+      "h100_only": 0,
+      "local_only": 0,
+      "same_requests": true
+    },
+    "v802": {
+      "h100_only": 0,
+      "local_only": 0,
+      "same_requests": true
+    }
+  },
+  "input_sha256": {
+    "build/performance/mass-budgeted-frontier-v629/batch-protocol.json": "63cbcdb31fe03f5d4893c7aa56ae4ab0b586add5b9c76d0d94c88bd04e20fbed",
+    "build/performance/mass-budgeted-frontier-v629/output/report.json": "a7729f4b454e35c001cc22897554fda80c2367059073dbbef93f529c852c15a7",
+    "results/lambda/2026-09-09/gpu-collect-reuse-v806/h100-files.json": "5088e46858168fc45de907386644fa6db0e32d5277a0d27771d90aa270501e1b",
+    "results/lambda/2026-09-09/gpu-collect-reuse-v806/h100.tar.gz": "8ecb0acf530d397426833bb298f905344fdf2a38bb8e688dcba47210f5f763ea",
+    "results/lambda/2026-09-09/gpu-collect-reuse-v806/local-files.json": "4ebc72c1d162332d40e9b70ed030827e5bcb6cae9e747f8e0e1ab09789e86dd6",
+    "results/lambda/2026-09-09/gpu-collect-reuse-v806/local.tar.gz": "f0364115d8c765416e4f6e5ff5350f876492334bca49fd4a7edb8dcdb3dfc076",
+    "results/lambda/2026-09-09/gpu-collect-reuse-v806/sha256.json": "02f02c231c7b1c05005b05ee10d53004d05c82d62cb5f63f1368fcaeebdf4fa2",
+    "results/lambda/2026-09-09/gpu-regeneration-v799/h100-files.json": "d6b67be3979fd9454493ebdcd9b1ad03a7b4b7d3dd2d3825ca4caf5c6d180b99",
+    "results/lambda/2026-09-09/gpu-regeneration-v799/h100.tar.gz": "b85da368640e21439ef393fff6c8f8d5de612659594a2f47cccb358e49c612a7",
+    "results/lambda/2026-09-09/gpu-regeneration-v799/local-files.json": "5a53fea72ebde654e658086abb782634bb1f56263a112c29fa9e13824d36b6b3",
+    "results/lambda/2026-09-09/gpu-regeneration-v799/local.tar.gz": "77c8bcaa7bd12b39c8b26496df2e2daaf99fce9bfdbd877423805de2757f2970",
+    "results/lambda/2026-09-09/gpu-regeneration-v799/sha256.json": "2ccf2009026c26fc1e3aff270497119eadb2d328ea40104127d7ea9a0f619f52",
+    "results/local/2026-09-09/mass-budgeted-frontier-v629/Result.txt": "765cb7ef97d38926317dbbf4ae8700626dffec06c48af3d6f68dae47c154f3da",
+    "results/local/2026-09-09/mass-budgeted-frontier-v629/checker-binding.json": "786165e3bd7f04acda14b17be845bd0b55ffbcbbbdff9b7c739084657b5a1ef7"
+  },
+  "minimum_raw_kg_decimal60": "14043.4954533729251929897440845241124146095610377610378052983",
+  "per_ship": {
+    "1": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "10": {
+      "eligible": 1,
+      "positive": 1,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "11": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "12": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "13": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "14": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "15": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "16": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "17": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "18": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "19": {
+      "eligible": 14,
+      "positive": 14,
+      "unattempted": 10,
+      "unattempted_without_failed_prefix": 0
+    },
+    "2": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "20": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "21": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "22": {
+      "eligible": 5,
+      "positive": 5,
+      "unattempted": 3,
+      "unattempted_without_failed_prefix": 0
+    },
+    "23": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "3": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "4": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "5": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "6": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "7": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "8": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    },
+    "9": {
+      "eligible": 0,
+      "positive": 0,
+      "unattempted": 0,
+      "unattempted_without_failed_prefix": 0
+    }
+  },
+  "pool_overlap": {
+    "h100": {
+      "new_v802": 874,
+      "shared": 10133,
+      "v794_only": 838,
+      "v794_unique": 10971,
+      "v802_unique": 11007
+    },
+    "local": {
+      "new_v802": 874,
+      "shared": 10133,
+      "v794_only": 838,
+      "v794_unique": 10971,
+      "v802_unique": 11007
+    }
+  },
+  "pool_records": {
+    "h100/v792": 1238,
+    "h100/v794": 10971,
+    "h100/v802": 11007,
+    "local/v792": 1238,
+    "local/v794": 10971,
+    "local/v802": 11007
+  },
+  "positive_alias_counts": {
+    "h100/v794": 12,
+    "h100/v802": 14,
+    "local/v794": 12,
+    "local/v802": 14
+  },
+  "positive_needs_other_ship_change": 0,
+  "positive_requests_unattempted_under_current_endpoint_core": 20,
+  "positive_unique": 20,
+  "precision_note": "The >1e-8 kg material-gain reporting threshold suppresses saved Result serialization noise, not a changed production qualification gate. Raw budget uses Decimal60 ln of the original ship-count formula. A positive saved proxy is not a trajectory certificate.",
+  "raw_kg_per_ship": 621.3480939202174,
+  "saved_Earth_seed_inventory": {
+    "h100/v792": {
+      "1": [
+        [
+          0,
+          6369,
+          64433.0,
+          65018.0
+        ]
+      ],
+      "10": [
+        [
+          0,
+          8913,
+          64388.0,
+          64958.0
+        ]
+      ],
+      "11": [
+        [
+          0,
+          3944,
+          64493.0,
+          65093.0
+        ]
+      ],
+      "12": [
+        [
+          0,
+          34101,
+          64643.0,
+          65203.0
+        ]
+      ],
+      "13": [
+        [
+          0,
+          3002,
+          64358.0,
+          64968.0
+        ]
+      ],
+      "14": [
+        [
+          0,
+          42326,
+          64328.0,
+          64898.0
+        ]
+      ],
+      "15": [
+        [
+          0,
+          35473,
+          64431.0,
+          64971.0
+        ]
+      ],
+      "16": [
+        [
+          0,
+          32087,
+          64328.0,
+          64878.0
+        ]
+      ],
+      "17": [
+        [
+          0,
+          27464,
+          64478.0,
+          65068.0
+        ]
+      ],
+      "18": [
+        [
+          0,
+          8846,
+          64403.0,
+          64928.0
+        ]
+      ],
+      "19": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ]
+      ],
+      "2": [
+        [
+          0,
+          47759,
+          64343.0,
+          64913.0
+        ]
+      ],
+      "20": [
+        [
+          0,
+          4524,
+          64403.0,
+          64988.0
+        ]
+      ],
+      "21": [
+        [
+          0,
+          29766,
+          64463.0,
+          65018.0
+        ]
+      ],
+      "22": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ]
+      ],
+      "23": [
+        [
+          0,
+          30805,
+          64403.0,
+          64973.0
+        ]
+      ],
+      "3": [
+        [
+          0,
+          3909,
+          64373.0,
+          65003.0
+        ]
+      ],
+      "4": [
+        [
+          0,
+          31520,
+          64433.0,
+          65033.0
+        ]
+      ],
+      "5": [
+        [
+          0,
+          42615,
+          64703.0,
+          65313.0
+        ]
+      ],
+      "6": [
+        [
+          0,
+          16821,
+          64493.0,
+          65143.0
+        ]
+      ],
+      "7": [
+        [
+          0,
+          49519,
+          64343.0,
+          64928.0
+        ]
+      ],
+      "8": [
+        [
+          0,
+          26251,
+          64373.0,
+          64973.0
+        ]
+      ],
+      "9": [
+        [
+          0,
+          2000,
+          64328.0,
+          64953.0
+        ]
+      ]
+    },
+    "h100/v794": {
+      "1": [
+        [
+          0,
+          6369,
+          64433.0,
+          65018.0
+        ]
+      ],
+      "10": [
+        [
+          0,
+          8913,
+          64388.0,
+          64958.0
+        ]
+      ],
+      "11": [
+        [
+          0,
+          3944,
+          64493.0,
+          65093.0
+        ]
+      ],
+      "12": [
+        [
+          0,
+          34101,
+          64643.0,
+          65203.0
+        ]
+      ],
+      "13": [
+        [
+          0,
+          3002,
+          64358.0,
+          64968.0
+        ]
+      ],
+      "14": [
+        [
+          0,
+          42326,
+          64328.0,
+          64898.0
+        ]
+      ],
+      "15": [
+        [
+          0,
+          35473,
+          64431.0,
+          64971.0
+        ]
+      ],
+      "16": [
+        [
+          0,
+          32087,
+          64328.0,
+          64878.0
+        ]
+      ],
+      "17": [
+        [
+          0,
+          27464,
+          64478.0,
+          65068.0
+        ]
+      ],
+      "18": [
+        [
+          0,
+          8846,
+          64403.0,
+          64928.0
+        ]
+      ],
+      "19": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ]
+      ],
+      "2": [
+        [
+          0,
+          47759,
+          64343.0,
+          64913.0
+        ]
+      ],
+      "20": [
+        [
+          0,
+          4524,
+          64403.0,
+          64988.0
+        ]
+      ],
+      "21": [
+        [
+          0,
+          29766,
+          64463.0,
+          65018.0
+        ]
+      ],
+      "22": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ]
+      ],
+      "23": [
+        [
+          0,
+          30805,
+          64403.0,
+          64973.0
+        ]
+      ],
+      "3": [
+        [
+          0,
+          3909,
+          64373.0,
+          65003.0
+        ]
+      ],
+      "4": [
+        [
+          0,
+          31520,
+          64433.0,
+          65033.0
+        ]
+      ],
+      "5": [
+        [
+          0,
+          42615,
+          64703.0,
+          65313.0
+        ]
+      ],
+      "6": [
+        [
+          0,
+          16821,
+          64493.0,
+          65143.0
+        ]
+      ],
+      "7": [
+        [
+          0,
+          49519,
+          64343.0,
+          64928.0
+        ]
+      ],
+      "8": [
+        [
+          0,
+          26251,
+          64373.0,
+          64973.0
+        ]
+      ],
+      "9": [
+        [
+          0,
+          2000,
+          64328.0,
+          64953.0
+        ]
+      ]
+    },
+    "h100/v802": {
+      "1": [
+        [
+          0,
+          6369,
+          64433.0,
+          65018.0
+        ]
+      ],
+      "10": [
+        [
+          0,
+          8913,
+          64388.0,
+          64958.0
+        ]
+      ],
+      "11": [
+        [
+          0,
+          3944,
+          64493.0,
+          65093.0
+        ]
+      ],
+      "12": [
+        [
+          0,
+          34101,
+          64643.0,
+          65203.0
+        ]
+      ],
+      "13": [
+        [
+          0,
+          3002,
+          64358.0,
+          64968.0
+        ]
+      ],
+      "14": [
+        [
+          0,
+          42326,
+          64328.0,
+          64898.0
+        ]
+      ],
+      "15": [
+        [
+          0,
+          35473,
+          64431.0,
+          64971.0
+        ]
+      ],
+      "16": [
+        [
+          0,
+          32087,
+          64328.0,
+          64878.0
+        ]
+      ],
+      "17": [
+        [
+          0,
+          27464,
+          64478.0,
+          65068.0
+        ]
+      ],
+      "18": [
+        [
+          0,
+          8846,
+          64403.0,
+          64928.0
+        ]
+      ],
+      "19": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ]
+      ],
+      "2": [
+        [
+          0,
+          47759,
+          64343.0,
+          64913.0
+        ]
+      ],
+      "20": [
+        [
+          0,
+          4524,
+          64403.0,
+          64988.0
+        ]
+      ],
+      "21": [
+        [
+          0,
+          29766,
+          64463.0,
+          65018.0
+        ]
+      ],
+      "22": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ]
+      ],
+      "23": [
+        [
+          0,
+          30805,
+          64403.0,
+          64973.0
+        ]
+      ],
+      "3": [
+        [
+          0,
+          3909,
+          64373.0,
+          65003.0
+        ]
+      ],
+      "4": [
+        [
+          0,
+          31520,
+          64433.0,
+          65033.0
+        ]
+      ],
+      "5": [
+        [
+          0,
+          42615,
+          64703.0,
+          65313.0
+        ]
+      ],
+      "6": [
+        [
+          0,
+          16821,
+          64493.0,
+          65143.0
+        ]
+      ],
+      "7": [
+        [
+          0,
+          49519,
+          64343.0,
+          64928.0
+        ]
+      ],
+      "8": [
+        [
+          0,
+          26251,
+          64373.0,
+          64973.0
+        ]
+      ],
+      "9": [
+        [
+          0,
+          2000,
+          64328.0,
+          64953.0
+        ]
+      ]
+    },
+    "local/v792": {
+      "1": [
+        [
+          0,
+          6369,
+          64433.0,
+          65018.0
+        ]
+      ],
+      "10": [
+        [
+          0,
+          8913,
+          64388.0,
+          64958.0
+        ]
+      ],
+      "11": [
+        [
+          0,
+          3944,
+          64493.0,
+          65093.0
+        ]
+      ],
+      "12": [
+        [
+          0,
+          34101,
+          64643.0,
+          65203.0
+        ]
+      ],
+      "13": [
+        [
+          0,
+          3002,
+          64358.0,
+          64968.0
+        ]
+      ],
+      "14": [
+        [
+          0,
+          42326,
+          64328.0,
+          64898.0
+        ]
+      ],
+      "15": [
+        [
+          0,
+          35473,
+          64431.0,
+          64971.0
+        ]
+      ],
+      "16": [
+        [
+          0,
+          32087,
+          64328.0,
+          64878.0
+        ]
+      ],
+      "17": [
+        [
+          0,
+          27464,
+          64478.0,
+          65068.0
+        ]
+      ],
+      "18": [
+        [
+          0,
+          8846,
+          64403.0,
+          64928.0
+        ]
+      ],
+      "19": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ]
+      ],
+      "2": [
+        [
+          0,
+          47759,
+          64343.0,
+          64913.0
+        ]
+      ],
+      "20": [
+        [
+          0,
+          4524,
+          64403.0,
+          64988.0
+        ]
+      ],
+      "21": [
+        [
+          0,
+          29766,
+          64463.0,
+          65018.0
+        ]
+      ],
+      "22": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ]
+      ],
+      "23": [
+        [
+          0,
+          30805,
+          64403.0,
+          64973.0
+        ]
+      ],
+      "3": [
+        [
+          0,
+          3909,
+          64373.0,
+          65003.0
+        ]
+      ],
+      "4": [
+        [
+          0,
+          31520,
+          64433.0,
+          65033.0
+        ]
+      ],
+      "5": [
+        [
+          0,
+          42615,
+          64703.0,
+          65313.0
+        ]
+      ],
+      "6": [
+        [
+          0,
+          16821,
+          64493.0,
+          65143.0
+        ]
+      ],
+      "7": [
+        [
+          0,
+          49519,
+          64343.0,
+          64928.0
+        ]
+      ],
+      "8": [
+        [
+          0,
+          26251,
+          64373.0,
+          64973.0
+        ]
+      ],
+      "9": [
+        [
+          0,
+          2000,
+          64328.0,
+          64953.0
+        ]
+      ]
+    },
+    "local/v794": {
+      "1": [
+        [
+          0,
+          6369,
+          64433.0,
+          65018.0
+        ]
+      ],
+      "10": [
+        [
+          0,
+          8913,
+          64388.0,
+          64958.0
+        ]
+      ],
+      "11": [
+        [
+          0,
+          3944,
+          64493.0,
+          65093.0
+        ]
+      ],
+      "12": [
+        [
+          0,
+          34101,
+          64643.0,
+          65203.0
+        ]
+      ],
+      "13": [
+        [
+          0,
+          3002,
+          64358.0,
+          64968.0
+        ]
+      ],
+      "14": [
+        [
+          0,
+          42326,
+          64328.0,
+          64898.0
+        ]
+      ],
+      "15": [
+        [
+          0,
+          35473,
+          64431.0,
+          64971.0
+        ]
+      ],
+      "16": [
+        [
+          0,
+          32087,
+          64328.0,
+          64878.0
+        ]
+      ],
+      "17": [
+        [
+          0,
+          27464,
+          64478.0,
+          65068.0
+        ]
+      ],
+      "18": [
+        [
+          0,
+          8846,
+          64403.0,
+          64928.0
+        ]
+      ],
+      "19": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ]
+      ],
+      "2": [
+        [
+          0,
+          47759,
+          64343.0,
+          64913.0
+        ]
+      ],
+      "20": [
+        [
+          0,
+          4524,
+          64403.0,
+          64988.0
+        ]
+      ],
+      "21": [
+        [
+          0,
+          29766,
+          64463.0,
+          65018.0
+        ]
+      ],
+      "22": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ]
+      ],
+      "23": [
+        [
+          0,
+          30805,
+          64403.0,
+          64973.0
+        ]
+      ],
+      "3": [
+        [
+          0,
+          3909,
+          64373.0,
+          65003.0
+        ]
+      ],
+      "4": [
+        [
+          0,
+          31520,
+          64433.0,
+          65033.0
+        ]
+      ],
+      "5": [
+        [
+          0,
+          42615,
+          64703.0,
+          65313.0
+        ]
+      ],
+      "6": [
+        [
+          0,
+          16821,
+          64493.0,
+          65143.0
+        ]
+      ],
+      "7": [
+        [
+          0,
+          49519,
+          64343.0,
+          64928.0
+        ]
+      ],
+      "8": [
+        [
+          0,
+          26251,
+          64373.0,
+          64973.0
+        ]
+      ],
+      "9": [
+        [
+          0,
+          2000,
+          64328.0,
+          64953.0
+        ]
+      ]
+    },
+    "local/v802": {
+      "1": [
+        [
+          0,
+          6369,
+          64433.0,
+          65018.0
+        ]
+      ],
+      "10": [
+        [
+          0,
+          8913,
+          64388.0,
+          64958.0
+        ]
+      ],
+      "11": [
+        [
+          0,
+          3944,
+          64493.0,
+          65093.0
+        ]
+      ],
+      "12": [
+        [
+          0,
+          34101,
+          64643.0,
+          65203.0
+        ]
+      ],
+      "13": [
+        [
+          0,
+          3002,
+          64358.0,
+          64968.0
+        ]
+      ],
+      "14": [
+        [
+          0,
+          42326,
+          64328.0,
+          64898.0
+        ]
+      ],
+      "15": [
+        [
+          0,
+          35473,
+          64431.0,
+          64971.0
+        ]
+      ],
+      "16": [
+        [
+          0,
+          32087,
+          64328.0,
+          64878.0
+        ]
+      ],
+      "17": [
+        [
+          0,
+          27464,
+          64478.0,
+          65068.0
+        ]
+      ],
+      "18": [
+        [
+          0,
+          8846,
+          64403.0,
+          64928.0
+        ]
+      ],
+      "19": [
+        [
+          0,
+          47630,
+          64478.0,
+          65018.0
+        ]
+      ],
+      "2": [
+        [
+          0,
+          47759,
+          64343.0,
+          64913.0
+        ]
+      ],
+      "20": [
+        [
+          0,
+          4524,
+          64403.0,
+          64988.0
+        ]
+      ],
+      "21": [
+        [
+          0,
+          29766,
+          64463.0,
+          65018.0
+        ]
+      ],
+      "22": [
+        [
+          0,
+          9443,
+          64508.0,
+          65093.0
+        ]
+      ],
+      "23": [
+        [
+          0,
+          30805,
+          64403.0,
+          64973.0
+        ]
+      ],
+      "3": [
+        [
+          0,
+          3909,
+          64373.0,
+          65003.0
+        ]
+      ],
+      "4": [
+        [
+          0,
+          31520,
+          64433.0,
+          65033.0
+        ]
+      ],
+      "5": [
+        [
+          0,
+          42615,
+          64703.0,
+          65313.0
+        ]
+      ],
+      "6": [
+        [
+          0,
+          16821,
+          64493.0,
+          65143.0
+        ]
+      ],
+      "7": [
+        [
+          0,
+          49519,
+          64343.0,
+          64928.0
+        ]
+      ],
+      "8": [
+        [
+          0,
+          26251,
+          64373.0,
+          64973.0
+        ]
+      ],
+      "9": [
+        [
+          0,
+          2000,
+          64328.0,
+          64953.0
+        ]
+      ]
+    }
+  },
+  "saved_attempt_records": 92,
+  "scope": "Saved plans, Result/event cargo, bonus coefficients and attempt signatures only. No ephemeris, Lambert, forward proxy, propagation, native calls or refinement.",
+  "ship_count": 23,
+  "solver_calls": 0,
+  "source_config": {
+    "h100/v792": {
+      "fit_sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e",
+      "run_sha256": "9bb4c6b42f0c7d041a2523363f26c6bbd6d6cab7d63d218ebff1eb88212fabc4"
+    },
+    "h100/v794": {
+      "fit_sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e",
+      "run_sha256": "e88be45083f06d38a278c29ef45bee0a6019ee7d2eab0a64e2095e6582ea5494"
+    },
+    "h100/v802": {
+      "fit_sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e",
+      "run_sha256": "6da6a621ca59f0426e428b5959cf385b65481674a32f7a0a2e4ebd17658a4b43"
+    },
+    "local/v792": {
+      "fit_sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e",
+      "run_sha256": "9bb4c6b42f0c7d041a2523363f26c6bbd6d6cab7d63d218ebff1eb88212fabc4"
+    },
+    "local/v794": {
+      "fit_sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e",
+      "run_sha256": "e88be45083f06d38a278c29ef45bee0a6019ee7d2eab0a64e2095e6582ea5494"
+    },
+    "local/v802": {
+      "fit_sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e",
+      "run_sha256": "6da6a621ca59f0426e428b5959cf385b65481674a32f7a0a2e4ebd17658a4b43"
+    }
+  },
+  "spendable_raw_kg_decimal60": "247.5107067920743352162094538937037474998139622389621947017",
+  "top_previously_attempted": [
+    {
+      "aliases": [
+        "local-v802-ship19-rank0000",
+        "h100-v802-ship19-rank0000"
+      ],
+      "asteroids": [
+        8746,
+        20594,
+        22760,
+        22937,
+        37322,
+        47630,
+        51417,
+        54492
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 1.496e-03",
+              "from": 51417,
+              "leg": 3,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 22760
+            }
+          ],
+          "hardware": "local",
+          "id": "local-v802-ship19-rank0000",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "731c4cac5b231e83d0bc39a650265e7665b01b6382a7c57f49eea80731a26365",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 19,
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+          "stage": "v803"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 1.496e-03",
+              "from": 51417,
+              "leg": 3,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 22760
+            }
+          ],
+          "hardware": "h100",
+          "id": "h100-v802-ship19-rank0000",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "731c4cac5b231e83d0bc39a650265e7665b01b6382a7c57f49eea80731a26365",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 19,
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+          "stage": "v803"
+        }
+      ],
+      "raw_delta_kg": 34.08624229985924,
+      "raw_slack_after_kg": 281.59694909193354,
+      "request_sha256": "731c4cac5b231e83d0bc39a650265e7665b01b6382a7c57f49eea80731a26365",
+      "ship": 19,
+      "weighted_delta_kg": 15.368123680613508
+    },
+    {
+      "aliases": [
+        "local-v794-ship19-rank0000",
+        "h100-v794-ship19-rank0000"
+      ],
+      "asteroids": [
+        6783,
+        20732,
+        37066,
+        37322,
+        47630,
+        49218,
+        49502,
+        54492,
+        57913
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        }
+      ],
+      "previous_attempts": [
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 6.408e-03",
+              "from": 37322,
+              "leg": 2,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 37066
+            }
+          ],
+          "hardware": "local",
+          "id": "local-v794-ship19-rank0000",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "5a4a1de4cf26a8f7fc46febb87e5eca6cb515a06928f0793d974d4bbbfa86985",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 19,
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+          "stage": "v795"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 6.408e-03",
+              "from": 37322,
+              "leg": 2,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 37066
+            }
+          ],
+          "hardware": "h100",
+          "id": "h100-v794-ship19-rank0000",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "5a4a1de4cf26a8f7fc46febb87e5eca6cb515a06928f0793d974d4bbbfa86985",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 19,
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+          "stage": "v795"
+        }
+      ],
+      "raw_delta_kg": -4.106776180633574,
+      "raw_slack_after_kg": 243.40393061144076,
+      "request_sha256": "5a4a1de4cf26a8f7fc46febb87e5eca6cb515a06928f0793d974d4bbbfa86985",
+      "ship": 19,
+      "weighted_delta_kg": 9.35486695431689
+    },
+    {
+      "aliases": [
+        "local-v802-ship19-rank0001",
+        "h100-v802-ship19-rank0001"
+      ],
+      "asteroids": [
+        6783,
+        20594,
+        22760,
+        22937,
+        37322,
+        47630,
+        51417,
+        54492
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 1.496e-03",
+              "from": 51417,
+              "leg": 3,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 22760
+            }
+          ],
+          "hardware": "local",
+          "id": "local-v802-ship19-rank0001",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "7acef8f7ccceb7bbede441c897e45f14226fd4c9ae8868bb8180a16fb31450f7",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 19,
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+          "stage": "v803"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 1.496e-03",
+              "from": 51417,
+              "leg": 3,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 22760
+            }
+          ],
+          "hardware": "h100",
+          "id": "h100-v802-ship19-rank0001",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "7acef8f7ccceb7bbede441c897e45f14226fd4c9ae8868bb8180a16fb31450f7",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 19,
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+          "stage": "v803"
+        }
+      ],
+      "raw_delta_kg": 27.51540041074213,
+      "raw_slack_after_kg": 275.02610720281643,
+      "request_sha256": "7acef8f7ccceb7bbede441c897e45f14226fd4c9ae8868bb8180a16fb31450f7",
+      "ship": 19,
+      "weighted_delta_kg": 8.797281791496516
+    },
+    {
+      "aliases": [
+        "local-v794-ship19-rank0001",
+        "h100-v794-ship19-rank0001"
+      ],
+      "asteroids": [
+        6783,
+        20732,
+        37066,
+        37322,
+        47630,
+        49218,
+        49502,
+        54492,
+        57913
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        }
+      ],
+      "previous_attempts": [
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 6.408e-03",
+              "from": 37322,
+              "leg": 2,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 37066
+            }
+          ],
+          "hardware": "local",
+          "id": "local-v794-ship19-rank0001",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "d287e0483943623dde0e562f373c301e8a6f8411dd454d7685f0cdad77123faa",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 19,
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+          "stage": "v795"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 6.408e-03",
+              "from": 37322,
+              "leg": 2,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 37066
+            }
+          ],
+          "hardware": "h100",
+          "id": "h100-v794-ship19-rank0001",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "d287e0483943623dde0e562f373c301e8a6f8411dd454d7685f0cdad77123faa",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 19,
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+          "stage": "v795"
+        }
+      ],
+      "raw_delta_kg": -5.7494866529128785,
+      "raw_slack_after_kg": 241.76122013916145,
+      "request_sha256": "d287e0483943623dde0e562f373c301e8a6f8411dd454d7685f0cdad77123faa",
+      "ship": 19,
+      "weighted_delta_kg": 7.406984236284984
+    },
+    {
+      "aliases": [
+        "local-v794-ship22-rank0001",
+        "h100-v794-ship22-rank0001",
+        "local-v802-ship22-rank0001",
+        "h100-v802-ship22-rank0001"
+      ],
+      "asteroids": [
+        9443,
+        11253,
+        12944,
+        30797,
+        32613,
+        35344,
+        41150,
+        44409,
+        57877
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+              "from": 9443,
+              "leg": 1,
+              "pass": 1,
+              "status": "numerical_failure",
+              "to": 32613
+            }
+          ],
+          "hardware": "local",
+          "id": "local-v794-ship22-rank0001",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "a12fbc28db5dae0af83e58d21fe66f109fcadac6bee0f03bcba4d302bd18e2a2",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 22,
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+          "stage": "v795"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+              "from": 9443,
+              "leg": 1,
+              "pass": 1,
+              "status": "numerical_failure",
+              "to": 32613
+            }
+          ],
+          "hardware": "h100",
+          "id": "h100-v794-ship22-rank0001",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "a12fbc28db5dae0af83e58d21fe66f109fcadac6bee0f03bcba4d302bd18e2a2",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 22,
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+          "stage": "v795"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+              "from": 9443,
+              "leg": 1,
+              "pass": 1,
+              "status": "numerical_failure",
+              "to": 32613
+            }
+          ],
+          "hardware": "local",
+          "id": "local-v802-ship22-rank0001",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "a12fbc28db5dae0af83e58d21fe66f109fcadac6bee0f03bcba4d302bd18e2a2",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 22,
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+          "stage": "v803"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+              "from": 9443,
+              "leg": 1,
+              "pass": 1,
+              "status": "numerical_failure",
+              "to": 32613
+            }
+          ],
+          "hardware": "h100",
+          "id": "h100-v802-ship22-rank0001",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "a12fbc28db5dae0af83e58d21fe66f109fcadac6bee0f03bcba4d302bd18e2a2",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 22,
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+          "stage": "v803"
+        }
+      ],
+      "raw_delta_kg": 5.284052019176897,
+      "raw_slack_after_kg": 252.79475881125123,
+      "request_sha256": "a12fbc28db5dae0af83e58d21fe66f109fcadac6bee0f03bcba4d302bd18e2a2",
+      "ship": 22,
+      "weighted_delta_kg": 6.588042245312067
+    },
+    {
+      "aliases": [
+        "local-v794-ship22-rank0002",
+        "h100-v794-ship22-rank0002",
+        "local-v802-ship22-rank0002",
+        "h100-v802-ship22-rank0002"
+      ],
+      "asteroids": [
+        3828,
+        9443,
+        13232,
+        32613,
+        33086,
+        35344,
+        47616,
+        48431
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+              "from": 9443,
+              "leg": 1,
+              "pass": 1,
+              "status": "numerical_failure",
+              "to": 32613
+            }
+          ],
+          "hardware": "local",
+          "id": "local-v794-ship22-rank0002",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "39a5a81f13e2f2e79984d0ccd158eb2a47a1a2300074404c5ba31c91adfd7cd5",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 22,
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+          "stage": "v795"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 2.136e-03",
+              "from": 9443,
+              "leg": 1,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 32613
+            }
+          ],
+          "hardware": "h100",
+          "id": "h100-v794-ship22-rank0002",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "39a5a81f13e2f2e79984d0ccd158eb2a47a1a2300074404c5ba31c91adfd7cd5",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 22,
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+          "stage": "v795"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+              "from": 9443,
+              "leg": 1,
+              "pass": 1,
+              "status": "numerical_failure",
+              "to": 32613
+            }
+          ],
+          "hardware": "local",
+          "id": "local-v802-ship22-rank0002",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "39a5a81f13e2f2e79984d0ccd158eb2a47a1a2300074404c5ba31c91adfd7cd5",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 22,
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+          "stage": "v803"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+              "from": 9443,
+              "leg": 1,
+              "pass": 1,
+              "status": "numerical_failure",
+              "to": 32613
+            }
+          ],
+          "hardware": "h100",
+          "id": "h100-v802-ship22-rank0002",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "39a5a81f13e2f2e79984d0ccd158eb2a47a1a2300074404c5ba31c91adfd7cd5",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 22,
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+          "stage": "v803"
+        }
+      ],
+      "raw_delta_kg": 1.177275838478863,
+      "raw_slack_after_kg": 248.6879826305532,
+      "request_sha256": "39a5a81f13e2f2e79984d0ccd158eb2a47a1a2300074404c5ba31c91adfd7cd5",
+      "ship": 22,
+      "weighted_delta_kg": 6.541353758518994
+    },
+    {
+      "aliases": [
+        "local-v794-ship10-rank0000",
+        "h100-v794-ship10-rank0000",
+        "local-v802-ship10-rank0000",
+        "h100-v802-ship10-rank0000"
+      ],
+      "asteroids": [
+        4438,
+        8913,
+        11353,
+        11539,
+        17126,
+        36739,
+        41383,
+        57016,
+        59079
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship10-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 17,
+          "flight": [
+            17126,
+            0,
+            69263.0,
+            69713.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship10-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 17,
+          "flight": [
+            17126,
+            0,
+            69263.0,
+            69713.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "local-v802-ship10-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 17,
+          "flight": [
+            17126,
+            0,
+            69263.0,
+            69713.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship10-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 17,
+          "flight": [
+            17126,
+            0,
+            69263.0,
+            69713.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+              "from": 17126,
+              "leg": 17,
+              "pass": 1,
+              "status": "numerical_failure",
+              "to": 0
+            }
+          ],
+          "hardware": "local",
+          "id": "local-v794-ship10-rank0000",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 10,
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+          "stage": "v795"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 2.782e-03",
+              "from": 17126,
+              "leg": 17,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 0
+            }
+          ],
+          "hardware": "h100",
+          "id": "h100-v794-ship10-rank0000",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 10,
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c",
+          "stage": "v795"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "virtual control remains 2.782e-03",
+              "from": 17126,
+              "leg": 17,
+              "pass": 1,
+              "status": "infeasible",
+              "to": 0
+            }
+          ],
+          "hardware": "local",
+          "id": "local-v802-ship10-rank0000",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 10,
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60",
+          "stage": "v803"
+        },
+        {
+          "certified": false,
+          "endpoint_merit_fix_present": false,
+          "failures": [
+            {
+              "certification": "optimizer status is not certification",
+              "diagnostic": "stationary penalized point with nonzero defects; no infeasibility certificate",
+              "from": 17126,
+              "leg": 17,
+              "pass": 1,
+              "status": "numerical_failure",
+              "to": 0
+            }
+          ],
+          "hardware": "h100",
+          "id": "h100-v802-ship10-rank0000",
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+          "saved_scvx_source_sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e",
+          "ship": 10,
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700",
+          "stage": "v803"
+        }
+      ],
+      "raw_delta_kg": 5.749486652824999,
+      "raw_slack_after_kg": 253.26019344489933,
+      "request_sha256": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+      "ship": 10,
+      "weighted_delta_kg": 5.528863601559237
+    }
+  ],
+  "top_unattempted": [
+    {
+      "aliases": [
+        "local-v794-ship22-rank0000",
+        "h100-v794-ship22-rank0000",
+        "local-v802-ship22-rank0000",
+        "h100-v802-ship22-rank0000"
+      ],
+      "asteroids": [
+        9443,
+        20860,
+        30893,
+        32613,
+        35344,
+        45822,
+        47168,
+        58408
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": -4.57221081449859,
+      "raw_slack_after_kg": 242.93849597757574,
+      "request_sha256": "8cbeb4f32a0006010e5a567c0ecd4cd99f06ae5b95ef11eeb74c01590d8188ae",
+      "ship": 22,
+      "weighted_delta_kg": 7.698960992113143
+    },
+    {
+      "aliases": [
+        "local-v802-ship19-rank0002",
+        "h100-v802-ship19-rank0002"
+      ],
+      "asteroids": [
+        6783,
+        20594,
+        22760,
+        22937,
+        37322,
+        47630,
+        51417,
+        54492
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": 25.87268993846294,
+      "raw_slack_after_kg": 273.38339673053724,
+      "request_sha256": "4d262cc037dfb587f396e2faaf83e6a6fff5f5565c9ae643dd27b08ca85a693e",
+      "ship": 19,
+      "weighted_delta_kg": 7.154571319217212
+    },
+    {
+      "aliases": [
+        "local-v794-ship22-rank0003",
+        "h100-v794-ship22-rank0003",
+        "local-v802-ship22-rank0003",
+        "h100-v802-ship22-rank0003"
+      ],
+      "asteroids": [
+        9443,
+        20860,
+        30893,
+        32613,
+        35344,
+        45822,
+        47168,
+        58408
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": -6.214921286777894,
+      "raw_slack_after_kg": 241.29578550529644,
+      "request_sha256": "224e486a945e3013896ade25321111a6ef06b5e826c58108bc06d2db35a5974a",
+      "ship": 22,
+      "weighted_delta_kg": 6.295921647433261
+    },
+    {
+      "aliases": [
+        "local-v794-ship22-rank0004",
+        "h100-v794-ship22-rank0004",
+        "local-v802-ship22-rank0004",
+        "h100-v802-ship22-rank0004"
+      ],
+      "asteroids": [
+        3828,
+        9443,
+        13232,
+        32613,
+        33086,
+        35344,
+        47616,
+        48431
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship22-rank0002",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 1,
+          "flight": [
+            9443,
+            32613,
+            65093.0,
+            65273.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": -0.4654346338004416,
+      "raw_slack_after_kg": 247.0452721582739,
+      "request_sha256": "d0b10f10804736fc8725af7cf79e691b0d5e46d9277876929bd800ad382bae95",
+      "ship": 22,
+      "weighted_delta_kg": 5.124272394575087
+    },
+    {
+      "aliases": [
+        "local-v802-ship19-rank0003",
+        "h100-v802-ship19-rank0003"
+      ],
+      "asteroids": [
+        20594,
+        22760,
+        22937,
+        37066,
+        37322,
+        47630,
+        51417,
+        54492
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": 27.51540041074213,
+      "raw_slack_after_kg": 275.02610720281643,
+      "request_sha256": "63b9f5847152939157efe5bbc76a318b6bf0b10b79574734fd768cfbed68c469",
+      "ship": 19,
+      "weighted_delta_kg": 4.619237856911923
+    },
+    {
+      "aliases": [
+        "local-v794-ship19-rank0002",
+        "h100-v794-ship19-rank0002"
+      ],
+      "asteroids": [
+        6783,
+        10285,
+        16356,
+        37066,
+        37322,
+        47630,
+        49218,
+        49502
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": -18.48049281307715,
+      "raw_slack_after_kg": 229.03021397899718,
+      "request_sha256": "338f4170dad7bd3ad02e40d5f263447307719551e43ca71653f30aaa5b98f5b4",
+      "ship": 19,
+      "weighted_delta_kg": 4.50114247341412
+    },
+    {
+      "aliases": [
+        "local-v794-ship19-rank0003",
+        "h100-v794-ship19-rank0003"
+      ],
+      "asteroids": [
+        6783,
+        10285,
+        16356,
+        37066,
+        37322,
+        47630,
+        49218,
+        49502
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": -19.301848049216687,
+      "raw_slack_after_kg": 228.20885874285764,
+      "request_sha256": "d45fac583f53787b57e9eda3cb53058a35a7d07be4e5ae94fbc71349dbcdbdd5",
+      "ship": 19,
+      "weighted_delta_kg": 3.8559325599676413
+    },
+    {
+      "aliases": [
+        "local-v802-ship19-rank0004",
+        "h100-v802-ship19-rank0004"
+      ],
+      "asteroids": [
+        20594,
+        22760,
+        22937,
+        37322,
+        47630,
+        47674,
+        51417,
+        54492
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": 29.158110883021436,
+      "raw_slack_after_kg": 276.66881767509574,
+      "request_sha256": "d93c5e0d864a29ad13d01d1aae79cd1e1491b5143e7a22ea7a77eb4d86b7e1d2",
+      "ship": 19,
+      "weighted_delta_kg": 3.345017585906362
+    },
+    {
+      "aliases": [
+        "local-v802-ship19-rank0005",
+        "h100-v802-ship19-rank0005"
+      ],
+      "asteroids": [
+        20594,
+        22760,
+        22937,
+        37066,
+        37322,
+        47630,
+        51417,
+        54492
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": 25.87268993846294,
+      "raw_slack_after_kg": 273.38339673053724,
+      "request_sha256": "b0713bb01130ed8fc42a11dd6ab549a6110920977a5ec6fadba82fc5926b3666",
+      "ship": 19,
+      "weighted_delta_kg": 3.15631066109745
+    },
+    {
+      "aliases": [
+        "local-v802-ship19-rank0006",
+        "h100-v802-ship19-rank0006"
+      ],
+      "asteroids": [
+        20594,
+        22760,
+        22937,
+        37322,
+        47630,
+        47674,
+        51417,
+        54492
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": 27.51540041074213,
+      "raw_slack_after_kg": 275.02610720281643,
+      "request_sha256": "0d16cfb8eb530aaedc6c74dc4cd8195f01722866374a1eaf4d95acd8ad786f81",
+      "ship": 19,
+      "weighted_delta_kg": 1.991897916805442
+    },
+    {
+      "aliases": [
+        "local-v794-ship19-rank0004",
+        "h100-v794-ship19-rank0004"
+      ],
+      "asteroids": [
+        6783,
+        20732,
+        37066,
+        37322,
+        47630,
+        49218,
+        49502,
+        54492,
+        57844
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": -12.731006160099696,
+      "raw_slack_after_kg": 234.77970063197463,
+      "request_sha256": "05a13a2f6f812b87358270b9be9bf039ca944c561dba674225786cdb952a33c0",
+      "ship": 19,
+      "weighted_delta_kg": 1.577165711674752
+    },
+    {
+      "aliases": [
+        "local-v802-ship19-rank0007",
+        "h100-v802-ship19-rank0007"
+      ],
+      "asteroids": [
+        10285,
+        16356,
+        20594,
+        22760,
+        22937,
+        37322,
+        47630,
+        51417
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "local-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "d5b547cde1dbede90e60814b94fb992d47628123feb62141b0f66bc84c946b60"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        },
+        {
+          "attempt_id": "h100-v802-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 3,
+          "flight": [
+            51417,
+            22760,
+            65498.0,
+            65648.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "abac8a860c63ed1fcccc1f1fc80f69e7082f5fa2f31ef98a0c084934848d3700"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": 26.69404517460248,
+      "raw_slack_after_kg": 274.2047519666768,
+      "request_sha256": "5194f2f107c8304a44988aa89d0d4b159f9ab9f903da1e04ddc3acc65803b35b",
+      "ship": 19,
+      "weighted_delta_kg": 1.0334714844915425
+    },
+    {
+      "aliases": [
+        "local-v794-ship19-rank0005",
+        "h100-v794-ship19-rank0005"
+      ],
+      "asteroids": [
+        6783,
+        20732,
+        37066,
+        37322,
+        47630,
+        49218,
+        49502,
+        54492,
+        57844
+      ],
+      "historically_failed_flight_prefix_matches": [
+        {
+          "attempt_id": "local-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "local-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0000",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        },
+        {
+          "attempt_id": "h100-v794-ship19-rank0001",
+          "endpoint_merit_fix_present": false,
+          "failed_leg": 2,
+          "flight": [
+            37322,
+            37066,
+            65258.0,
+            65438.0
+          ],
+          "policy": "historical refinement; pre-endpoint-merit core",
+          "source_core_sha256": "6019d43b540c11f2a326fba1927676d30e2e7326f5973ed16d28cdfa81cf644c"
+        }
+      ],
+      "previous_attempts": [],
+      "raw_delta_kg": -13.552361396239348,
+      "raw_slack_after_kg": 233.95834539583498,
+      "request_sha256": "21bcb9a3bb94d7974743de575780a6266d8e6e536dbbfced3d5b4e42cf7ae34e",
+      "ship": 19,
+      "weighted_delta_kg": 0.4477986770498319
+    }
+  ],
+  "top_unattempted_without_failed_prefix": [],
+  "unattempted_unique": 13,
+  "unattempted_without_historical_failed_prefix": 0,
+  "unique_asteroids": 199,
+  "unique_requests_with_ship": 12669,
+  "verified_archive_members": {
+    "v799/h100/runtime/bonus_coefficients.txt": {
+      "bytes": 3660000,
+      "sha256": "e8a3795e599556ed5b66713ab1fa176de93ef37f93cb2a4a87d561539b1caa21"
+    },
+    "v799/h100/runtime/repo/cpp/cuda/src/gtoc12_scvx.cu": {
+      "bytes": 42926,
+      "sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e"
+    },
+    "v799/h100/runtime/source-manifest.json": {
+      "bytes": 100021,
+      "sha256": "03e13e9bcea9fcbdf441f23fd5302249492a4197b0590336e46b8979478f767e"
+    },
+    "v799/h100/v792/fit.json": {
+      "bytes": 4505,
+      "sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e"
+    },
+    "v799/h100/v792/run.py": {
+      "bytes": 5026,
+      "sha256": "9bb4c6b42f0c7d041a2523363f26c6bbd6d6cab7d63d218ebff1eb88212fabc4"
+    },
+    "v799/h100/v792/ship-01/plans.json": {
+      "bytes": 197937,
+      "sha256": "3573c86d0be4c53166945bd1dd7ff66cbc81e7b63447ad271fed3e38c425313e"
+    },
+    "v799/h100/v792/ship-02/plans.json": {
+      "bytes": 214864,
+      "sha256": "9be8843b3e70394b22271940e5bf9e4ce0306d8be5b5b69c1b389d2f640ca5dc"
+    },
+    "v799/h100/v792/ship-03/plans.json": {
+      "bytes": 223630,
+      "sha256": "06d957f7fa71b341d3a689211c70e15735030d9a39c6be6076974f65f627b799"
+    },
+    "v799/h100/v792/ship-04/plans.json": {
+      "bytes": 201173,
+      "sha256": "041ac346b88f190f496bbe6cee855c92e7b34677ca7b3db3e469b7eee0aa2365"
+    },
+    "v799/h100/v792/ship-05/plans.json": {
+      "bytes": 155213,
+      "sha256": "b6c912fd07e8e8c651f5db45aca8eab0c6a9bf478f0e4c7b30d6d30f0ee2a549"
+    },
+    "v799/h100/v792/ship-06/plans.json": {
+      "bytes": 188031,
+      "sha256": "36f7737539c3e790c40b9baacdba6b9ae11ed34bd5068bd3e654685aec805579"
+    },
+    "v799/h100/v792/ship-07/plans.json": {
+      "bytes": 181159,
+      "sha256": "8a456ca8cfbcf03fa664a46d708da4ccf8d05a8e9b6dd1b9dd78fe504a9d0899"
+    },
+    "v799/h100/v792/ship-08/plans.json": {
+      "bytes": 189472,
+      "sha256": "b13a8036c69d801b306b6c137f997e92e6d2bc6c95845159579e1af1ee8187b9"
+    },
+    "v799/h100/v792/ship-09/plans.json": {
+      "bytes": 150610,
+      "sha256": "4007740b062b070c4e0021d7521bc9ce2f38a382c0b39dfd0bfb49776fa614bb"
+    },
+    "v799/h100/v792/ship-10/plans.json": {
+      "bytes": 142440,
+      "sha256": "1932948a3a0557ea82bed1ce3d20463080905ffc1ddbcb97a0466f1fd80c2f37"
+    },
+    "v799/h100/v792/ship-11/plans.json": {
+      "bytes": 157890,
+      "sha256": "812520b9344d5d394323a5ab307616fb68f49caebb2363ba82c891715be6e164"
+    },
+    "v799/h100/v792/ship-12/plans.json": {
+      "bytes": 189314,
+      "sha256": "58f97654807f6d7b872d4b31c6ca7c7a40b2892ab267f4359f34a10c5197f4f7"
+    },
+    "v799/h100/v792/ship-13/plans.json": {
+      "bytes": 220212,
+      "sha256": "1663449b6636719ebd606fab7b02df4bfbb8e71291a0d3dd03928e00565f16c2"
+    },
+    "v799/h100/v792/ship-14/plans.json": {
+      "bytes": 193268,
+      "sha256": "1e71a62173c0fbc2b6dc1fbc12bacd7e31da0bdd3e52834a7de010f06b06b465"
+    },
+    "v799/h100/v792/ship-15/plans.json": {
+      "bytes": 194934,
+      "sha256": "6ffbcbf17ae510ea3c2bd60dcea5ebd092185944f201b2bdaef9ff73daa93c11"
+    },
+    "v799/h100/v792/ship-16/plans.json": {
+      "bytes": 193253,
+      "sha256": "543db398eeff8c0027043eae99cff02c0588c38103cc2d225c952466398d2f47"
+    },
+    "v799/h100/v792/ship-17/plans.json": {
+      "bytes": 176247,
+      "sha256": "80df415e4525e32694764ebf632320145c706ac84cd0b719f346a555e8f13f87"
+    },
+    "v799/h100/v792/ship-18/plans.json": {
+      "bytes": 241038,
+      "sha256": "6dfc544e7bd19288fbdb2881f1bc41939eca6cc7abdca660ce8044187225edf2"
+    },
+    "v799/h100/v792/ship-19/plans.json": {
+      "bytes": 240807,
+      "sha256": "f56765ee70827a122c5c587a9655d11454c39021e5f0048c0feeb55abe160eea"
+    },
+    "v799/h100/v792/ship-19/report.json": {
+      "bytes": 12103,
+      "sha256": "1e3497b3318f43b1d6ef0c5e262e83251befc1693b5de527aad7fb48d4f17b6a"
+    },
+    "v799/h100/v792/ship-20/plans.json": {
+      "bytes": 165669,
+      "sha256": "bd24d99c92a1f30e29c988353099e7026aa52415f17cf29dd3812aab5a9aac4d"
+    },
+    "v799/h100/v792/ship-21/plans.json": {
+      "bytes": 196863,
+      "sha256": "80c22742e24e8834a007141befca71e9efe8e7fc6e9ce50cb8f9bf4d793d4c87"
+    },
+    "v799/h100/v792/ship-22/plans.json": {
+      "bytes": 136840,
+      "sha256": "123a5b3f8f4018bb0cc5186c2be9c71570a3170f938969976c3677ba317cd4cf"
+    },
+    "v799/h100/v792/ship-23/plans.json": {
+      "bytes": 214564,
+      "sha256": "a7c980a51b9ce7afb9192b592c3ef91a32fbde1138c4c496e3de1f641b34aff9"
+    },
+    "v799/h100/v793/report.json": {
+      "bytes": 4125,
+      "sha256": "e53fc810f41f79a8a475a60073bf9d6389c0b480c0b7c12cc456d81d81ce822a"
+    },
+    "v799/h100/v794/fit.json": {
+      "bytes": 4505,
+      "sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e"
+    },
+    "v799/h100/v794/run.py": {
+      "bytes": 4960,
+      "sha256": "e88be45083f06d38a278c29ef45bee0a6019ee7d2eab0a64e2095e6582ea5494"
+    },
+    "v799/h100/v794/ship-01/plans.json": {
+      "bytes": 1891278,
+      "sha256": "5c6522e8683500f4f4f3a0f3cb1f292d620762903ad84353d4ea527f83ab3c65"
+    },
+    "v799/h100/v794/ship-02/plans.json": {
+      "bytes": 1755348,
+      "sha256": "16c1d2bdadb8128047eaf033d6f011a5e7fac2d1eff5c803b6950ea42225e34b"
+    },
+    "v799/h100/v794/ship-03/plans.json": {
+      "bytes": 1765997,
+      "sha256": "019c2b40494f910c2dad01aa8633cb18978cc59bf04260ad088063b344495275"
+    },
+    "v799/h100/v794/ship-04/plans.json": {
+      "bytes": 1834556,
+      "sha256": "52ac04017c69973f4afae6382911e87ea6041df20cd619786d3363999dadc55e"
+    },
+    "v799/h100/v794/ship-05/plans.json": {
+      "bytes": 1647822,
+      "sha256": "d0c2a04457786f915eef58961d4ade01c8637f0f8fc23733302d0384f215c400"
+    },
+    "v799/h100/v794/ship-06/plans.json": {
+      "bytes": 1778069,
+      "sha256": "2ebe7216bcf7dc67aef7b2dc732dead1b0c2efb2db8e23d0608d7239980e5d1e"
+    },
+    "v799/h100/v794/ship-07/plans.json": {
+      "bytes": 1935504,
+      "sha256": "db6f14b5e549bd2e4bae3d69d276b42eb68e7f582c84a4d1d11cb800d95a787d"
+    },
+    "v799/h100/v794/ship-08/plans.json": {
+      "bytes": 1748506,
+      "sha256": "2016973e50686900d76b757bed7c4f351b7fec09200fe6e2bfd21deeacf1111e"
+    },
+    "v799/h100/v794/ship-09/plans.json": {
+      "bytes": 1670034,
+      "sha256": "6caf8becb80109760b9857a55ce84aaf6548eabf6ebb81f221e30950340a04ae"
+    },
+    "v799/h100/v794/ship-10/plans.json": {
+      "bytes": 1937381,
+      "sha256": "74a645360dabab9c540e3ec0ac7f87898629f191a2f25071a1885ced8056c332"
+    },
+    "v799/h100/v794/ship-11/plans.json": {
+      "bytes": 1801004,
+      "sha256": "fe6d750b74aff68da44a4951d15c213fa5a16093d020889c7831c19d9d713e6e"
+    },
+    "v799/h100/v794/ship-12/plans.json": {
+      "bytes": 1637930,
+      "sha256": "db1d8fc268771d9b5bff29b04dedd2ff61ef297facc6bd2ed127a7dcc93dca2c"
+    },
+    "v799/h100/v794/ship-13/plans.json": {
+      "bytes": 1604427,
+      "sha256": "a163582400d0601e33a5fd063099c9d7f5a4ac05d11c171de9512fa018e891d0"
+    },
+    "v799/h100/v794/ship-14/plans.json": {
+      "bytes": 1575952,
+      "sha256": "b4779eeef242245f32c7d925802922970fe392672f8f3954b03891275b332ab7"
+    },
+    "v799/h100/v794/ship-15/plans.json": {
+      "bytes": 1801416,
+      "sha256": "45885b319878c4db37f2903a93472864ee88ae848728b5e8eef8c928a9accef1"
+    },
+    "v799/h100/v794/ship-16/plans.json": {
+      "bytes": 1688803,
+      "sha256": "7bba9137a6d4c2613b669263075bd11ab9e047c1c1971f814565193afedde911"
+    },
+    "v799/h100/v794/ship-17/plans.json": {
+      "bytes": 1633201,
+      "sha256": "a50af0d444491a836f1d58a032581969db83a364d3a33913bf074f07eaa6c434"
+    },
+    "v799/h100/v794/ship-18/plans.json": {
+      "bytes": 1649889,
+      "sha256": "04b1aa6ba1fbed00b614839fa506ae93e953ea9ecc31eeda4dc6e614586f5a3a"
+    },
+    "v799/h100/v794/ship-19/plans.json": {
+      "bytes": 1834171,
+      "sha256": "f3627cdd107aac665cab18d8cc6ad7c86f92aad68c8c36e7ba4db7230df06ef0"
+    },
+    "v799/h100/v794/ship-19/report.json": {
+      "bytes": 20329,
+      "sha256": "f83c156552ed21b69999e6ca8f62544f091f0a0d53edc0abf5e052f431b72c16"
+    },
+    "v799/h100/v794/ship-20/plans.json": {
+      "bytes": 1566695,
+      "sha256": "ec04233d65e6c0c5eec33823bb60f76c1f51733157d7772280ec771db3f0d913"
+    },
+    "v799/h100/v794/ship-21/plans.json": {
+      "bytes": 1698258,
+      "sha256": "38a5e32f0c5cdb893885e457eebfd78f947cbecc492468d131f545d65f374f57"
+    },
+    "v799/h100/v794/ship-22/plans.json": {
+      "bytes": 1705135,
+      "sha256": "3157e9f220fd23f1c9c31d6548e17f860e8e674acc2b63c248d77e94bb371790"
+    },
+    "v799/h100/v794/ship-23/plans.json": {
+      "bytes": 2132518,
+      "sha256": "c890997ca6e24e73852a54a6b8e61d4811ecc07e3c2f5bb9179e33048eed768e"
+    },
+    "v799/h100/v795/report.json": {
+      "bytes": 32353,
+      "sha256": "f23d4f671868364be34ae86bb9e007cd5c990a7db4398440a42d89a28e39e55c"
+    },
+    "v799/local/runtime/bonus_coefficients.txt": {
+      "bytes": 3660000,
+      "sha256": "e8a3795e599556ed5b66713ab1fa176de93ef37f93cb2a4a87d561539b1caa21"
+    },
+    "v799/local/runtime/repo/cpp/cuda/src/gtoc12_scvx.cu": {
+      "bytes": 42926,
+      "sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e"
+    },
+    "v799/local/runtime/source-manifest.json": {
+      "bytes": 100021,
+      "sha256": "03e13e9bcea9fcbdf441f23fd5302249492a4197b0590336e46b8979478f767e"
+    },
+    "v799/local/v792/fit.json": {
+      "bytes": 4505,
+      "sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e"
+    },
+    "v799/local/v792/run.py": {
+      "bytes": 5026,
+      "sha256": "9bb4c6b42f0c7d041a2523363f26c6bbd6d6cab7d63d218ebff1eb88212fabc4"
+    },
+    "v799/local/v792/ship-01/plans.json": {
+      "bytes": 197929,
+      "sha256": "213e135a31e007de9d5ccf2777997cc0b64244a5e02cf6bbfaced1ff2f90fc27"
+    },
+    "v799/local/v792/ship-02/plans.json": {
+      "bytes": 214868,
+      "sha256": "00d13109c3d58c16b4a1414bc59c4d352b968a69f7c3e909717c5c8db75ec97b"
+    },
+    "v799/local/v792/ship-03/plans.json": {
+      "bytes": 223626,
+      "sha256": "63884bc3b3082ebc9ac47230a2964a77ef56deca704aef294a7d4991fdb817ea"
+    },
+    "v799/local/v792/ship-04/plans.json": {
+      "bytes": 201177,
+      "sha256": "189fd7982990b824bd863abd03846efb44c7e25878b85a73f99261a8e7283a9f"
+    },
+    "v799/local/v792/ship-05/plans.json": {
+      "bytes": 155223,
+      "sha256": "824f26481c6fc8b333772ba5feb237145b6608fa1c1d3d4a5bf951ca21646c75"
+    },
+    "v799/local/v792/ship-06/plans.json": {
+      "bytes": 188045,
+      "sha256": "6c60587baf1cacc51898b98a05c5a4fa383c57a87c0a155590fa58e63d143094"
+    },
+    "v799/local/v792/ship-07/plans.json": {
+      "bytes": 181218,
+      "sha256": "7633d5a6edff012dfc06116bd74e00c858980139ffbd0b30aaac6dc9d4ba69c6"
+    },
+    "v799/local/v792/ship-08/plans.json": {
+      "bytes": 189526,
+      "sha256": "6eceb9c0623811250cf310179c179f6247cdfa2a73b3e33379d89a4896b052c6"
+    },
+    "v799/local/v792/ship-09/plans.json": {
+      "bytes": 150610,
+      "sha256": "1471a8d06b4059d5b2a1bf66ba1eeb7629110ac0b8f4e43090e62db118ae767f"
+    },
+    "v799/local/v792/ship-10/plans.json": {
+      "bytes": 142418,
+      "sha256": "c00831320e944ac858e3e884c1ea485dce39e72781e009df317ca7e8061a12a1"
+    },
+    "v799/local/v792/ship-11/plans.json": {
+      "bytes": 157901,
+      "sha256": "f559aa947cc6d6fc39a16632e4190185c9ec7a06abf878d679bdda9e5156f719"
+    },
+    "v799/local/v792/ship-12/plans.json": {
+      "bytes": 189343,
+      "sha256": "1289011b228c5ea7e4cb0d9c7812796d863006140fa6f14c30e04653ec104655"
+    },
+    "v799/local/v792/ship-13/plans.json": {
+      "bytes": 220211,
+      "sha256": "2a0fe107b011861c1f1c84dc5e2584ae1057bf8fc274226288e9ef5f7d8c2da9"
+    },
+    "v799/local/v792/ship-14/plans.json": {
+      "bytes": 193289,
+      "sha256": "2bb1974523beaeff1806cc1d9fa8b5a9b14b2188e8249c165d237c1a365432ed"
+    },
+    "v799/local/v792/ship-15/plans.json": {
+      "bytes": 194928,
+      "sha256": "5615733fae9992c107288066fe83a8d70b31073466171cc2aad7adba824876ae"
+    },
+    "v799/local/v792/ship-16/plans.json": {
+      "bytes": 193253,
+      "sha256": "248efacdbe5b95a9a7b16325bbb1d8ec1dddebd3b492921984768c7c571fa76d"
+    },
+    "v799/local/v792/ship-17/plans.json": {
+      "bytes": 176242,
+      "sha256": "a7fcb37750086e45a90c179b9b599f75dca40020dafc36e491a350de98addfe0"
+    },
+    "v799/local/v792/ship-18/plans.json": {
+      "bytes": 241090,
+      "sha256": "71175344cacf7ac3400018c05c47fb7936c400c008a4e299c5b5e6ae5579f36b"
+    },
+    "v799/local/v792/ship-19/plans.json": {
+      "bytes": 240807,
+      "sha256": "e88379954d808383e77c9c31c69d8b6a0315d7979835c29994cd0a6519c4fd94"
+    },
+    "v799/local/v792/ship-19/report.json": {
+      "bytes": 12104,
+      "sha256": "bfcd0a4c7467c438860d3137d9355b4f5a2162067ca17b60063b2035b7c4d1d5"
+    },
+    "v799/local/v792/ship-20/plans.json": {
+      "bytes": 165676,
+      "sha256": "6206adfae208eb577056efa51643de0c36600950589cbbbfc7daf0c260041af9"
+    },
+    "v799/local/v792/ship-21/plans.json": {
+      "bytes": 196931,
+      "sha256": "0a0a00a0b13e4fe2d4672a598f6267720ce726d4c29f99f7a21b01f45aaccbdd"
+    },
+    "v799/local/v792/ship-22/plans.json": {
+      "bytes": 136841,
+      "sha256": "94ba12f96f57f65feeb363ac161fa18aa5d1a0ca8ba5c4defdfc01ad8ff1056b"
+    },
+    "v799/local/v792/ship-23/plans.json": {
+      "bytes": 214549,
+      "sha256": "39f746ba25dfa41b2040f4bd7b445c17b07997f2897df1d85056ec1ec65c223b"
+    },
+    "v799/local/v793/report.json": {
+      "bytes": 4120,
+      "sha256": "5d11685b06286b57656afd9556f5402af42dd63e893d5e6f141aa6b6d23d9751"
+    },
+    "v799/local/v794/fit.json": {
+      "bytes": 4505,
+      "sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e"
+    },
+    "v799/local/v794/run.py": {
+      "bytes": 4960,
+      "sha256": "e88be45083f06d38a278c29ef45bee0a6019ee7d2eab0a64e2095e6582ea5494"
+    },
+    "v799/local/v794/ship-01/plans.json": {
+      "bytes": 1891262,
+      "sha256": "73b25acd5bf4a572782e9c81a8b14b511bc3e3e90bf8fe3239059f699b52514a"
+    },
+    "v799/local/v794/ship-02/plans.json": {
+      "bytes": 1755328,
+      "sha256": "7467a71921ac1b3da6ad386ad0d5fe3cb7b1f2d0afba03bdeb797af6937c20aa"
+    },
+    "v799/local/v794/ship-03/plans.json": {
+      "bytes": 1765970,
+      "sha256": "2975f621aa9d13d5edc456c2011b3562c76cde6ef2fda59e7ad5f759993742f3"
+    },
+    "v799/local/v794/ship-04/plans.json": {
+      "bytes": 1834527,
+      "sha256": "1ab0cd4f3857227bc096b7969af5ea1aa354641213da752ffcb862bd08c74e7c"
+    },
+    "v799/local/v794/ship-05/plans.json": {
+      "bytes": 1647632,
+      "sha256": "e3223393b4b2ab55b9d1af9e9a96a1f2a52bb46ebe1737107e47aaaeb970965c"
+    },
+    "v799/local/v794/ship-06/plans.json": {
+      "bytes": 1777930,
+      "sha256": "f61607b5bc0c9c6fe67aedbf315e3d08ffe6ba3e1d43f6d2a68b999cc43b1b09"
+    },
+    "v799/local/v794/ship-07/plans.json": {
+      "bytes": 1935529,
+      "sha256": "5f2190ad40de3baeabe257463584bd2707bc48cb80c5bed0285e81496c1bb549"
+    },
+    "v799/local/v794/ship-08/plans.json": {
+      "bytes": 1748177,
+      "sha256": "ab4a3992501c7ef644f6354e0711258ad00025131939ae7b5b583aee4cf1a50f"
+    },
+    "v799/local/v794/ship-09/plans.json": {
+      "bytes": 1669887,
+      "sha256": "7fcf0e0ae8d121c501eeb08d6ce7b8dfb6c90f7406ecbc7d5db1275da986d8a3"
+    },
+    "v799/local/v794/ship-10/plans.json": {
+      "bytes": 1937054,
+      "sha256": "b695cb21e57152f4ebc36cb0c88157afb3277b3d31d6b5f0a0e72922e3def169"
+    },
+    "v799/local/v794/ship-11/plans.json": {
+      "bytes": 1801003,
+      "sha256": "a588944483c6848a148256d140b89766c92d834a5ce1a3aa975d93f50e798d8c"
+    },
+    "v799/local/v794/ship-12/plans.json": {
+      "bytes": 1638055,
+      "sha256": "97f82a4f920b951ad94a7874463ecba4ce43afdc3fe4333b42c5ce99754863df"
+    },
+    "v799/local/v794/ship-13/plans.json": {
+      "bytes": 1604445,
+      "sha256": "4076d6e37974afa56e76251e035668efa2ddee8b1f782cc76175cdcaf4adbf7a"
+    },
+    "v799/local/v794/ship-14/plans.json": {
+      "bytes": 1576078,
+      "sha256": "f056184aa89f38afaed87ef1e82e6bae1f9f0944ff731b96ed7d9c03a77549ab"
+    },
+    "v799/local/v794/ship-15/plans.json": {
+      "bytes": 1801291,
+      "sha256": "2979128134d7a63d5b232f2f28556aa6ddd0ec5e7a635fcfe9f6b01493f98a35"
+    },
+    "v799/local/v794/ship-16/plans.json": {
+      "bytes": 1688865,
+      "sha256": "478057bb39222afc4329c449da5422ea6a7bcb401fa405d672a79499980705d8"
+    },
+    "v799/local/v794/ship-17/plans.json": {
+      "bytes": 1633249,
+      "sha256": "0c9148de380c58904d291e23ec7cefd30c97e0cdfdc601ccfbcc7d0905f26594"
+    },
+    "v799/local/v794/ship-18/plans.json": {
+      "bytes": 1650159,
+      "sha256": "790925423a8f75c641efcf36307e9608f872cc6f287012b05e07e0a7ebc7e622"
+    },
+    "v799/local/v794/ship-19/plans.json": {
+      "bytes": 1834389,
+      "sha256": "600e8228cb9cfe2e1161c4a677e7dadee8eef407905e4adf56f19beb5e1667b7"
+    },
+    "v799/local/v794/ship-19/report.json": {
+      "bytes": 20324,
+      "sha256": "2d6eebfa196af1527da59b36c811120d0b17d7015c739a4223fe5bea9925bb46"
+    },
+    "v799/local/v794/ship-20/plans.json": {
+      "bytes": 1566628,
+      "sha256": "57daa4b629eb216c5e425967ee54f82d6c7f4741d36e65a11ef75a2bcfe07d36"
+    },
+    "v799/local/v794/ship-21/plans.json": {
+      "bytes": 1698813,
+      "sha256": "6077df1027159c373fe893878eb53621010da47e8758e115f6e1f07aca79438c"
+    },
+    "v799/local/v794/ship-22/plans.json": {
+      "bytes": 1705128,
+      "sha256": "7868ee842c942761a71f51c7ca18633ba58c214e58a9c08248f5a9fe03e8297b"
+    },
+    "v799/local/v794/ship-23/plans.json": {
+      "bytes": 2132432,
+      "sha256": "1f950d937dacfca23aa2c24ab7d115da767a1831abb4a5e099044f50506bd3d2"
+    },
+    "v799/local/v795/report.json": {
+      "bytes": 32506,
+      "sha256": "91676add45a3b05811c557bb95e7dfca5fa4c7555949fe9980ba8cdaefeed323"
+    },
+    "v806/h100/runtime/bonus_coefficients.txt": {
+      "bytes": 3660000,
+      "sha256": "e8a3795e599556ed5b66713ab1fa176de93ef37f93cb2a4a87d561539b1caa21"
+    },
+    "v806/h100/runtime/repo/cpp/cuda/src/gtoc12_scvx.cu": {
+      "bytes": 42926,
+      "sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e"
+    },
+    "v806/h100/runtime/source-manifest.json": {
+      "bytes": 100242,
+      "sha256": "818dc29afc61f6eed1e94701009ae048c24fcd9943d067416d27251fc3f2067b"
+    },
+    "v806/h100/v802/fit.json": {
+      "bytes": 4505,
+      "sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e"
+    },
+    "v806/h100/v802/run.py": {
+      "bytes": 5114,
+      "sha256": "6da6a621ca59f0426e428b5959cf385b65481674a32f7a0a2e4ebd17658a4b43"
+    },
+    "v806/h100/v802/ship-01/plans.json": {
+      "bytes": 1891142,
+      "sha256": "ea3df26f85c3dedad4a9651193a8e712d2d7f87963e6889d9864d590f333803c"
+    },
+    "v806/h100/v802/ship-02/plans.json": {
+      "bytes": 1754864,
+      "sha256": "1c03185c7a90b269c9b8861999be22c4bd01450bb324bca4a0cc00f936ec5a2d"
+    },
+    "v806/h100/v802/ship-03/plans.json": {
+      "bytes": 1765997,
+      "sha256": "019c2b40494f910c2dad01aa8633cb18978cc59bf04260ad088063b344495275"
+    },
+    "v806/h100/v802/ship-04/plans.json": {
+      "bytes": 1787104,
+      "sha256": "9b1181c361feec4f2c935b37c9c22dab9bd5ba4fdc895a16d25bc483662007cc"
+    },
+    "v806/h100/v802/ship-05/plans.json": {
+      "bytes": 1647822,
+      "sha256": "d0c2a04457786f915eef58961d4ade01c8637f0f8fc23733302d0384f215c400"
+    },
+    "v806/h100/v802/ship-06/plans.json": {
+      "bytes": 1779112,
+      "sha256": "11e5d7e9efc68d0baee31cbad63847e7c28bb1620666b345719cc7d3c7820bd7"
+    },
+    "v806/h100/v802/ship-07/plans.json": {
+      "bytes": 1935699,
+      "sha256": "a336482199a4e19ef350f969b01ad439c07212cee0be0d7762bb293927635a47"
+    },
+    "v806/h100/v802/ship-08/plans.json": {
+      "bytes": 1740852,
+      "sha256": "8755f6ee7c813ac63b443d0811d38efa0cfff7348ef9d26c0fd2900563d36634"
+    },
+    "v806/h100/v802/ship-09/plans.json": {
+      "bytes": 1670010,
+      "sha256": "0ccb27c80d163bafb47382b36589f69e0bc28fe8d20c529ddfee82179145657e"
+    },
+    "v806/h100/v802/ship-10/plans.json": {
+      "bytes": 1938036,
+      "sha256": "247d484ffa028f2a4edf5b1be4d7cd687a91cbb25af412455ff805d25172bc13"
+    },
+    "v806/h100/v802/ship-11/plans.json": {
+      "bytes": 1801669,
+      "sha256": "5bb7343e3c4780d542125254a9fcc41514c029452ce113ce9bccbf383d70063d"
+    },
+    "v806/h100/v802/ship-12/plans.json": {
+      "bytes": 1637930,
+      "sha256": "db1d8fc268771d9b5bff29b04dedd2ff61ef297facc6bd2ed127a7dcc93dca2c"
+    },
+    "v806/h100/v802/ship-13/plans.json": {
+      "bytes": 1604427,
+      "sha256": "a163582400d0601e33a5fd063099c9d7f5a4ac05d11c171de9512fa018e891d0"
+    },
+    "v806/h100/v802/ship-14/plans.json": {
+      "bytes": 1575656,
+      "sha256": "70ced04259c54c619f9db6422a067a1ee04ff5abc60571e791c64cab1b408bab"
+    },
+    "v806/h100/v802/ship-15/plans.json": {
+      "bytes": 1812177,
+      "sha256": "fb337baf03e543f0dcbaa40a18c3890885f58eaa0d263079aa106b766523bdc0"
+    },
+    "v806/h100/v802/ship-16/plans.json": {
+      "bytes": 1688803,
+      "sha256": "7bba9137a6d4c2613b669263075bd11ab9e047c1c1971f814565193afedde911"
+    },
+    "v806/h100/v802/ship-17/plans.json": {
+      "bytes": 1845651,
+      "sha256": "6736dfcd780fa306eb51445fb167a5a5cff4f0252e90df9b0d899f7dad77312b"
+    },
+    "v806/h100/v802/ship-18/plans.json": {
+      "bytes": 1649889,
+      "sha256": "04b1aa6ba1fbed00b614839fa506ae93e953ea9ecc31eeda4dc6e614586f5a3a"
+    },
+    "v806/h100/v802/ship-19/plans.json": {
+      "bytes": 1770919,
+      "sha256": "e183c91372203bcb3025effe6026d9dd9cdc963309f046397adc109d01fed51a"
+    },
+    "v806/h100/v802/ship-19/report.json": {
+      "bytes": 24944,
+      "sha256": "9a446ed1bee4552cc5ce5f36f6d345461dbe2824cbd7cc290a6893b818186cf5"
+    },
+    "v806/h100/v802/ship-20/plans.json": {
+      "bytes": 1622345,
+      "sha256": "91638d937119a714d0589bf54e6cf63b267f2308dadfb74932d03a8470d51756"
+    },
+    "v806/h100/v802/ship-21/plans.json": {
+      "bytes": 1715717,
+      "sha256": "d388f1009bf2448111442cefde1237f6e06fb47c06c3acc214f7ba232b99f9ec"
+    },
+    "v806/h100/v802/ship-22/plans.json": {
+      "bytes": 1705135,
+      "sha256": "3157e9f220fd23f1c9c31d6548e17f860e8e674acc2b63c248d77e94bb371790"
+    },
+    "v806/h100/v802/ship-23/plans.json": {
+      "bytes": 2134621,
+      "sha256": "dc89f892f7e3de22dfdd683ac6972e127fb24cbee9c34ef7ae6ddcc37bad866a"
+    },
+    "v806/h100/v803/report.json": {
+      "bytes": 25691,
+      "sha256": "11dc1ed2faff6621991d1f80973228f10e30bbda0460aa38024b9ca80b6d0d51"
+    },
+    "v806/local/runtime/bonus_coefficients.txt": {
+      "bytes": 3660000,
+      "sha256": "e8a3795e599556ed5b66713ab1fa176de93ef37f93cb2a4a87d561539b1caa21"
+    },
+    "v806/local/runtime/repo/cpp/cuda/src/gtoc12_scvx.cu": {
+      "bytes": 42926,
+      "sha256": "036de3500f31893d958e0f34b0c2f4c02d4579b80087b76f0b9691469a32516e"
+    },
+    "v806/local/runtime/source-manifest.json": {
+      "bytes": 100242,
+      "sha256": "15ea5659a93b43c40cac953165540580e9c7508f8f6e433538d46fa82d9eff20"
+    },
+    "v806/local/v802/fit.json": {
+      "bytes": 4505,
+      "sha256": "b23afd0272c35197b14c2f0c85e5ff8b3a063e29867425835966de88e70d096e"
+    },
+    "v806/local/v802/run.py": {
+      "bytes": 5114,
+      "sha256": "6da6a621ca59f0426e428b5959cf385b65481674a32f7a0a2e4ebd17658a4b43"
+    },
+    "v806/local/v802/ship-01/plans.json": {
+      "bytes": 1891217,
+      "sha256": "46cefecf6419ddcee07dc65008ba810044af7fa3c79d1163d5c880f55144767a"
+    },
+    "v806/local/v802/ship-02/plans.json": {
+      "bytes": 1754855,
+      "sha256": "56d8c4e95f0241d4790c1a94960e328b42e19769d2290bd818568e32b698a7de"
+    },
+    "v806/local/v802/ship-03/plans.json": {
+      "bytes": 1765970,
+      "sha256": "2975f621aa9d13d5edc456c2011b3562c76cde6ef2fda59e7ad5f759993742f3"
+    },
+    "v806/local/v802/ship-04/plans.json": {
+      "bytes": 1787142,
+      "sha256": "f42368845a09e1fa0db1da1b1fc4018fd62ce466e5224bb58fdb5c45fb119ba2"
+    },
+    "v806/local/v802/ship-05/plans.json": {
+      "bytes": 1647632,
+      "sha256": "e3223393b4b2ab55b9d1af9e9a96a1f2a52bb46ebe1737107e47aaaeb970965c"
+    },
+    "v806/local/v802/ship-06/plans.json": {
+      "bytes": 1778969,
+      "sha256": "c534019bbe6995327bc9bb7a823584fe2cd7ac5148f75a0d30e1eca70421d50e"
+    },
+    "v806/local/v802/ship-07/plans.json": {
+      "bytes": 1935720,
+      "sha256": "4e9c6a2e3bbc9e7037947f014937b45d518026f917b563bc03dacdeb41d36573"
+    },
+    "v806/local/v802/ship-08/plans.json": {
+      "bytes": 1740548,
+      "sha256": "cfb4e80655298a6fbb5d109cbfbe56e0fe6da5dd9a6ee848435672888dafd3e0"
+    },
+    "v806/local/v802/ship-09/plans.json": {
+      "bytes": 1669886,
+      "sha256": "5be56f0ffe8568bec5d0fa6071c5f2289991039db4d9888f269e671b63551631"
+    },
+    "v806/local/v802/ship-10/plans.json": {
+      "bytes": 1937834,
+      "sha256": "14a1fa24cc6f29b87db3fc333a54e4c934844d9f27922438613cf1a6393f9d49"
+    },
+    "v806/local/v802/ship-11/plans.json": {
+      "bytes": 1801662,
+      "sha256": "ce12d994152ba4e5b7f461f9fa0fdbcb972b9314c27c47ef63af99d62df73948"
+    },
+    "v806/local/v802/ship-12/plans.json": {
+      "bytes": 1638055,
+      "sha256": "97f82a4f920b951ad94a7874463ecba4ce43afdc3fe4333b42c5ce99754863df"
+    },
+    "v806/local/v802/ship-13/plans.json": {
+      "bytes": 1604445,
+      "sha256": "4076d6e37974afa56e76251e035668efa2ddee8b1f782cc76175cdcaf4adbf7a"
+    },
+    "v806/local/v802/ship-14/plans.json": {
+      "bytes": 1575782,
+      "sha256": "5c7b35715bea815e012d92485985f3f376fa6758f199ec0f807a1226078e313b"
+    },
+    "v806/local/v802/ship-15/plans.json": {
+      "bytes": 1812066,
+      "sha256": "f027dbf8e2fbd7e592f1e1e07642c1e462eb2d83fc65bee86b139033582518bc"
+    },
+    "v806/local/v802/ship-16/plans.json": {
+      "bytes": 1688865,
+      "sha256": "478057bb39222afc4329c449da5422ea6a7bcb401fa405d672a79499980705d8"
+    },
+    "v806/local/v802/ship-17/plans.json": {
+      "bytes": 1845723,
+      "sha256": "93345bb3c1d2369fd8b43970e07d3b25d8366b579c1796b628466772b21ae8e9"
+    },
+    "v806/local/v802/ship-18/plans.json": {
+      "bytes": 1650159,
+      "sha256": "790925423a8f75c641efcf36307e9608f872cc6f287012b05e07e0a7ebc7e622"
+    },
+    "v806/local/v802/ship-19/plans.json": {
+      "bytes": 1771037,
+      "sha256": "521721a0d7116458704e994a4260d38ec081b5571f9285567a6bd048fe151a83"
+    },
+    "v806/local/v802/ship-19/report.json": {
+      "bytes": 24948,
+      "sha256": "c0fbf5fe19019f7eca5966532e1630f9a41d07bdd16a90964cb991fa83a52e6b"
+    },
+    "v806/local/v802/ship-20/plans.json": {
+      "bytes": 1622278,
+      "sha256": "7916dd1a97c32e3cf229f1e8f020134bb3aa371f271015ca029ef243ea68946a"
+    },
+    "v806/local/v802/ship-21/plans.json": {
+      "bytes": 1716264,
+      "sha256": "a9b52a3a51a1ec0de01d47c1f6a82046efb0880d2fb6607f68550cd18971be73"
+    },
+    "v806/local/v802/ship-22/plans.json": {
+      "bytes": 1705128,
+      "sha256": "7868ee842c942761a71f51c7ca18633ba58c214e58a9c08248f5a9fe03e8297b"
+    },
+    "v806/local/v802/ship-23/plans.json": {
+      "bytes": 2134524,
+      "sha256": "dd6fa7b9f427af25db971af8bb671503edd700ddf2c7cd65366e6cfd5d7776eb"
+    },
+    "v806/local/v803/report.json": {
+      "bytes": 25688,
+      "sha256": "30c20ef5613016f7aa3facf4daf4cd375e50c219ff34744798f718f0a4f820a3"
+    }
+  },
+  "weighted_kg_per_ship": 566.2480391729567
+}

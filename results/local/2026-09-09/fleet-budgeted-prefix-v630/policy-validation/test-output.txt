@@ -1,0 +1,12 @@
+Recorded from the completed authorized tool command, chunk 7f4bce (no additional test run):
+
+wsl -d Ubuntu-22.04 -- env PYTHONPATH=src CUDA_VISIBLE_DEVICES= SPACEPDHCG_GTOC12_GPU_TESTS=0 /home/angus/worktrees/spacepdhcg-literature-venv/bin/python -m pytest -q tests/test_gtoc12_fleet_admission.py tests/test_gtoc12_refinement_admission.py tests/test_gtoc12_completion_capture.py tests/test_gtoc12_fixed_refinement.py tests/test_gtoc12_bundles.py -k 'fleet_admission or refinement_admission or completion_capture or fixed_refinement or refine_candidates' --tb=short
+
+........................................................................ [ 62%]
+............................................                             [100%]
+116 passed, 29 deselected in 2.01s
+
+Ruff check, completed tool command chunk 85c37c:
+All checks passed!
+
+This records the production policy tests. The separately frozen mission kit has its own 24 CPU orchestration tests and complete subprocess logs under fleet-budgeted-prefix-v630/validation-sealed/.

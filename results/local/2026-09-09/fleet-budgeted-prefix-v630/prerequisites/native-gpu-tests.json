@@ -1,0 +1,103 @@
+{
+  "complete": true,
+  "passed": true,
+  "supervisor_pid": 13169,
+  "stages": [
+    {
+      "name": "native-api-graph",
+      "command": [
+        "/home/angus/spacepdhcg-route-ephemeris-v630a/build/cuda-tests/gtoc12_ephemeris_test"
+      ],
+      "deadline_seconds": 15,
+      "child": {
+        "pid": 13174,
+        "state": "R",
+        "ppid": 13169,
+        "start_ticks": 662493
+      },
+      "exit_code": 0,
+      "cleanup": {
+        "verified_empty": true,
+        "actions": [],
+        "survivors": []
+      },
+      "seconds": 0.2712580959996558,
+      "log_sha256": "405c95d1a8fef0d70c868a93970be9b74223a0943de3bd322fbe77a619fc274a",
+      "compute_after": ""
+    },
+    {
+      "name": "native-memcheck",
+      "command": [
+        "/usr/local/cuda-12.8/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "/home/angus/spacepdhcg-route-ephemeris-v630a/build/cuda-tests/gtoc12_ephemeris_test"
+      ],
+      "deadline_seconds": 30,
+      "child": {
+        "pid": 13192,
+        "state": "R",
+        "ppid": 13169,
+        "start_ticks": 662525
+      },
+      "exit_code": 0,
+      "cleanup": {
+        "verified_empty": true,
+        "actions": [],
+        "survivors": []
+      },
+      "seconds": 0.4717707330000849,
+      "log_sha256": "4d02b7d902353d51839ff8db900b6c3e5ccf369a3f0d4847f77798e86a4eb2f7",
+      "compute_after": ""
+    },
+    {
+      "name": "independent-state-parity",
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-p",
+        "no:cacheprovider",
+        "-q",
+        "tests/test_gtoc12_gpu_ephemeris.py",
+        "-k",
+        "cuda_states_match_independent_cpu_equations"
+      ],
+      "deadline_seconds": 20,
+      "child": {
+        "pid": 13213,
+        "state": "R",
+        "ppid": 13169,
+        "start_ticks": 662579
+      },
+      "exit_code": 0,
+      "cleanup": {
+        "verified_empty": true,
+        "actions": [],
+        "survivors": []
+      },
+      "seconds": 0.8228788340002211,
+      "log_sha256": "fffd04c8d967f722e77f915cbb56ebda0b60f9d7dec5a3feaf5756b35561ab33",
+      "compute_after": ""
+    }
+  ],
+  "manifest_sha256": "7435b392a5faceff50db4361bab287fb3ce98b1b37aa93d2d5d633c0a9e68a14",
+  "source_tree_sha256": "737137c4e7e85c762d413e094d69b9df423c409c6ab7581b82ce1f6eee754063",
+  "runner_sha256": "7e9464b480007f7ce7625e35327ad8a3eeaa39a37e97034afd7bfbef2a7ddd9f",
+  "process_guard_sha256": "c7039b63b8ba8e1745d77fcb759c83460f6eca309879d304bb60ae3e671f4422",
+  "process_budget": 3,
+  "optimizer_calls": 0,
+  "native_API_rows": 20,
+  "python_state_rows": 17,
+  "gpu_inventory": "GPU-4df2f6b5-e866-14a0-eeac-332cb2b757d4, NVIDIA GeForce RTX 5090, 595.97",
+  "compute_before": "",
+  "final_cleanup": {
+    "verified_empty": true,
+    "actions": [],
+    "survivors": []
+  },
+  "final_compute_inventory": ""
+}

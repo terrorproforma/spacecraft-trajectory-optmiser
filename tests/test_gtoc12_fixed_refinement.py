@@ -56,6 +56,7 @@ def settings():
         assembly_backend="cuda",
         convex_solver_backend="qoco",
         outer_loop_backend="cuda",
+        ephemeris_backend="cpu",  # This suite supplies synthetic host boundary states.
     )
 
 
