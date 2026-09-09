@@ -1,0 +1,118 @@
+{
+  "all_checker_attempts": {
+    "independent_full_fleet_checks": 2,
+    "official_full_fleet_checks": 2,
+    "prior_attempt": "Independent physics passed; official checker rejected one trailing empty line. Final attempt removed only terminal CRLF.",
+    "worker_seconds_total": 47.144631559000004
+  },
+  "commit": "verified-frontier-v629+archive-fleet-master-v10+v633b-checkers",
+  "composition": {
+    "appended_ship_id": 24,
+    "archived_source_ship_id": 9,
+    "baseline_Result_sha256": "765cb7ef97d38926317dbbf4ae8700626dffec06c48af3d6f68dae47c154f3da",
+    "qualified": true,
+    "raw_gain_kg": 624.0383299112,
+    "retained_ship_ids": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ],
+    "weighted_gain_kg": 503.2563401950665
+  },
+  "display_replay_provenance": {
+    "event_only_ship_ids": [
+      24
+    ],
+    "native_node_ship_ids_inherited": [
+      8,
+      19
+    ],
+    "new_catalogue_rows_parsed": 9,
+    "new_event_samples": 20,
+    "new_interpolated_samples": 0,
+    "new_orbital_equation_evaluations": 0,
+    "new_propagations": 0,
+    "reused_history_ship_ids": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ],
+    "unsampled_intervals_are_gaps": true
+  },
+  "final_pass_counts": {
+    "independent_full_fleet_checks": 1,
+    "official_full_fleet_checks": 1
+  },
+  "fleet_run_id": "local_fleet_addition_v633",
+  "hardware": {
+    "fleet_assembly": "Local saved-route composition and CPU full-fleet checks; no new GPU solves",
+    "upstream_search": "Historical source fleet_master_v10; previous 23 ships retained"
+  },
+  "model": {
+    "dynamics": "Both original full-fleet checkers; unchanged physical tolerances",
+    "local_refine": "No new refinement in this archive-addition step"
+  },
+  "optimisation": {
+    "proven_optimal": false,
+    "strategy": "Add one disjoint certified 9-asteroid route using available fleet raw-mass budget"
+  },
+  "raw_kg_per_ship": 621.4601870865083,
+  "result_sha256": "1f420928bbef8da91e3a6f8b74d3bf00039c78d4257215c103a484bc55bb22da",
+  "run_counts": {
+    "GPU_calls": 0,
+    "checker_attempts": 2,
+    "independent_full_fleet_checks": 2,
+    "native_solves": 0,
+    "official_full_fleet_checks": 2,
+    "search_calls": 0
+  },
+  "run_id": "local_fleet_addition_v633",
+  "timing": {
+    "final_pass_seconds": 23.189034796999977,
+    "first_format_rejection_seconds": 23.955596762000027,
+    "scope": "Sum of both checker-worker elapsed times, excluding archive recovery and display export",
+    "wall_human": "47.145 s summed checker-worker time, 2 attempts (2 CPU + 2 official calls); final pass 23.189 s; excludes archive recovery and display export",
+    "wall_seconds_total": 47.144631559000004
+  },
+  "weighted_score_fixed_bonus_kg": 13526.96124117307
+}

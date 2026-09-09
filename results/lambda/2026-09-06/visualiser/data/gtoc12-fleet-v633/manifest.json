@@ -1,0 +1,150 @@
+{
+  "composition": {
+    "appended_ship_id": 24,
+    "archived_source_ship_id": 9,
+    "baseline_Result_sha256": "765cb7ef97d38926317dbbf4ae8700626dffec06c48af3d6f68dae47c154f3da",
+    "qualified": true,
+    "raw_gain_kg": 624.0383299112,
+    "retained_ship_ids": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ],
+    "weighted_gain_kg": 503.2563401950665
+  },
+  "dataset_kind": "gtoc12-fleet",
+  "display_replay_provenance": {
+    "event_only_ship_ids": [
+      24
+    ],
+    "native_node_ship_ids_inherited": [
+      8,
+      19
+    ],
+    "new_catalogue_rows_parsed": 9,
+    "new_event_samples": 20,
+    "new_interpolated_samples": 0,
+    "new_orbital_equation_evaluations": 0,
+    "new_propagations": 0,
+    "reused_history_ship_ids": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ],
+    "unsampled_intervals_are_gaps": true
+  },
+  "files": {
+    ".gitattributes": {
+      "bytes": 25,
+      "sha256": "bb3c3a4751df0dc4460e370569ff389e93ab545025e3698ed5445661d62677b1"
+    },
+    "checker-binding.json": {
+      "bytes": 1007,
+      "sha256": "11b12449f4b177c5545bbcaba4eb2d06539d70095788a5bf36ad34c47a2a250e"
+    },
+    "compute.json": {
+      "bytes": 3078,
+      "sha256": "535417c1ff36f2e87b4b2e91c920cab20c50f46302c46866c0a0a40ea5661da5"
+    },
+    "fleet.json": {
+      "bytes": 2192218,
+      "sha256": "cb22ab847f6ce6b85b999cbb2d0073a4cc3261a1d40291d6eb65fb177c58ff51"
+    },
+    "source-display-map.json": {
+      "bytes": 22053,
+      "sha256": "7b34a493cb8367e33479dfc1d492c989095ff594feedd967fa5b1078dfba157a"
+    }
+  },
+  "kepler_check": {
+    "asteroid_max_error_km": 3.6571973832501837e-06,
+    "context_points_checked": 68264,
+    "earth_max_error_km": 3.0719530854108674e-07,
+    "scope": "Inherited context check for the existing 23 ships only; nine added catalogue rows parsed without a new context propagation check.",
+    "tolerance_km": 0.01
+  },
+  "schema_version": "1.0.0",
+  "source": {
+    "base_display_source": {
+      "catalogue": {
+        "bytes": 6840111,
+        "name": "catalogue-v767.txt",
+        "sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675"
+      },
+      "export_manifest_sha256": "34469d22ef6c38aad65b46cc14f40e111986f7f345fb4074ee4db6823fdd1522",
+      "export_trajectories_bytes": 9893546,
+      "export_trajectories_sha256": "6cc0f28059d93c6dd0bcec6216fc1ea791ff53ec23ab81181af88c9fcf697480",
+      "fleet_json_sha256": "7631eff32c53807814037d1d2c7193745feaf1b71091500659b9b6afc7869670",
+      "generator": "spacepdhcg.gtoc12.pipeline",
+      "independent_verifier_ok": true,
+      "official_verifier_ok": true,
+      "solution_basename": "Result.txt",
+      "solution_bytes": 9978319,
+      "solution_sha256": "765cb7ef97d38926317dbbf4ae8700626dffec06c48af3d6f68dae47c154f3da",
+      "solution_verified_locally": true,
+      "transform": "Exact saved native nodes converted to physical units, saved certificate endpoints and Result events for ships8/19; exact reuse of21 prior histories. No propagation or invented intermediate points. Explicit coast gaps."
+    },
+    "catalogue": {
+      "bytes": 6840111,
+      "name": "catalogue-v767.txt",
+      "sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675"
+    },
+    "display_data_basename": "source-display-map.json",
+    "display_data_sha256": "7b34a493cb8367e33479dfc1d492c989095ff594feedd967fa5b1078dfba157a",
+    "generator": "Saved Result events plus byte-preserved frontier-v629 display records",
+    "independent_verifier_ok": true,
+    "official_verifier_ok": true,
+    "solution_basename": "Result.txt",
+    "solution_bytes": 10439933,
+    "solution_sha256": "1f420928bbef8da91e3a6f8b74d3bf00039c78d4257215c103a484bc55bb22da",
+    "solution_verified_locally": true,
+    "transform": "23 original ship JSON objects retained byte-for-byte. Ship 24 uses 20 saved event positions, with all 19 unsampled intervals omitted. No propagation or interpolation."
+  },
+  "summary": {
+    "events": 464,
+    "official_total_mass_kg": 14915.0,
+    "replay_points": 11672,
+    "ships": 24,
+    "unique_asteroids": 208
+  },
+  "transform": "23 original ship JSON objects retained byte-for-byte. Ship 24 uses 20 saved event positions, with all 19 unsampled intervals omitted. No propagation or interpolation."
+}

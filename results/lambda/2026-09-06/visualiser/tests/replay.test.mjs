@@ -36,3 +36,15 @@ test('solver samples carry an explicit source label', () => {
   assert.match(sampleSourceLabel({ display_sample_kind: 'native_nodes_and_certified_endpoints' }), /solver nodes and certified endpoints/);
   assert.equal(sampleSourceLabel({}), 'Archived trajectory samples');
 });
+
+test('event-only displays leave every flight interval blank', () => {
+  const times = [64508, 65078, 65258];
+  const gaps = replayGaps({ points_txyz: times.map(t => [t, 0, 0, 0]), gap_after_indices: [0, 1] });
+  const ship = { times, gapAfter: gaps };
+  assert.deepEqual(visibleSegmentRanges(times.length, times.length, gaps), []);
+  for (let i = 0; i < times.length; i++) {
+    assert.equal(currentReplaySample(ship, times[i]), i);
+    if (i + 1 < times.length) assert.equal(currentReplaySample(ship, (times[i] + times[i + 1]) / 2), -1);
+  }
+  assert.equal(sampleSourceLabel({ display_sample_kind: 'archived_event_states_only' }), 'Saved event positions only; no sampled flight paths');
+});

@@ -14,8 +14,24 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
-The latest locally verified fleet reaches **13,023.705 weighted kg / 14,291.006 raw
-kg**, with 23 ships, 199 asteroids and **621.348 raw kg per ship**. Four route
+The latest locally verified fleet reaches **13,526.961 weighted kg / 14,915.044 raw
+kg**, with **24 ships, 208 asteroids and 621.460 raw kg per ship**. Recovering an
+unused compatible archived route adds **503.256340 weighted kg (3.86%)**. Both
+original full-fleet checkers pass on the exact composed result, with unchanged
+physics tolerances. This is a fleet-selection gain from existing trajectories;
+no new optimizer or PDHCG solve produced the added route.
+[Exact result, provenance and display](docs/GTOC12_FLEET_ADDITION.md).
+
+CUDA beam expansion and ranking now make two paired route searches **2.58x and
+2.72x faster on H100** (**1.61x and 1.75x on RTX 5090**). Combined search rates
+are about **74.1 / 41.6 surrogate candidates per second** on H100/local, excluding
+process startup and catalogue loading. The wider saved beam includes 509 new
+asteroid orders; these have not yet been trajectory-refined. These gains belong
+to mission search, while reliable PDHCG qualification remains under development.
+[Paired measurements and remaining host work](docs/GPU_BEAM_EXPANSION.md).
+
+The preceding GPU refinement frontier reaches **13,023.705 weighted kg / 14,291.006
+raw kg**, with 23 ships, 199 asteroids and **621.348 raw kg per ship**. Four route
 alternatives all certify; composing the best two into the preceding fleet adds
 **23.880058 weighted kg**. Fleet selection can accept a ship with less raw cargo
 when its weighted contribution improves and the complete fleet still meets the

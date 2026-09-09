@@ -31,6 +31,7 @@ export function currentReplaySample(ship, epoch) {
 }
 
 export function sampleSourceLabel(ship) {
+  if (ship.display_sample_kind === "archived_event_states_only") return "Saved event positions only; no sampled flight paths";
   return ship.display_sample_kind === "native_nodes_and_certified_endpoints"
     ? "Saved solver nodes and certified endpoints" : "Archived trajectory samples";
 }

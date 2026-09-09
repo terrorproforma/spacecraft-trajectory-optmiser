@@ -49,12 +49,22 @@ mission choices. Neither obstacle is resolved by faster individual kernels.
   search and refinement costs. These are incremental results with the earlier
   hash cache enabled, not additive speedup claims or certified throughput.
   [Downloaded paired results](../results/lambda/2026-09-09/gpu-resident-catalogue-v827/README.md).
-- The certified frontier remains **13,023.704901 weighted kg**, **14,291.006160
-  raw kg**, 23 ships and 199 asteroids. The v630 additional route prescriptions
-  produce no complete certified improvement. Its failed optimizer statuses do
-  not prove those physical missions infeasible.
-  [Fleet baseline](GPU_MASS_BUDGETED_FRONTIER.md),
-  [failed prescriptions](GPU_FLEET_BUDGET_ADMISSION.md).
+- The certified frontier now reaches **13,526.961241 weighted kg**, **14,915.044490
+  raw kg**, 24 ships and 208 asteroids. Recovering a complete, compatible archived
+  route adds **503.256340 weighted kg (3.86%)** without a new optimizer call.
+  Both original full-fleet checkers pass. The original 23-ship Result is an exact
+  byte prefix; the additional ship uses the archived row values. This is a
+  fleet-selection gain and provides no new PDHCG performance evidence.
+  [Exact fleet and fresh checks](../results/local/2026-09-09/fleet-addition-v633/README.md).
+- The latest CUDA beam-expansion work demonstrates a larger search-layer gain:
+  **2.58x/2.72x on H100 and 1.61x/1.75x locally**, for the same two route
+  searches. Combined throughput is about **74.1/41.6 surrogate candidates/s**
+  (H100/local). Three alternating measured samples follow warm-up; timings
+  exclude process startup and catalogue loading. Topology and ordering match,
+  with maximum FP64 difference 9.095e-13 across the two GPUs. The wider saved
+  beam yields 1,960 candidates and 509 additional asteroid orders, still
+  unrefined. This earns broader search at lower cost, not certified throughput
+  or a PDHCG advantage. [Paired evidence](GPU_BEAM_EXPANSION.md).
 
 The native GTOC12 trajectory refinements currently use **GPU QOCO inside SCvx**.
 The custom persistent PDHCG-inspired backend is still awaiting reliable

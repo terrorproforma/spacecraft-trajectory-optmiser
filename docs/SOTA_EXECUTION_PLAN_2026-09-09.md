@@ -14,6 +14,27 @@ establish a competitive PDHCG mission backend.
 
 ## Current checkpoint and next work
 
+The verified fleet now has **24 ships and 208 asteroids**, returning
+**14,915.044490 raw kg** for **13,526.961241 weighted kg**. A compatible archived
+route was recovered and added to the exact prior 23-ship Result. Both original
+checkers pass the final bytes with unchanged physical gates. The gain is
+**503.256340 weighted kg**, from fleet composition rather than a new numerical
+solve. The 24-ship raw-mass rule leaves only **5.604591 kg** of aggregate margin;
+future replacements must use this updated budget. Do not use the prior
+23-ship-average limit to admit an arbitrarily light additional ship.
+[Full provenance, first format rejection and fresh successful pair](../results/local/2026-09-09/fleet-addition-v633/README.md).
+
+CUDA beam child pricing/ranking now cuts the paired H100 route-search times by
+factors of 2.58 and 2.72, with about 74.1 surrogate candidates/s combined.
+The saved wider beam already contains 509 additional asteroid orders among
+1,960 candidates, without any new trajectory refinement. Use this pool for a
+bounded, diverse refinement comparison against the updated 24-ship fleet before
+generating another wider pool. Charge complete refinement failures and both
+checks; maintain asteroid conflicts and the new raw-mass margin. Resident
+screening-to-expansion transfer, beam admission and collection scheduling remain
+the next measured opportunities for removing host work.
+[Exact comparison, scope and retained candidates](GPU_BEAM_EXPANSION.md).
+
 The v633 diagnostics make the immediate experiments more specific. The joint
 equality/L1 reference still qualifies zero of two saved captures: successful
 factors and zero virtual-control complementarity do not resolve the remaining
@@ -95,7 +116,7 @@ qualified-latency claim. These results do not overturn the earlier saved warm
 point's successful dual correction, whose starting conditions differ.
 [Complete cold and retained costs and localized failures](GPU_CORE_RETAINED_COLD_STARTS.md).
 
-The latest locally checked fleet, frontier v629, scores **13,023.704901 weighted
+The preceding locally checked fleet, frontier v629, scores **13,023.704901 weighted
 kg** and returns **14,291.006160 raw kg**, or **621.348094 raw kg per ship**, with
 23 ships and 199 asteroids. Four fixed-cargo alternatives all certify on RTX 5090;
 the best two add **23.880058 weighted kg** to the preceding combined fleet.
