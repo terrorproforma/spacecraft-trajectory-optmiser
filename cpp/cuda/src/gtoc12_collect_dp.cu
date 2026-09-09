@@ -62,12 +62,14 @@ using Inputs=spacepdhcg_collect_inputs;
 using Result=spacepdhcg_collect_result_v2;
 using PlanInputs=spacepdhcg_collect_plan_inputs;
 using PlanResult=spacepdhcg_collect_plan_result;
+using GeometryInputs=spacepdhcg_collect_geometry_inputs;
 static_assert(sizeof(Policy)==144);
 static_assert(sizeof(Inputs)==88);
 static_assert(sizeof(Result)==632);
 static_assert(sizeof(spacepdhcg_collect_result)==496);
 static_assert(sizeof(PlanInputs)==64);
 static_assert(sizeof(PlanResult)==656);
+static_assert(sizeof(GeometryInputs)==64);
 struct PlanState {double burn{};int run{1},passes{1};};
 struct View {
     Policy p; Inputs in;
@@ -81,6 +83,7 @@ struct Workspace {
     Policy capacity{};bool valid{};const float** table_pointers{};
     double* plan_data{};PlanInputs plan_inputs{};bool plan_ready{};
     PlanState* plan_state{};Result* first{};PlanResult* plan_result{};
+    double* geometry_data{};
     ~Workspace() {
         cudaStreamSynchronize(stream);
         for(auto ptr:std::initializer_list<const double*>{v.in.dv,v.in.returns,v.in.tofs,v.in.return_tofs,v.in.mined,
@@ -89,7 +92,7 @@ struct Workspace {
         for(auto ptr:std::initializer_list<const int32_t*>{v.in.steps,v.in.banned,v.prefix,v.previous,v.departure,v.tof,v.allocated})
             cudaFree(const_cast<int32_t*>(ptr));
         cudaFree(v.result);cudaFree(table_pointers);cudaFree(plan_data);cudaFree(plan_state);
-        cudaFree(first);cudaFree(plan_result);if(stream)cudaStreamDestroy(stream);
+        cudaFree(first);cudaFree(plan_result);cudaFree(geometry_data);if(stream)cudaStreamDestroy(stream);
     }
 };
 __device__ size_t state(const View& v,int subset,int j){return size_t(subset)*v.p.k+j;}
@@ -291,13 +294,39 @@ __global__ void finish_plan(View v,const Result* first,bool automatic,PlanResult
         }
     }
 }
+__device__ double positive_mod(double x,double period) {
+    double r=fmod(x,period);if(r<0)r+=period;return r==0?0.0:r;
+}
+__global__ void prepare_longitudes(int k,const double* epochs,GeometryInputs g,double* motion,double* longitude) {
+    const int j=blockIdx.x*blockDim.x+threadIdx.x;if(j>=k)return;
+    const double* e=g.elements+5*j;
+    const double n=sqrt(g.mu/pow(e[1],3.0))*g.day_seconds;
+    motion[j]=n;
+    const double mean=e[4]+n*(epochs[0]-e[0]);
+    longitude[j]=positive_mod((e[2]+e[3])+mean,6.28318530717958647692);
+}
+__global__ void prepare_geometry(View v,const double* epochs,GeometryInputs g,const double* motion,const double* longitude) {
+    const int i=blockIdx.x*blockDim.x+threadIdx.x;if(i>=v.p.k*v.p.k*v.p.n)return;
+    const int t=i%v.p.n,pair=i/v.p.n,j=pair/v.p.k,l=pair%v.p.k;
+    double a=0,phase=0,penalty=0;
+    if(!v.in.banned[pair]){
+        a=(g.elements[5*l+1]-g.elements[5*j+1])/g.au_km;
+        const double delta=(longitude[l]-longitude[j])+(motion[l]-motion[j])*(epochs[t]-epochs[0]);
+        phase=positive_mod(delta+3.14159265358979323846,6.28318530717958647692)-3.14159265358979323846;
+        if(g.phase_weight>0)penalty=g.phase_weight*(g.phase_slope*fmax(fabs(phase)*57.2957795130823208768-g.phase_threshold,0.0));
+    }
+    if(t==0)const_cast<double*>(v.in.geometry_a)[pair]=v.p.hop_model==2?a:0.0;
+    const_cast<double*>(v.in.geometry_l)[i]=v.p.hop_model==2?phase:0.0;
+    const_cast<double*>(v.in.penalty)[i]=penalty;
+}
 template<class T> bool allocate(T*& p,size_t n){return cudaMalloc(reinterpret_cast<void**>(&p),n*sizeof(T))==cudaSuccess;}
+static bool allocate_const(const double*& p,size_t n){double* target=nullptr;const bool ok=allocate(target,n);p=target;return ok;}
 template<class T> bool copy(const T*& p,const T* src,size_t n,cudaStream_t stream){
     T* target=nullptr;if(!allocate(target,n))return false;p=target;
     return cudaMemcpyAsync(target,src,n*sizeof(T),cudaMemcpyHostToDevice,stream)==cudaSuccess;
 }
 }
-static int validate_inputs(const Policy* p,const Inputs* in,bool resident,bool plan=false) {
+static int validate_inputs(const Policy* p,const Inputs* in,bool resident,bool plan=false,bool geometry=false) {
     if(!p||!in||p->k<1||p->k>16||p->n<1||p->nt<1||p->nr<1||p->camp<0||p->camp>=p->k
         ||p->hop_model<0||p->hop_model>2||p->return_model<0||p->return_model>1)return 1;
     const size_t states=size_t(1<<p->k)*p->k,cells=states*p->n,pairs=size_t(p->k)*p->k;
@@ -305,8 +334,8 @@ static int validate_inputs(const Policy* p,const Inputs* in,bool resident,bool p
     const double* numbers=&p->thrust;
     for(int i=0;i<14;++i)if(!std::isfinite(numbers[i]))return 1;
     if(p->thrust<=0||p->exhaust<=0||p->hop_ratio<0||p->return_ratio<0)return 1;
-    if((!resident&&(!in->dv||!in->returns))||!in->tofs||!in->return_tofs||(!plan&&!in->mined)||!in->geometry_a||!in->geometry_l
-        ||!in->penalty||!in->override_inflation||!in->steps||!in->banned)return 1;
+    if((!resident&&(!in->dv||!in->returns))||!in->tofs||!in->return_tofs||(!plan&&!in->mined)
+        ||(!geometry&&(!in->geometry_a||!in->geometry_l||!in->penalty))||!in->override_inflation||!in->steps||!in->banned)return 1;
     for(int h=0;h<p->nt;++h)if(in->steps[h]<1||!std::isfinite(in->tofs[h])||in->tofs[h]<=0)return 1;
     for(int h=0;h<p->nr;++h)if(!std::isfinite(in->return_tofs[h])||in->return_tofs[h]<=0)return 1;
     return 0;
@@ -322,7 +351,14 @@ static int validate_plan(const Policy* p,const PlanInputs* in) {
 static bool fits(const Workspace* w,const Policy* p) {
     return p->k<=w->capacity.k&&p->n<=w->capacity.n&&p->nt<=w->capacity.nt&&p->nr<=w->capacity.nr;
 }
-static bool upload_inputs(Workspace* w,const Policy* p,const Inputs* in,bool resident,bool plan=false) {
+static int validate_geometry(const Policy* p,const GeometryInputs* g) {
+    if(!g||g->abi_version!=1||g->reserved||!g->elements)return 1;
+    const double* numbers=&g->mu;for(int i=0;i<6;++i)if(!std::isfinite(numbers[i]))return 1;
+    if(g->mu<=0||g->day_seconds<=0||g->au_km<=0||g->phase_weight<0)return 1;
+    for(int i=0;i<5*p->k;++i)if(!std::isfinite(g->elements[i])||(i%5==1&&g->elements[i]<=0))return 1;
+    return 0;
+}
+static bool upload_inputs(Workspace* w,const Policy* p,const Inputs* in,bool resident,bool plan=false,bool geometry=false) {
     const size_t pairs=size_t(p->k)*p->k;const auto& dest=w->v.in;
     auto put=[&](const void* target,const void* source,size_t bytes){
         return cudaMemcpyAsync(const_cast<void*>(target),source,bytes,cudaMemcpyHostToDevice,w->stream)==cudaSuccess;
@@ -330,8 +366,9 @@ static bool upload_inputs(Workspace* w,const Policy* p,const Inputs* in,bool res
     return (resident||(put(dest.dv,in->dv,pairs*p->n*p->nt*sizeof(double))
         &&put(dest.returns,in->returns,size_t(p->k)*p->n*p->nr*sizeof(double))))
         &&put(dest.tofs,in->tofs,p->nt*sizeof(double))&&put(dest.return_tofs,in->return_tofs,p->nr*sizeof(double))
-        &&(plan||put(dest.mined,in->mined,size_t(p->k)*p->n*sizeof(double)))&&put(dest.geometry_a,in->geometry_a,pairs*sizeof(double))
-        &&put(dest.geometry_l,in->geometry_l,pairs*p->n*sizeof(double))&&put(dest.penalty,in->penalty,pairs*p->n*sizeof(double))
+        &&(plan||put(dest.mined,in->mined,size_t(p->k)*p->n*sizeof(double)))
+        &&(geometry||(put(dest.geometry_a,in->geometry_a,pairs*sizeof(double))
+        &&put(dest.geometry_l,in->geometry_l,pairs*p->n*sizeof(double))&&put(dest.penalty,in->penalty,pairs*p->n*sizeof(double))))
         &&put(dest.override_inflation,in->override_inflation,size_t(p->k)*p->n*p->nr*sizeof(double))
         &&put(dest.steps,in->steps,p->nt*sizeof(int32_t))&&put(dest.banned,in->banned,pairs*sizeof(int32_t));
 }
@@ -347,10 +384,20 @@ static bool upload_plan(Workspace* w,const Policy* p,const PlanInputs* in) {
     }
     if(good)w->plan_inputs=device;return good;
 }
-static int create_workspace(const Policy* p,const Inputs* in,void** out,bool resident,const PlanInputs* plan=nullptr) {
+static bool upload_geometry(Workspace* w,const Policy* p,const GeometryInputs* g) {
+    if(cudaMemcpyAsync(w->geometry_data,g->elements,5*p->k*sizeof(double),cudaMemcpyHostToDevice,w->stream)!=cudaSuccess)return false;
+    auto device=*g;device.elements=w->geometry_data;
+    auto view=w->v;view.p=*p;
+    double* motion=w->geometry_data+5*p->k;double* longitude=motion+p->k;
+    prepare_longitudes<<<1,32,0,w->stream>>>(p->k,w->plan_data,device,motion,longitude);
+    prepare_geometry<<<(p->k*p->k*p->n+255)/256,256,0,w->stream>>>(view,w->plan_data,device,motion,longitude);
+    return cudaGetLastError()==cudaSuccess;
+}
+static int create_workspace(const Policy* p,const Inputs* in,void** out,bool resident,const PlanInputs* plan=nullptr,const GeometryInputs* geometry=nullptr) {
     if(!out||*out)return 1;
-    const int validation=validate_inputs(p,in,resident,plan!=nullptr);if(validation)return validation;
+    const int validation=validate_inputs(p,in,resident,plan!=nullptr,geometry!=nullptr);if(validation)return validation;
     if(plan&&validate_plan(p,plan))return 1;
+    if(geometry&&(!plan||validate_geometry(p,geometry)))return 1;
     const size_t states=size_t(1<<p->k)*p->k,cells=states*p->n,pairs=size_t(p->k)*p->k;
     auto* w=new(std::nothrow) Workspace;if(!w)return 2;
     w->v.p=*p;w->capacity=*p;auto& v=w->v;
@@ -365,8 +412,9 @@ static int create_workspace(const Policy* p,const Inputs* in,void** out,bool res
     if(plan){ok=ok&&allocate(mining,size_t(p->k)*p->n);v.in.mined=mining;}
     ok=ok
         &&copy(v.in.tofs,in->tofs,p->nt,w->stream)&&copy(v.in.return_tofs,in->return_tofs,p->nr,w->stream)
-        &&(plan||copy(v.in.mined,in->mined,size_t(p->k)*p->n,w->stream))&&copy(v.in.geometry_a,in->geometry_a,pairs,w->stream)
-        &&copy(v.in.geometry_l,in->geometry_l,pairs*p->n,w->stream)&&copy(v.in.penalty,in->penalty,pairs*p->n,w->stream)
+        &&(plan||copy(v.in.mined,in->mined,size_t(p->k)*p->n,w->stream))
+        &&(geometry?(allocate_const(v.in.geometry_a,pairs)&&allocate_const(v.in.geometry_l,pairs*p->n)&&allocate_const(v.in.penalty,pairs*p->n))
+        :(copy(v.in.geometry_a,in->geometry_a,pairs,w->stream)&&copy(v.in.geometry_l,in->geometry_l,pairs*p->n,w->stream)&&copy(v.in.penalty,in->penalty,pairs*p->n,w->stream)))
         &&copy(v.in.override_inflation,in->override_inflation,size_t(p->k)*p->n*p->nr,w->stream)
         &&copy(v.in.steps,in->steps,p->nt,w->stream)&&copy(v.in.banned,in->banned,pairs,w->stream)
         &&allocate(v.arrive,cells)&&allocate(v.ready,cells)&&allocate(v.prefix,cells)&&allocate(v.previous,cells)
@@ -375,6 +423,7 @@ static int create_workspace(const Policy* p,const Inputs* in,void** out,bool res
         &&allocate(w->table_pointers,pairs+p->k);
     if(plan)ok=ok&&allocate(w->plan_data,p->n+3*p->k)&&allocate(w->plan_state,1)
         &&allocate(w->first,1)&&allocate(w->plan_result,1)&&upload_plan(w,p,plan);
+    if(geometry)ok=ok&&allocate(w->geometry_data,7*p->k)&&upload_geometry(w,p,geometry);
     ok=(cudaStreamSynchronize(w->stream)==cudaSuccess)&&ok;
     if(!ok){delete w;return 2;}w->valid=true;w->plan_ready=plan!=nullptr;*out=w;return 0;
 }
@@ -422,16 +471,27 @@ extern "C" int spacepdhcg_collect_solve_v2(void* opaque,const double* masses,dou
 extern "C" int spacepdhcg_collect_create_plan(const Policy* p,const Inputs* in,const PlanInputs* plan,void** out) {
     if(!plan)return 1;return create_workspace(p,in,out,false,plan);
 }
-extern "C" int spacepdhcg_collect_update_plan(void* opaque,const Policy* p,const Inputs* in,const PlanInputs* plan) {
+static int update_plan(void* opaque,const Policy* p,const Inputs* in,const PlanInputs* plan,const GeometryInputs* geometry=nullptr) {
     auto* w=static_cast<Workspace*>(opaque);if(!w)return 1;
-    if(validate_inputs(p,in,false,true)||validate_plan(p,plan))return 1;
+    if(validate_inputs(p,in,false,true,geometry!=nullptr)||validate_plan(p,plan))return 1;
+    if(geometry&&validate_geometry(p,geometry))return 1;
     std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
     int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;if(device!=w->device)return 1;
-    if(!fits(w,p)||!w->plan_data)return 4;
+    if(!fits(w,p)||!w->plan_data||(geometry&&!w->geometry_data))return 4;
     w->valid=false;w->plan_ready=false;
-    bool good=upload_inputs(w,p,in,false,true)&&upload_plan(w,p,plan);
+    bool good=upload_inputs(w,p,in,false,true,geometry!=nullptr)&&upload_plan(w,p,plan)
+        &&(!geometry||upload_geometry(w,p,geometry));
     good=(cudaStreamSynchronize(w->stream)==cudaSuccess)&&good;if(!good)return 2;
     w->v.p=*p;w->valid=true;w->plan_ready=true;return 0;
+}
+extern "C" int spacepdhcg_collect_update_plan(void* opaque,const Policy* p,const Inputs* in,const PlanInputs* plan) {
+    return update_plan(opaque,p,in,plan);
+}
+extern "C" int spacepdhcg_collect_create_plan_geometry(const Policy* p,const Inputs* in,const PlanInputs* plan,const GeometryInputs* geometry,void** out) {
+    if(!plan||!geometry)return 1;return create_workspace(p,in,out,false,plan,geometry);
+}
+extern "C" int spacepdhcg_collect_update_plan_geometry(void* opaque,const Policy* p,const Inputs* in,const PlanInputs* plan,const GeometryInputs* geometry) {
+    if(!geometry)return 1;return update_plan(opaque,p,in,plan,geometry);
 }
 extern "C" int spacepdhcg_collect_solve_plan(void* opaque,double camp_mass,double price,double burn,PlanResult* result) {
     auto* w=static_cast<Workspace*>(opaque);
@@ -596,17 +656,18 @@ extern "C" int spacepdhcg_collect_table_destroy(void* opaque) {
     if(!table->mutex.try_lock())return 3;table->mutex.unlock();delete table;return 0;
 }
 static int tables_workspace(const Policy* p,const Inputs* in,
-    void* const* pairs,void* const* returns,int32_t t0,void** output,Workspace* existing,const PlanInputs* plan=nullptr) {
+    void* const* pairs,void* const* returns,int32_t t0,void** output,Workspace* existing,const PlanInputs* plan=nullptr,const GeometryInputs* geometry=nullptr) {
     if(!pairs||!returns||t0<0||(!existing&&(!output||*output)))return 1;
-    const int validation=validate_inputs(p,in,true,plan!=nullptr);if(validation)return validation;
+    const int validation=validate_inputs(p,in,true,plan!=nullptr,geometry!=nullptr);if(validation)return validation;
     if(plan&&validate_plan(p,plan))return 1;
+    if(geometry&&(!plan||validate_geometry(p,geometry)))return 1;
     int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;
     std::unique_lock<std::mutex> workspace_lock;
     if(existing){
         workspace_lock=std::unique_lock<std::mutex>(existing->mutex,std::try_to_lock);
         if(!workspace_lock.owns_lock())return 3;
         if(existing->device!=device)return 1;
-        if(!fits(existing,p)||(plan&&!existing->plan_data))return 4;
+        if(!fits(existing,p)||(plan&&!existing->plan_data)||(geometry&&!existing->geometry_data))return 4;
     }
     std::vector<DeviceTable*> tables;
     for(int i=0;i<p->k*p->k+p->k;++i){
@@ -617,7 +678,7 @@ static int tables_workspace(const Policy* p,const Inputs* in,
     }
     std::vector<std::unique_lock<std::mutex>> locks;
     for(auto* table:tables){locks.emplace_back(table->mutex,std::try_to_lock);if(!locks.back().owns_lock())return 3;}
-    if(!existing){const int status=create_workspace(p,in,output,true,plan);if(status)return status;}
+    if(!existing){const int status=create_workspace(p,in,output,true,plan,geometry);if(status)return status;}
     auto* w=existing?existing:static_cast<Workspace*>(*output);
     std::vector<const float*> pointers;
     for(int i=0;i<p->k*p->k+p->k;++i){
@@ -625,7 +686,8 @@ static int tables_workspace(const Policy* p,const Inputs* in,
         pointers.push_back(table?table->values:nullptr);
     }
     w->valid=false;w->plan_ready=false;
-    bool good=!existing||(upload_inputs(w,p,in,true,plan!=nullptr)&&(!plan||upload_plan(w,p,plan)));
+    bool good=!existing||(upload_inputs(w,p,in,true,plan!=nullptr,geometry!=nullptr)
+        &&(!plan||upload_plan(w,p,plan))&&(!geometry||upload_geometry(w,p,geometry)));
     if(good)good=cudaMemcpyAsync(w->table_pointers,pointers.data(),pointers.size()*sizeof(float*),cudaMemcpyHostToDevice,w->stream)==cudaSuccess;
     if(good){
         const size_t count=size_t(p->k)*p->k*p->n*p->nt+size_t(p->k)*p->n*p->nr;
@@ -654,4 +716,24 @@ extern "C" int spacepdhcg_collect_update_plan_tables(void* workspace,const Polic
     void* const* pairs,void* const* returns,int32_t t0) {
     if(!workspace||!plan)return 1;
     return tables_workspace(p,in,pairs,returns,t0,nullptr,static_cast<Workspace*>(workspace),plan);
+}
+extern "C" int spacepdhcg_collect_create_plan_tables_geometry(const Policy* p,const Inputs* in,const PlanInputs* plan,const GeometryInputs* geometry,
+    void* const* pairs,void* const* returns,int32_t t0,void** output) {
+    if(!plan||!geometry)return 1;return tables_workspace(p,in,pairs,returns,t0,output,nullptr,plan,geometry);
+}
+extern "C" int spacepdhcg_collect_update_plan_tables_geometry(void* workspace,const Policy* p,const Inputs* in,const PlanInputs* plan,const GeometryInputs* geometry,
+    void* const* pairs,void* const* returns,int32_t t0) {
+    if(!workspace||!plan||!geometry)return 1;
+    return tables_workspace(p,in,pairs,returns,t0,nullptr,static_cast<Workspace*>(workspace),plan,geometry);
+}
+extern "C" int spacepdhcg_collect_read_geometry(void* opaque,int32_t k,int32_t n,double* a,double* longitude,double* penalty) {
+    auto* w=static_cast<Workspace*>(opaque);if(!w||!a||!longitude||!penalty)return 1;
+    std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
+    if(!w->valid||k!=w->v.p.k||n!=w->v.p.n)return 1;
+    int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;if(device!=w->device)return 1;
+    const size_t pairs=size_t(k)*k;const auto& in=w->v.in;
+    bool good=cudaMemcpyAsync(a,in.geometry_a,pairs*sizeof(double),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess
+        &&cudaMemcpyAsync(longitude,in.geometry_l,pairs*n*sizeof(double),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess
+        &&cudaMemcpyAsync(penalty,in.penalty,pairs*n*sizeof(double),cudaMemcpyDeviceToHost,w->stream)==cudaSuccess;
+    const auto done=cudaStreamSynchronize(w->stream);return good&&done==cudaSuccess?0:2;
 }

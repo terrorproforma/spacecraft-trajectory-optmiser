@@ -1,0 +1,450 @@
+{
+  "local": {
+    "verified_members": 991,
+    "archive_sha256": "f9c62ef7f91bf8ef3572fd6e5d9624484f4b79891f6a5ddd9dc3cc2997711e30",
+    "core_sha256": "e578108d3f3b13ad3436a123be7238329827d4c567e1585649fc82c42862a337",
+    "source_manifest_sha256": "ee41750216e782159e8577f0fef3c818a1fdf67232265563263398927c8f5d34",
+    "comparison": {
+      "10": {
+        "host": {
+          "seconds": 10.025945392000722,
+          "range": [
+            10.023966897000719,
+            10.11563848500009
+          ],
+          "candidates_per_second": 51.56620944818754,
+          "counters": {
+            "completed_collection_dp_passes": 1731,
+            "collect_dp_allocations": 26,
+            "collect_dp_rebinds": 1126,
+            "native_collection_plans": 1152,
+            "collection_plan_metadata_upload_bytes": 2299200,
+            "collection_plan_result_download_bytes": 755712
+          }
+        },
+        "native": {
+          "seconds": 9.907332920000044,
+          "range": [
+            9.794118309999249,
+            9.956028245998823
+          ],
+          "candidates_per_second": 52.18356990470425,
+          "counters": {
+            "completed_collection_dp_passes": 1731,
+            "collect_dp_allocations": 26,
+            "collect_dp_rebinds": 1126,
+            "native_collection_plans": 1152,
+            "collection_plan_metadata_upload_bytes": 2299200,
+            "collection_plan_result_download_bytes": 755712,
+            "collection_geometry_plans": 1152,
+            "collection_geometry_upload_bytes": 276480
+          }
+        },
+        "speedup": 1.0119721899888146,
+        "plans_sha256": "3568175931f3b7e08d5a994ab6fa3d6a12b26a968c9ae85c2d0c623d08711da5"
+      },
+      "21": {
+        "host": {
+          "seconds": 8.531645029001083,
+          "range": [
+            8.499795255000208,
+            8.59168948000115
+          ],
+          "candidates_per_second": 55.323445642142886,
+          "counters": {
+            "completed_collection_dp_passes": 1548,
+            "collect_dp_allocations": 25,
+            "collect_dp_rebinds": 1007,
+            "native_collection_plans": 1032,
+            "collection_plan_metadata_upload_bytes": 2177952,
+            "collection_plan_result_download_bytes": 676992
+          }
+        },
+        "native": {
+          "seconds": 8.297360348000439,
+          "range": [
+            8.151639280999007,
+            8.344739612999547
+          ],
+          "candidates_per_second": 56.885561215109355,
+          "counters": {
+            "completed_collection_dp_passes": 1548,
+            "collect_dp_allocations": 25,
+            "collect_dp_rebinds": 1007,
+            "native_collection_plans": 1032,
+            "collection_plan_metadata_upload_bytes": 2177952,
+            "collection_plan_result_download_bytes": 676992,
+            "collection_geometry_plans": 1032,
+            "collection_geometry_upload_bytes": 228480
+          }
+        },
+        "speedup": 1.0282360499212384,
+        "plans_sha256": "26541eca159974041f36bc2d1f39220929ea21e5461c1e2329f2cbffa6c682c8"
+      }
+    },
+    "tests": 248,
+    "sanitizer_tests_per_tool": 110,
+    "leak_tests": 43,
+    "gpu_context": [
+      {
+        "run": "warm-fresh",
+        "gpu": "NVIDIA GeForce RTX 5090, 9 %, 16996 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "warm-reuse",
+        "gpu": "NVIDIA GeForce RTX 5090, 4 %, 16993 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-0-fresh",
+        "gpu": "NVIDIA GeForce RTX 5090, 4 %, 16990 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-0-reuse",
+        "gpu": "NVIDIA GeForce RTX 5090, 4 %, 16985 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-1-reuse",
+        "gpu": "NVIDIA GeForce RTX 5090, 4 %, 16993 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-1-fresh",
+        "gpu": "NVIDIA GeForce RTX 5090, 4 %, 16989 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-2-fresh",
+        "gpu": "NVIDIA GeForce RTX 5090, 4 %, 16971 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-2-reuse",
+        "gpu": "NVIDIA GeForce RTX 5090, 28 %, 17000 MiB\n",
+        "compute_processes": ""
+      }
+    ]
+  },
+  "h100": {
+    "verified_members": 1006,
+    "archive_sha256": "e31555440fd10f2b5bf7fc1c98b2dc973c30752dd91eeab313eae68878368e0d",
+    "core_sha256": "68c6b38b2dfa1160f113329147945de17de28e666242eb7f768fe711a9fd6c34",
+    "source_manifest_sha256": "ee41750216e782159e8577f0fef3c818a1fdf67232265563263398927c8f5d34",
+    "comparison": {
+      "10": {
+        "host": {
+          "seconds": 5.587233550962992,
+          "range": [
+            5.578335753001738,
+            5.590840132033918
+          ],
+          "candidates_per_second": 92.53237676289585,
+          "counters": {
+            "completed_collection_dp_passes": 1731,
+            "collect_dp_allocations": 26,
+            "collect_dp_rebinds": 1126,
+            "native_collection_plans": 1152,
+            "collection_plan_metadata_upload_bytes": 2299200,
+            "collection_plan_result_download_bytes": 755712
+          }
+        },
+        "native": {
+          "seconds": 5.227055226976518,
+          "range": [
+            5.220207369013224,
+            5.247432014031801
+          ],
+          "candidates_per_second": 98.90846328383792,
+          "counters": {
+            "completed_collection_dp_passes": 1731,
+            "collect_dp_allocations": 26,
+            "collect_dp_rebinds": 1126,
+            "native_collection_plans": 1152,
+            "collection_plan_metadata_upload_bytes": 2299200,
+            "collection_plan_result_download_bytes": 755712,
+            "collection_geometry_plans": 1152,
+            "collection_geometry_upload_bytes": 276480
+          }
+        },
+        "speedup": 1.0689065464867513,
+        "plans_sha256": "3e39083ba3327289c3c7adeec78a16176f6ced90fd77eb270e8537caeeffdf20"
+      },
+      "21": {
+        "host": {
+          "seconds": 4.939792559016496,
+          "range": [
+            4.939282581966836,
+            4.950277943979017
+          ],
+          "candidates_per_second": 95.55057107377286,
+          "counters": {
+            "completed_collection_dp_passes": 1548,
+            "collect_dp_allocations": 25,
+            "collect_dp_rebinds": 1007,
+            "native_collection_plans": 1032,
+            "collection_plan_metadata_upload_bytes": 2177952,
+            "collection_plan_result_download_bytes": 676992
+          }
+        },
+        "native": {
+          "seconds": 4.675889968988486,
+          "range": [
+            4.666190930991434,
+            4.697157447051723
+          ],
+          "candidates_per_second": 100.94335049165103,
+          "counters": {
+            "completed_collection_dp_passes": 1548,
+            "collect_dp_allocations": 25,
+            "collect_dp_rebinds": 1007,
+            "native_collection_plans": 1032,
+            "collection_plan_metadata_upload_bytes": 2177952,
+            "collection_plan_result_download_bytes": 676992,
+            "collection_geometry_plans": 1032,
+            "collection_geometry_upload_bytes": 228480
+          }
+        },
+        "speedup": 1.0564390077136694,
+        "plans_sha256": "cd3bbc486fb2bd03ca58ca8e970237cf1eef3dcd0501c55ee214833e037d8c2e"
+      }
+    },
+    "tests": 248,
+    "sanitizer_tests_per_tool": 110,
+    "leak_tests": 43,
+    "gpu_context": null,
+    "profiles": {
+      "10": {
+        "top_cumulative": [
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1193,
+            "function": "run",
+            "primitive_calls": 1,
+            "calls": 1,
+            "self_seconds": 0.0037867680000000003,
+            "cumulative_seconds": 7.263004822
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2010,
+            "function": "_complete",
+            "primitive_calls": 577,
+            "calls": 577,
+            "self_seconds": 0.043318495000000005,
+            "cumulative_seconds": 5.298428976
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2093,
+            "function": "_schedule_dp",
+            "primitive_calls": 576,
+            "calls": 576,
+            "self_seconds": 0.012972322000000001,
+            "cumulative_seconds": 2.7191088420000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2259,
+            "function": "_schedule_forward",
+            "primitive_calls": 6448,
+            "calls": 6448,
+            "self_seconds": 0.059092799,
+            "cumulative_seconds": 2.406613349
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 573,
+            "function": "plan_collect_tour",
+            "primitive_calls": 1152,
+            "calls": 1152,
+            "self_seconds": 0.014196024000000002,
+            "cumulative_seconds": 2.290364965
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 502,
+            "function": "cuda_collect_plan",
+            "primitive_calls": 1152,
+            "calls": 1152,
+            "self_seconds": 0.016089359,
+            "cumulative_seconds": 2.264434069
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 332,
+            "function": "expand_and_select",
+            "primitive_calls": 9,
+            "calls": 9,
+            "self_seconds": 0.0010027740000000001,
+            "cumulative_seconds": 1.953075402
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 239,
+            "function": "pack",
+            "primitive_calls": 9,
+            "calls": 9,
+            "self_seconds": 0.23550092900000003,
+            "cumulative_seconds": 1.8058698290000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 831,
+            "function": "hops_from",
+            "primitive_calls": 2052,
+            "calls": 2052,
+            "self_seconds": 0.010199350000000001,
+            "cumulative_seconds": 1.446443406
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 412,
+            "function": "solve_plan",
+            "primitive_calls": 1152,
+            "calls": 1152,
+            "self_seconds": 1.140451007,
+            "cumulative_seconds": 1.1975576140000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/screening.py",
+            "line": 298,
+            "function": "screen_asteroid_hops",
+            "primitive_calls": 964,
+            "calls": 964,
+            "self_seconds": 0.019333504,
+            "cumulative_seconds": 1.141004515
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1874,
+            "function": "_return_options",
+            "primitive_calls": 6443,
+            "calls": 6443,
+            "self_seconds": 0.078108299,
+            "cumulative_seconds": 1.127651497
+          }
+        ],
+        "total_calls": 5220542,
+        "total_self_seconds": 7.234508837000001
+      },
+      "21": {
+        "top_cumulative": [
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1193,
+            "function": "run",
+            "primitive_calls": 1,
+            "calls": 1,
+            "self_seconds": 0.0035912870000000003,
+            "cumulative_seconds": 6.5738024710000005
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2010,
+            "function": "_complete",
+            "primitive_calls": 517,
+            "calls": 517,
+            "self_seconds": 0.040731802000000004,
+            "cumulative_seconds": 4.7809037320000005
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2259,
+            "function": "_schedule_forward",
+            "primitive_calls": 5908,
+            "calls": 5908,
+            "self_seconds": 0.0608047,
+            "cumulative_seconds": 2.5113210550000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2093,
+            "function": "_schedule_dp",
+            "primitive_calls": 516,
+            "calls": 516,
+            "self_seconds": 0.011378828,
+            "cumulative_seconds": 2.0740094040000003
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 332,
+            "function": "expand_and_select",
+            "primitive_calls": 9,
+            "calls": 9,
+            "self_seconds": 0.000970213,
+            "cumulative_seconds": 1.784085538
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 573,
+            "function": "plan_collect_tour",
+            "primitive_calls": 1032,
+            "calls": 1032,
+            "self_seconds": 0.012604747000000001,
+            "cumulative_seconds": 1.688471443
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 502,
+            "function": "cuda_collect_plan",
+            "primitive_calls": 1032,
+            "calls": 1032,
+            "self_seconds": 0.014329216,
+            "cumulative_seconds": 1.665870151
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 239,
+            "function": "pack",
+            "primitive_calls": 9,
+            "calls": 9,
+            "self_seconds": 0.226084215,
+            "cumulative_seconds": 1.63904256
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 831,
+            "function": "hops_from",
+            "primitive_calls": 2052,
+            "calls": 2052,
+            "self_seconds": 0.009267834,
+            "cumulative_seconds": 1.2890492900000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 70,
+            "function": "cuda_select_collection",
+            "primitive_calls": 9966,
+            "calls": 9966,
+            "self_seconds": 0.01587102,
+            "cumulative_seconds": 1.055618009
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 280,
+            "function": "select_collection",
+            "primitive_calls": 9966,
+            "calls": 9966,
+            "self_seconds": 0.060370169,
+            "cumulative_seconds": 1.037423381
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-collect-geometry-v860/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1874,
+            "function": "_return_options",
+            "primitive_calls": 5903,
+            "calls": 5903,
+            "self_seconds": 0.07204748400000001,
+            "cumulative_seconds": 1.0357571730000001
+          }
+        ],
+        "total_calls": 4828994,
+        "total_self_seconds": 6.54493492
+      }
+    }
+  },
+  "passed": true
+}

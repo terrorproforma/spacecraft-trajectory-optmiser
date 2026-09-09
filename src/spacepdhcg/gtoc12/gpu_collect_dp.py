@@ -99,6 +99,25 @@ class PlanResult(ct.Structure):
     ]
 
 
+class GeometryInputs(ct.Structure):
+    _fields_ = [
+        ("abi_version", ct.c_int32),
+        ("reserved", ct.c_int32),
+        ("elements", ct.c_void_p),
+        *[
+            (n, ct.c_double)
+            for n in [
+                "mu",
+                "day_seconds",
+                "au_km",
+                "phase_threshold",
+                "phase_slope",
+                "phase_weight",
+            ]
+        ],
+    ]
+
+
 class GpuCollectDP:
     def __init__(
         self,
@@ -118,10 +137,23 @@ class GpuCollectDP:
         self.gpu, self.key, self.table, self.ids = gpu, key, table, ids
         self.t0, self.epochs = t0, epochs
         self.handle = ct.c_void_p()
+        from .collectdp import CollectPairTable
+        from .harvestphase import HarvestPhasePrior
+
+        s = table.settings
+        phase_active = phase_penalty is not None
+        native_geometry = (
+            mining is not None
+            and isinstance(table, CollectPairTable)
+            and (not phase_active or type(s.harvest_phase) is HarvestPhasePrior)
+            and os.environ.get("SPACEPDHCG_TEST_GTOC12_NATIVE_COLLECT_GEOMETRY", "1") != "0"
+        )
+        suffix = "_geometry" if native_geometry else ""
         try:
             self.create = getattr(
                 gpu.library,
-                "spacepdhcg_collect_create_plan" if mining else "spacepdhcg_collect_create",
+                ("spacepdhcg_collect_create_plan" if mining else "spacepdhcg_collect_create")
+                + suffix,
             )
             self.solve_native = gpu.library.spacepdhcg_collect_solve_v2
             self.destroy = gpu.library.spacepdhcg_collect_destroy
@@ -130,6 +162,7 @@ class GpuCollectDP:
         self.create.argtypes = (
             [ct.POINTER(Policy), ct.POINTER(Inputs)]
             + ([ct.POINTER(PlanInputs)] if mining else [])
+            + ([ct.POINTER(GeometryInputs)] if native_geometry else [])
             + [ct.POINTER(ct.c_void_p)]
         )
         self.solve_native.argtypes = [
@@ -142,9 +175,6 @@ class GpuCollectDP:
         self.destroy.argtypes = [ct.c_void_p]
         for f in [self.create, self.solve_native, self.destroy]:
             f.restype = ct.c_int
-        s = table.settings
-        from .collectdp import CollectPairTable
-
         resident = isinstance(table, CollectPairTable) and gpu.collect_tables_resident
         k, n, nt, nr = len(ids), len(epochs), len(table.tofs), len(table.return_tofs)
         if not 1 <= k <= 16:
@@ -176,9 +206,9 @@ class GpuCollectDP:
             tofs=np.ascontiguousarray(table.tofs, dtype=np.float64),
             return_tofs=np.ascontiguousarray(table.return_tofs, dtype=np.float64),
             mined=np.empty(0) if mining else np.ascontiguousarray(mined),
-            geometry_a=np.zeros((k, k)),
-            geometry_l=np.zeros((k, k, n)),
-            penalty=np.zeros((k, k, n)),
+            geometry_a=np.empty(0) if native_geometry else np.zeros((k, k)),
+            geometry_l=np.empty(0) if native_geometry else np.zeros((k, k, n)),
+            penalty=np.empty(0) if native_geometry else np.zeros((k, k, n)),
             override_inflation=np.full((k, n, nr), np.nan),
             steps=np.ascontiguousarray(table.tof_steps, dtype=np.int32),
             banned=np.zeros((k, k), dtype=np.int32),
@@ -208,16 +238,19 @@ class GpuCollectDP:
                     pair_handles[j * k + target_index] = native.handle.value
                 else:
                     data["dv"][j, target_index] = table.hop(source, target)[t0:]
-                if fit:
+                if fit and not native_geometry:
                     a, longitude = table.pair_geometry(source, target, epochs)
                     data["geometry_a"][j, target_index] = a
                     data["geometry_l"][j, target_index] = longitude
-                if phase_penalty is not None:
+                if phase_penalty is not None and not native_geometry:
                     data["penalty"][j, target_index] = phase_penalty(j, target_index)
         self.data = data
         packed = Inputs(
             *(
-                None if name == "mined" and mining else data[name].ctypes.data
+                None
+                if (name == "mined" and mining)
+                or (native_geometry and name in {"geometry_a", "geometry_l", "penalty"})
+                else data[name].ctypes.data
                 for name, _ in Inputs._fields_
             )
         )
@@ -239,18 +272,60 @@ class GpuCollectDP:
                 C.DRY_MASS_KG + 1.0,
             )
         metadata = [ct.byref(self.plan_inputs)] if mining else []
+        self.geometry_inputs = None
+        if native_geometry:
+            cat = table.catalogue
+            indices = np.searchsorted(cat.ids, ids)
+            if np.any(indices >= len(cat.ids)) or not np.array_equal(cat.ids[indices], ids):
+                raise ValueError("collection geometry contains an unknown asteroid")
+            self.geometry_data = np.ascontiguousarray(
+                np.column_stack(
+                    [
+                        cat.epoch_mjd[indices],
+                        cat.semi_major_axis_km[indices],
+                        cat.ascending_node_rad[indices],
+                        cat.argument_of_perihelion_rad[indices],
+                        cat.mean_anomaly_rad[indices],
+                    ]
+                ),
+                dtype=np.float64,
+            )
+            prior = s.harvest_phase if phase_active else None
+            self.geometry_inputs = GeometryInputs(
+                1,
+                0,
+                self.geometry_data.ctypes.data,
+                C.MU_SUN_KM3_S2,
+                C.DAY_S,
+                C.AU_KM,
+                prior.p75_deg if prior else 0.0,
+                prior.kg_per_deg_total if prior else 0.0,
+                s.phase_weight if prior else 0.0,
+            )
+            metadata.append(ct.byref(self.geometry_inputs))
+            gpu.telemetry["collection_geometry_plans"] = (
+                gpu.telemetry.get("collection_geometry_plans", 0) + 1
+            )
+            gpu.telemetry["collection_geometry_upload_bytes"] = (
+                gpu.telemetry.get("collection_geometry_upload_bytes", 0) + self.geometry_data.nbytes
+            )
         self.policy = p
         pair_array = (ct.c_void_p * (k * k))(*pair_handles)
         return_array = (ct.c_void_p * k)(*return_handles)
         update = getattr(
             gpu.library,
             (
-                "spacepdhcg_collect_update_plan_tables"
-                if resident
-                else "spacepdhcg_collect_update_plan"
+                (
+                    "spacepdhcg_collect_update_plan_tables"
+                    if resident
+                    else "spacepdhcg_collect_update_plan"
+                )
+                if mining
+                else (
+                    "spacepdhcg_collect_update_tables" if resident else "spacepdhcg_collect_update"
+                )
             )
-            if mining
-            else ("spacepdhcg_collect_update_tables" if resident else "spacepdhcg_collect_update"),
+            + suffix,
             None,
         )
         reuse = os.environ.get("SPACEPDHCG_TEST_GTOC12_REUSE_COLLECT_DP", "1") != "0"
@@ -258,6 +333,7 @@ class GpuCollectDP:
             update.argtypes = (
                 [ct.c_void_p, ct.POINTER(Policy), ct.POINTER(Inputs)]
                 + ([ct.POINTER(PlanInputs)] if mining else [])
+                + ([ct.POINTER(GeometryInputs)] if native_geometry else [])
                 + ([ct.c_void_p, ct.c_void_p, ct.c_int32] if resident else [])
             )
             update.restype = ct.c_int
@@ -279,14 +355,18 @@ class GpuCollectDP:
         if resident:
             create_tables = getattr(
                 gpu.library,
-                "spacepdhcg_collect_create_plan_tables"
-                if mining
-                else "spacepdhcg_collect_create_tables",
+                (
+                    "spacepdhcg_collect_create_plan_tables"
+                    if mining
+                    else "spacepdhcg_collect_create_tables"
+                )
+                + suffix,
             )
             create_tables.argtypes = [
                 ct.POINTER(Policy),
                 ct.POINTER(Inputs),
                 *([ct.POINTER(PlanInputs)] if mining else []),
+                *([ct.POINTER(GeometryInputs)] if native_geometry else []),
                 ct.c_void_p,
                 ct.c_void_p,
                 ct.c_int32,

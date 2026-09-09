@@ -108,6 +108,31 @@ int spacepdhcg_collect_update_plan_tables(void*,const spacepdhcg_collect_policy*
  * Updating a legacy-only allocation to a plan returns capacity status 4. */
 int spacepdhcg_collect_solve_plan(void*,double camp_mass,double price,double burn,
     spacepdhcg_collect_plan_result*);
+/* Optional native pair geometry and harvest-phase prior. elements[k][5] are
+ * (epoch MJD, semi-major axis km, node rad, perihelion rad, mean anomaly rad).
+ * Geometry and penalties are derived on CUDA on the plan's exact epoch slice.
+ * inputs.geometry_a/geometry_l/penalty are ignored by these entry points.
+ * Metadata is copied before return; old plan APIs retain their ABI. */
+typedef struct spacepdhcg_collect_geometry_inputs {
+    int32_t abi_version,reserved;
+    const double* elements;
+    double mu,day_seconds,au_km,phase_threshold,phase_slope,phase_weight;
+} spacepdhcg_collect_geometry_inputs;
+int spacepdhcg_collect_create_plan_geometry(const spacepdhcg_collect_policy*,
+    const spacepdhcg_collect_inputs*,const spacepdhcg_collect_plan_inputs*,
+    const spacepdhcg_collect_geometry_inputs*,void**);
+int spacepdhcg_collect_update_plan_geometry(void*,const spacepdhcg_collect_policy*,
+    const spacepdhcg_collect_inputs*,const spacepdhcg_collect_plan_inputs*,
+    const spacepdhcg_collect_geometry_inputs*);
+int spacepdhcg_collect_create_plan_tables_geometry(const spacepdhcg_collect_policy*,
+    const spacepdhcg_collect_inputs*,const spacepdhcg_collect_plan_inputs*,
+    const spacepdhcg_collect_geometry_inputs*,void* const*,void* const*,int32_t,void**);
+int spacepdhcg_collect_update_plan_tables_geometry(void*,const spacepdhcg_collect_policy*,
+    const spacepdhcg_collect_inputs*,const spacepdhcg_collect_plan_inputs*,
+    const spacepdhcg_collect_geometry_inputs*,void* const*,void* const*,int32_t);
+/* Optional diagnostic read, never needed by the planner. k/n must equal the
+ * current problem; outputs hold k*k, k*k*n and k*k*n doubles respectively. */
+int spacepdhcg_collect_read_geometry(void*,int32_t k,int32_t n,double* a,double* longitude,double* penalty);
 #ifdef __cplusplus
 }
 #endif
