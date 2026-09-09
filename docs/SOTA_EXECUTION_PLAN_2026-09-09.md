@@ -40,11 +40,29 @@ the same requests. [Production policy and failure evidence](GPU_FLEET_BUDGET_ADM
 The v631 GPU mass-scaled initializer reproduces the archived ship-10 return,
 which certifies in two accepted steps. The changed-mass return starts with a
 dynamically consistent seed but misses its required arrival mass by 10.28998 kg;
-all 22 candidate steps are rejected. The current reference merit omits this
-mass violation (the conic model enforces minimum mass at every node).
-Correcting and testing that omission is the next
-bounded mission intervention; success and physical feasibility remain unproven.
+all 22 candidate steps are rejected. The old reference merit omitted this
+mass violation even though the conic model enforces minimum mass at every node.
 [Validated initializer and two-return outcome](GPU_MASS_SCALED_INITIALIZATION.md).
+
+That omission is now fixed and tested in v632. All-node mass penalties enter
+reference, actual and predicted merits, with raw mass feasibility also required
+for convergence and polishing. Native controller/graph/seed tests and CUDA
+memcheck/racecheck/synccheck pass. The matched mission rerun preserves all inputs
+and gates: the original control certifies, while the changed-mass candidate
+accepts two steps and then fails after 26 iterations with dynamics and virtual
+defects about 0.002782. The two-case worker takes 9.589 seconds and produces no
+fleet improvement. Keep the correction; identify the remaining dynamics failure
+and evaluate schedule/itinerary changes instead of repeating the same fixed
+candidate. The unsuccessful local solve is not an infeasibility proof.
+[Fix, regressions and unchanged qualification boundary](GPU_MASS_MERIT.md).
+
+The subsequent resident-catalogue work cuts upload bytes by 99.44% across two
+saved searches, but measured H100 throughput improves only 0.09%/1.11% on top
+of the earlier hash-prefix cache. These small three-repeat results do not
+establish a general speedup. Complete search still includes host decisions,
+request packing and repeated pricing/grid rebuilds; about 28.4 surrogate
+candidates/s is not certified trajectories/s.
+[Latest downloaded component measurements](GPU_RESIDENT_CATALOGUE.md).
 
 CUDA route-boundary ephemerides pass independent state and archived-seed checks,
 with a maximum 1.765 mm position difference. Their complete preparation step is

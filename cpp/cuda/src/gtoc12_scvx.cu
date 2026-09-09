@@ -33,6 +33,7 @@ struct GraphExit { int done,error,iterations,timeout; };
 struct Metrics {
     double fuel, penalty, virtual_sum, defect, virtual_inf, step, invalid;
     double boundary_penalty=0.0, boundary_defect=0.0;
+    double mass_penalty=0.0, mass_defect=0.0;
 };
 struct BoundaryTargets { double values[12]; int free_dep,free_arr; double vinf_max; };
 
@@ -76,14 +77,25 @@ __global__ void add_boundary_metrics(Metrics* m,const double* x,int nodes,
 __global__ void reduce_metrics(int nodes, int variables, const double* candidate,
     const double* controls, const double* virtuals, const double* reference,
     const double* reference_controls, const double* propagated, const int* invalid,
-    const double* fuel, double tolerance, int active_controls, Metrics* partial, const int* enabled=nullptr) {
+    const double* fuel, double tolerance, double minimum_mass,
+    int active_controls, Metrics* partial, const int* enabled=nullptr) {
     if (enabled && !*enabled) return;
-    __shared__ double values[7][256];
+    __shared__ double values[9][256];
     const int tid = threadIdx.x;
-    double v[7] = {};
+    double v[9] = {};
     const int count = max(variables, 7*nodes);
     for (int i = blockIdx.x*blockDim.x+tid; i < count; i += blockDim.x*gridDim.x) {
-        if (i < nodes) v[0] += fuel[i]*controls[4*i+3];
+        if (i < nodes) {
+            v[0] += fuel[i]*controls[4*i+3];
+            // The conic model imposes this lower bound at every state node.
+            // An exactly propagated reference can violate it, so price the
+            // same affine rows in both reference and candidate merits.
+            const double mass=candidate[7*i+6];
+            const double shortfall=isfinite(mass) ? fmax(minimum_mass-mass,0.0) : INFINITY;
+            v[7]+=fmax(shortfall-tolerance,0.0);
+            v[8]=fmax(v[8],shortfall);
+            if(!isfinite(shortfall)) v[6]=1.0;
+        }
         if (i < 7*(nodes-1)) {
             const double defect = fabs(candidate[7+i]-propagated[i]);
             v[1] += fmax(defect-tolerance, 0.0);
@@ -107,34 +119,36 @@ __global__ void reduce_metrics(int nodes, int variables, const double* candidate
             if (!isfinite(thrust) || thrust>0.6+1e-9) v[6]=1.0;
         }
     }
-    for (int j = 0; j < 7; ++j) values[j][tid] = v[j];
+    for (int j = 0; j < 9; ++j) values[j][tid] = v[j];
     __syncthreads();
     for (int offset = 128; offset; offset /= 2) {
-        if (tid < offset) for (int j = 0; j < 7; ++j)
-            values[j][tid] = j < 3 ? values[j][tid]+values[j][tid+offset]
+        if (tid < offset) for (int j = 0; j < 9; ++j)
+            values[j][tid] = j < 3 || j == 7 ? values[j][tid]+values[j][tid+offset]
                 : fmax(values[j][tid], values[j][tid+offset]);
         __syncthreads();
     }
     if (!tid) partial[blockIdx.x] = {values[0][0], values[1][0], values[2][0],
-        values[3][0], values[4][0], values[5][0], fmax(values[6][0], double(*invalid))};
+        values[3][0], values[4][0], values[5][0], fmax(values[6][0], double(*invalid)),
+        0.0,0.0,values[7][0],values[8][0]};
 }
 
 __global__ void finish_metrics(int count, const Metrics* partial, Metrics* result, const int* enabled=nullptr) {
     if (enabled && !*enabled) return;
-    __shared__ double values[7][256];
+    __shared__ double values[9][256];
     const int tid = threadIdx.x;
     Metrics m = tid < count ? partial[tid] : Metrics{};
     values[0][tid]=m.fuel; values[1][tid]=m.penalty; values[2][tid]=m.virtual_sum;
     values[3][tid]=m.defect; values[4][tid]=m.virtual_inf; values[5][tid]=m.step; values[6][tid]=m.invalid;
+    values[7][tid]=m.mass_penalty; values[8][tid]=m.mass_defect;
     __syncthreads();
     for (int offset=128; offset; offset/=2) {
-        if (tid<offset) for (int j=0; j<7; ++j)
-            values[j][tid]=j<3 ? values[j][tid]+values[j][tid+offset]
+        if (tid<offset) for (int j=0; j<9; ++j)
+            values[j][tid]=j<3 || j==7 ? values[j][tid]+values[j][tid+offset]
                 : fmax(values[j][tid],values[j][tid+offset]);
         __syncthreads();
     }
     if (!tid) *result={values[0][0],values[1][0],values[2][0],values[3][0],
-        values[4][0],values[5][0],values[6][0]};
+        values[4][0],values[5][0],values[6][0],0.0,0.0,values[7][0],values[8][0]};
 }
 
 __global__ void initialize(State* s, Settings p, spacepdhcg_gtoc12_conic_parameters* conic) {
@@ -158,12 +172,13 @@ __global__ void initialize_vinf(State* s, const double* states, int nodes,
 
 __global__ void set_reference(State* s, const Metrics* m, Settings p, bool only_refresh=false) {
     if (only_refresh && !s->command.refresh) return;
-    const double merit=m->fuel+p.virtual_weight*(m->penalty+m->boundary_penalty);
+    const double merit=m->fuel+p.virtual_weight*(m->penalty+m->boundary_penalty+m->mass_penalty);
     // Polishing starts only after an accepted, feasible convergence step.
     // Validate that same point with the finer propagator before asking the IPM
     // for another near-identical solve. Budget/trust exhaustion is no substitute.
     const bool confirmed=only_refresh && s->polishing && !m->invalid
         && m->defect<=p.defect_tolerance && m->boundary_defect<=p.defect_tolerance
+        && m->mass_defect<=p.defect_tolerance
         && s->result.virtual_inf<=10.0*p.defect_tolerance
         && isfinite(merit) && fabs(merit-s->merit)<=p.objective_tolerance;
     s->merit=merit;
@@ -213,8 +228,8 @@ __global__ void decide(State* s, Settings p, const Metrics* m, const double* x,
         }
     } else {
         s->inaccurate_retries=0;
-        const double merit=m->fuel+p.virtual_weight*(m->penalty+m->boundary_penalty);
-        const double model=m->fuel+p.virtual_weight*(m->virtual_sum+m->boundary_penalty);
+        const double merit=m->fuel+p.virtual_weight*(m->penalty+m->boundary_penalty+m->mass_penalty);
+        const double model=m->fuel+p.virtual_weight*(m->virtual_sum+m->boundary_penalty+m->mass_penalty);
         const double predicted=s->merit-model;
         const double actual=s->merit-merit;
         const double ratio=predicted>1e-15 ? actual/predicted : (actual>=0.0 ? 1.0 : -1.0);
@@ -222,6 +237,7 @@ __global__ void decide(State* s, Settings p, const Metrics* m, const double* x,
         record.virtual_inf=m->virtual_inf; record.ratio=ratio; record.step=m->step;
         record.trust_state=s->trust_state; record.trust_control=s->trust_control;
         const bool feasible=m->defect<=p.defect_tolerance && m->boundary_defect<=p.defect_tolerance
+            && m->mass_defect<=p.defect_tolerance
             && m->virtual_inf<=10.0*p.defect_tolerance;
         // A ratio of two negligible merit differences has no useful sign.
         // Accept a feasible stationary candidate using BOTH existing absolute
@@ -537,7 +553,7 @@ static int solve_impl(int intervals,int hold,int free_dep,int free_arr,
         if (status) return status;
         reduce_metrics<<<blocks,256,0,w.stream>>>(nodes,candidate ? dimensions.variables : 7*nodes,
             x,u,candidate ? x+11*nodes : nullptr,candidate ? w.states : nullptr,
-            candidate ? w.controls : nullptr,propagated,invalid,w.fuel,p.conic_tolerance,
+            candidate ? w.controls : nullptr,propagated,invalid,w.fuel,p.conic_tolerance,p.minimum_mass,
             hold ? nodes : nodes-1,w.partial);
         finish_metrics<<<1,256,0,w.stream>>>(blocks,w.partial,w.metrics);
         add_boundary_metrics<<<1,32,0,w.stream>>>(w.metrics,x,nodes,endpoints,w.state,candidate,p.conic_tolerance);
@@ -577,7 +593,7 @@ static int solve_impl(int intervals,int hold,int free_dep,int free_arr,
             w.dynamics,w.states,w.controls,&w.state->command.substeps,enabled,0,w.stream);
         if (status) return status;
         reduce_metrics<<<blocks,256,0,w.stream>>>(nodes,7*nodes,w.states,w.controls,nullptr,
-            nullptr,nullptr,propagated,invalid,w.fuel,p.conic_tolerance,
+            nullptr,nullptr,propagated,invalid,w.fuel,p.conic_tolerance,p.minimum_mass,
             hold ? nodes : nodes-1,w.partial,enabled);
         finish_metrics<<<1,256,0,w.stream>>>(blocks,w.partial,w.metrics,enabled);
         add_boundary_metrics<<<1,32,0,w.stream>>>(w.metrics,w.states,nodes,endpoints,w.state,false,p.conic_tolerance,enabled);

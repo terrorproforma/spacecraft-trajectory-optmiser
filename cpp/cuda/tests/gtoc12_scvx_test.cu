@@ -2,6 +2,7 @@
 #include "../src/gtoc12_scvx.cu"
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 
 #define REQUIRE(x) do { if (!(x)) { std::fprintf(stderr,"line %d: %s\n",__LINE__,#x); std::exit(1); } } while (0)
@@ -235,7 +236,7 @@ void reductions(int nodes,bool poison) {
     CUDA(cudaMemcpy(du,u.data(),u.size()*8,cudaMemcpyHostToDevice));
     CUDA(cudaMemcpy(df,weights.data(),weights.size()*8,cudaMemcpyHostToDevice));
     CUDA(cudaMemcpy(dp,prop.data(),prop.size()*8,cudaMemcpyHostToDevice)); CUDA(cudaMemset(invalid,0,4));
-    reduce_metrics<<<blocks,256>>>(nodes,variables,dx,dx+7*nodes,dx+11*nodes,dr,du,dp,invalid,df,1e-9,nodes,partial);
+    reduce_metrics<<<blocks,256>>>(nodes,variables,dx,dx+7*nodes,dx+11*nodes,dr,du,dp,invalid,df,1e-9,0.0,nodes,partial);
     finish_metrics<<<1,256>>>(blocks,partial,out);
     Metrics got{}; CUDA(cudaMemcpy(&got,out,sizeof(got),cudaMemcpyDeviceToHost));
     REQUIRE(std::abs(got.fuel-expected.fuel)<1e-11*std::max(1.0,expected.fuel));
@@ -254,7 +255,7 @@ void reductions(int nodes,bool poison) {
         // active violating candidate nodes are rejected even with a finite CQP.
         const int active=test==3 ? nodes-1 : nodes;
         reduce_metrics<<<blocks,256>>>(nodes,variables,dx,dx+7*nodes,dx+11*nodes,dr,
-            test==5 ? nullptr : du,dp,invalid,df,1e-9,active,partial);
+            test==5 ? nullptr : du,dp,invalid,df,1e-9,0.0,active,partial);
         finish_metrics<<<1,256>>>(blocks,partial,out);
         CUDA(cudaMemcpy(&got,out,sizeof(got),cudaMemcpyDeviceToHost));
         REQUIRE(got.invalid==double(test==2 || test==4));
@@ -368,10 +369,168 @@ void boundary_merit() {
     CUDA(cudaFree(ds));CUDA(cudaFree(dm));CUDA(cudaFree(dx));CUDA(cudaFree(records));CUDA(cudaFree(parameters));
 }
 
+void mass_reductions(int nodes) {
+    // Independent host sum/max over every original mass row. Include inputs
+    // with a feasible endpoint and an infeasible interior, and grids larger
+    // than the capped reduction launch. No trajectory solver is involved.
+    const int variables=25*nodes-14,blocks=std::min(256,(variables+255)/256);
+    const auto p=fixture();
+    std::vector<double> input(variables,0.0),weights(nodes,0.0),propagated(7*(nodes-1),0.0);
+    double *dx{},*df{},*dp{};int *invalid{},*enabled{};Metrics *partial{},*output{};
+    CUDA(cudaMalloc(&dx,input.size()*sizeof(double)));
+    CUDA(cudaMalloc(&df,weights.size()*sizeof(double)));
+    CUDA(cudaMalloc(&dp,propagated.size()*sizeof(double)));
+    CUDA(cudaMalloc(&invalid,sizeof(int)));CUDA(cudaMalloc(&enabled,sizeof(int)));
+    CUDA(cudaMalloc(&partial,blocks*sizeof(Metrics)));CUDA(cudaMalloc(&output,sizeof(Metrics)));
+    CUDA(cudaMemcpy(df,weights.data(),weights.size()*sizeof(double),cudaMemcpyHostToDevice));
+    CUDA(cudaMemset(invalid,0,sizeof(int)));
+    for(int test=0;test<8;++test) {
+        std::fill(input.begin(),input.end(),0.0);
+        double floor=.5;
+        for(int node=0;node<nodes;++node) input[7*node+6]=.75;
+        input[6]=1.0;
+        if(test==1) input[7*(nodes/2)+6]=.25; // Interior-only deficit.
+        if(test==2) {input[7*(nodes/2)+6]=.375;input[7*nodes-1]=.125;}
+        if(test==3) for(int node=1;node<nodes;++node)
+            input[7*node+6]=.5+.03125*(node%7-3);
+        if(test==4) {
+            // Zero floor represents the deadband and its adjacent doubles
+            // exactly, avoiding a rounded floor-minus-tolerance construction.
+            floor=0.0;
+            const double edge[]={0.0,-p.conic_tolerance,
+                std::nextafter(-p.conic_tolerance,INFINITY),
+                std::nextafter(-p.conic_tolerance,-INFINITY)};
+            for(int node=0;node<nodes;++node) input[7*node+6]=edge[node%4];
+        }
+        if(test==5) input[7*(nodes/2)+6]=NAN;
+        if(test==6) input[7*(nodes/2)+6]=INFINITY;
+        if(test==7) input[7*nodes-1]=-INFINITY;
+        long double sum=0.0L;double maximum=0.0;
+        if(test<5) for(int node=0;node<nodes;++node) {
+            const double deficit=std::max(floor-input[7*node+6],0.0);
+            sum+=static_cast<long double>(std::max(deficit-p.conic_tolerance,0.0));
+            maximum=std::max(maximum,deficit);
+        }
+        std::copy(input.begin()+7,input.begin()+7*nodes,propagated.begin());
+        CUDA(cudaMemcpy(dx,input.data(),input.size()*sizeof(double),cudaMemcpyHostToDevice));
+        CUDA(cudaMemcpy(dp,propagated.data(),propagated.size()*sizeof(double),cudaMemcpyHostToDevice));
+        reduce_metrics<<<blocks,256>>>(nodes,variables,dx,dx+7*nodes,nullptr,nullptr,nullptr,
+            dp,invalid,df,p.conic_tolerance,floor,nodes-1,partial);
+        finish_metrics<<<1,256>>>(blocks,partial,output);
+        CUDA(cudaGetLastError());
+        Metrics got{};CUDA(cudaMemcpy(&got,output,sizeof(got),cudaMemcpyDeviceToHost));
+        REQUIRE(got.invalid==double(test>=5));
+        if(test<5) {
+            const double expected=static_cast<double>(sum);
+            // Scale by the actual penalty: nextafter-sized hinges must survive.
+            REQUIRE(std::abs(got.mass_penalty-expected)<=1e-11*expected);
+            REQUIRE(got.mass_defect==maximum);
+            REQUIRE(got.fuel==0.0 && got.penalty==0.0 && got.defect==0.0);
+            REQUIRE(got.virtual_sum==0.0 && got.virtual_inf==0.0);
+            REQUIRE(got.boundary_penalty==0.0 && got.boundary_defect==0.0);
+            if(test==0) REQUIRE(got.mass_penalty==0.0 && got.mass_defect==0.0);
+            if(test==1) REQUIRE(input[7*nodes-1]>floor && got.mass_defect==.25);
+            if(test==4) REQUIRE(got.mass_penalty>0.0 && got.mass_defect>p.conic_tolerance);
+        }
+    }
+    // Both phases must preserve every field and every partial when disabled,
+    // even though the retained input still contains a nonfinite final mass.
+    std::vector<Metrics> before(blocks),after(blocks);
+    for(int i=0;i<blocks;++i) {
+        before[i]={1.0+i,2,3,4,5,6,7};
+        before[i].boundary_penalty=8;before[i].boundary_defect=9;
+        before[i].mass_penalty=10;before[i].mass_defect=11;
+    }
+    Metrics sentinel=before[0],untouched{};
+    CUDA(cudaMemcpy(partial,before.data(),blocks*sizeof(Metrics),cudaMemcpyHostToDevice));
+    CUDA(cudaMemcpy(output,&sentinel,sizeof(sentinel),cudaMemcpyHostToDevice));
+    CUDA(cudaMemset(enabled,0,sizeof(int)));
+    reduce_metrics<<<blocks,256>>>(nodes,variables,dx,dx+7*nodes,nullptr,nullptr,nullptr,
+        dp,invalid,df,p.conic_tolerance,.5,nodes-1,partial,enabled);
+    finish_metrics<<<1,256>>>(blocks,partial,output,enabled);
+    CUDA(cudaGetLastError());
+    CUDA(cudaMemcpy(after.data(),partial,blocks*sizeof(Metrics),cudaMemcpyDeviceToHost));
+    CUDA(cudaMemcpy(&untouched,output,sizeof(untouched),cudaMemcpyDeviceToHost));
+    REQUIRE(std::memcmp(before.data(),after.data(),blocks*sizeof(Metrics))==0);
+    REQUIRE(std::memcmp(&sentinel,&untouched,sizeof(Metrics))==0);
+    CUDA(cudaFree(dx));CUDA(cudaFree(df));CUDA(cudaFree(dp));CUDA(cudaFree(invalid));
+    CUDA(cudaFree(enabled));CUDA(cudaFree(partial));CUDA(cudaFree(output));
+}
+
+void mass_merit() {
+    State* ds{};Metrics* dm{};double* dx{};Record* records{};
+    spacepdhcg_gtoc12_conic_parameters* parameters{};
+    CUDA(cudaMalloc(&ds,sizeof(State)));CUDA(cudaMalloc(&dm,sizeof(Metrics)));
+    CUDA(cudaMalloc(&dx,100*sizeof(double)));CUDA(cudaMalloc(&records,44*sizeof(Record)));
+    CUDA(cudaMalloc(&parameters,sizeof(*parameters)));
+    auto p=fixture();
+    std::vector<double> x(100,0.0);for(int i=0;i<4;++i)x[7*i+6]=1.0;
+    CUDA(cudaMemcpy(dx,x.data(),x.size()*sizeof(double),cudaMemcpyHostToDevice));
+    initialize<<<1,1>>>(ds,p,parameters);
+    // Saved-failure pattern: a small fuel cost and zero dynamics/boundary
+    // residual still has an original mass inequality violation.
+    Metrics reference{.1,0,0,0,0,.01,0};
+    reference.mass_defect=.1;reference.mass_penalty=.1-p.conic_tolerance;
+    CUDA(cudaMemcpy(dm,&reference,sizeof(reference),cudaMemcpyHostToDevice));
+    set_reference<<<1,1>>>(ds,dm,p);
+    State state{};CUDA(cudaMemcpy(&state,ds,sizeof(state),cudaMemcpyDeviceToHost));
+    REQUIRE(std::abs(state.merit-(.1+1e4*(.1-p.conic_tolerance)))<1e-10);
+    Metrics candidate{.2,0,0,0,0,.01,0};
+    CUDA(cudaMemcpy(dm,&candidate,sizeof(candidate),cudaMemcpyHostToDevice));
+    decide<<<1,1>>>(ds,p,dm,dx,4,0,0,1,1,records,parameters);
+    CUDA(cudaMemcpy(&state,ds,sizeof(state),cudaMemcpyDeviceToHost));
+    Record record{};CUDA(cudaMemcpy(&record,records,sizeof(record),cudaMemcpyDeviceToHost));
+    REQUIRE(record.accepted==1 && record.ratio==1.0 && record.merit==.2);
+    REQUIRE(state.copy_candidate==1 && state.result.accepted_iterations==1);
+    REQUIRE(state.result.status!=1); // An accepted finite step alone is not convergence.
+
+    // Price the same affine hinge in both candidate merits. A nonzero virtual
+    // term makes the ratio detect a missing MODEL contribution independently.
+    state={};state.merit=20;state.trust_state=.2;state.trust_control=1;state.polish_left=4;
+    candidate={1,0,.0002,0,0,1,0};
+    candidate.mass_penalty=.001;candidate.mass_defect=.001+p.conic_tolerance;
+    CUDA(cudaMemcpy(ds,&state,sizeof(state),cudaMemcpyHostToDevice));
+    CUDA(cudaMemcpy(dm,&candidate,sizeof(candidate),cudaMemcpyHostToDevice));
+    decide<<<1,1>>>(ds,p,dm,dx,4,0,0,1,1,records,parameters);
+    CUDA(cudaMemcpy(&record,records,sizeof(record),cudaMemcpyDeviceToHost));
+    CUDA(cudaMemcpy(&state,ds,sizeof(state),cudaMemcpyDeviceToHost));
+    REQUIRE(record.accepted==1 && std::abs(record.merit-11.0)<1e-14);
+    REQUIRE(std::abs(record.ratio-9.0/7.0)<1e-14);
+    REQUIRE(!state.command.done && !state.polishing && state.result.status!=1);
+
+    // The merit deadband and raw feasibility threshold are different. Exact
+    // p.defect_tolerance passes; its next representable larger value fails,
+    // even with unchanged zero prediction/actual reduction and zero step.
+    // The separate physical/fixed-mass certificate is not replaced by this test.
+    const double deficits[]={0.0,.5*p.conic_tolerance,p.conic_tolerance,p.defect_tolerance,
+        std::nextafter(p.defect_tolerance,INFINITY),2*p.defect_tolerance};
+    for(bool polish:{false,true})for(double deficit:deficits) {
+        auto settings=p;settings.polish_iterations=0;
+        Metrics metrics{1,0,0,0,0,0,0};
+        metrics.mass_defect=deficit;
+        metrics.mass_penalty=std::max(deficit-p.conic_tolerance,0.0);
+        State initial{};initial.merit=1+p.virtual_weight*metrics.mass_penalty;
+        initial.trust_state=.2;initial.trust_control=1;initial.polish_left=4;
+        initial.polishing=polish;initial.command.refresh=polish;initial.result.virtual_inf=0;
+        CUDA(cudaMemcpy(ds,&initial,sizeof(initial),cudaMemcpyHostToDevice));
+        CUDA(cudaMemcpy(dm,&metrics,sizeof(metrics),cudaMemcpyHostToDevice));
+        if(polish)set_reference<<<1,1>>>(ds,dm,settings,true);
+        else decide<<<1,1>>>(ds,settings,dm,dx,4,0,0,1,1,records,parameters);
+        CUDA(cudaGetLastError());
+        CUDA(cudaMemcpy(&state,ds,sizeof(state),cudaMemcpyDeviceToHost));
+        const bool feasible=deficit<=p.defect_tolerance;
+        REQUIRE((state.result.status==1)==feasible && bool(state.command.done)==feasible);
+        if(!polish && !feasible) REQUIRE(!state.polishing);
+    }
+    CUDA(cudaFree(ds));CUDA(cudaFree(dm));CUDA(cudaFree(dx));CUDA(cudaFree(records));CUDA(cudaFree(parameters));
+}
+
 int main() {
+    mass_merit();
     boundary_merit();
     initial_velocity_outputs();
     controller();
     for (int n:{4,37,4097,10001}) for (bool poison:{false,true}) reductions(n,poison);
-    std::puts("PASS: boundary-corrective acceptance, 64 endpoint/auxiliary checks, 2 boundary convergence guards, 22 controller branches, 18 bounded-retry transitions, 48 stationary-failure transitions, 10 final states, 5 polish confirmations, 8 multi-block reductions, 24 physical thrust gates");
+    for(int n:{4,37,4097,10001}) mass_reductions(n);
+    std::puts("PASS: mass-corrective acceptance and candidate/model pricing, 12 raw-mass convergence/polish guards, 32 all-node mass reductions, 4 disabled mass reductions, boundary-corrective acceptance, 64 endpoint/auxiliary checks, 2 boundary convergence guards, 22 controller branches, 18 bounded-retry transitions, 48 stationary-failure transitions, 10 final states, 5 polish confirmations, 8 multi-block reductions, 24 physical thrust gates");
 }

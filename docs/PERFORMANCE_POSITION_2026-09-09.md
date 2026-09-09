@@ -7,6 +7,12 @@ mission choices. Neither obstacle is resolved by faster individual kernels.
 
 ## What is established
 
+- The tested PDHCG path has progressed beyond the original one-block solve:
+  v630 uses 128 cooperative blocks, parallel setup work and retained storage.
+  Its measured solve intervals are roughly 0.374–0.377 seconds for 10,000
+  updates, but none of those outputs qualifies. Fast unqualified updates do
+  not establish fast trajectory solutions. Legacy single-block paths remain
+  in the source. [Exact launch and timing scope](GPU_CORE_RETAINED_COLD_STARTS.md).
 - The v630 comparison qualifies **0/4 persistent PDHCG outputs and 1/4 QOCO
   outputs** under the same original-equation gates. The four outputs per backend
   cover two cold trials on each of two captures from one synthetic fixture;
@@ -27,6 +33,14 @@ mission choices. Neither obstacle is resolved by faster individual kernels.
   size determine whether the transfer is worthwhile.
   [Catalogue measurements](GPU_CATALOGUE_OWNERSHIP.md),
   [ephemeris measurements](GPU_ROUTE_EPHEMERIDES.md).
+- The subsequent resident-catalogue comparison cuts upload bytes by 99.44%,
+  but improves complete search throughput by only 0.09%/1.11% on H100 and
+  2.37%/2.33% locally. H100 produces about 28.4 surrogate candidates/s on those
+  two saved routes. Three repeats provide no confidence bound; the 0.09%
+  observation is effectively flat. This supports prioritizing the remaining
+  search and refinement costs. These are incremental results with the earlier
+  hash cache enabled, not additive speedup claims or certified throughput.
+  [Downloaded paired results](../results/lambda/2026-09-09/gpu-resident-catalogue-v827/README.md).
 - The certified frontier remains **13,023.704901 weighted kg**, **14,291.006160
   raw kg**, 23 ships and 199 asteroids. The v630 additional route prescriptions
   produce no complete certified improvement. Its failed optimizer statuses do
@@ -41,16 +55,23 @@ explicit PDHG updates and does not yet implement the upstream conic quadratic
 proximal inner solve. Recovery CGLS is a different operation. These boundaries
 must remain visible when attributing performance or mission gains.
 
-The latest fixed-date GPU return test regenerates the archived control in two
-accepted iterations and independently certifies it. At the candidate's changed
-starting mass, the GPU-scaled seed is dynamically consistent but finishes
-10.28998 kg below the prescribed minimum mass. All 22 subsequent steps are
-rejected. The complete two-case worker takes 10.787 seconds, with two native
-solves and one fresh certificate; no full-fleet checks or score promotion occur.
-Source inspection identifies missing state-mass-shortfall terms in the
-reference acceptance merit. That omission is confirmed; whether correcting it
-can certify this candidate still needs a new controlled experiment.
-[Exact initialization and mission outcome](GPU_MASS_SCALED_INITIALIZATION.md).
+The fixed-date v631 GPU return test exposed missing state-mass-shortfall terms
+in reference acceptance merit: a dynamically consistent seed was 10.28998 kg
+short of required final mass, but all 22 steps were rejected. The v632 fix now
+prices all original mass inequalities in reference, candidate and predicted
+merits, with focused GPU and sanitizer regressions passing. In the matched
+rerun the original control again independently certifies in two iterations.
+The candidate accepts two steps, then stalls after 26 total iterations with
+dynamics/virtual defects about 0.002782, still far above unchanged gates. No
+candidate certificate or fleet improvement results. The two-case worker takes
+9.589 seconds; the different iteration paths and single observations do not
+establish a speedup. This confirms the acceptance repair while exposing a
+remaining trajectory-refinement problem. Saved ZOH mass algebra limits the
+largest mass-balance defect to 1.16e-10 kg, so the dominant remaining dynamics
+error is in position or velocity. The saved outputs do not identify its exact
+axis or interval; an existing-API propagation replay is the next diagnostic.
+[Initialization](GPU_MASS_SCALED_INITIALIZATION.md),
+[implemented repair and matched outcome](GPU_MASS_MERIT.md).
 
 ## Where the method is most promising
 
@@ -102,11 +123,11 @@ not a claim that copying one technique establishes first place.
 
 ## Execution order
 
-1. **Repair reliable refinement and the measured numerical obstruction.** Add
-   the missing state-mass constraint violations to the reference acceptance
-   calculation, test a corrective step and its guards, then rerun the bounded
-   original-mass control and changed-mass return with all physical gates fixed. For
-   the core, address dynamics together with the original L1 virtual-control
+1. **Repair reliable refinement and the measured numerical obstruction.** The
+   mass-merit repair and matched control are complete; the candidate still fails.
+   Identify its remaining dynamics defect and distinguish poor local convergence
+   from an overconstrained fixed schedule before another refinement. For the
+   core, address dynamics together with the original L1 virtual-control
    term; a joint proximal step or compatible structured preconditioner needs
    an independent mathematical reference before CUDA integration. Preserve
    failed cases and stop repeating unchanged experiments.
