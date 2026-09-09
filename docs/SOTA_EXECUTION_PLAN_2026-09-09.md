@@ -14,14 +14,28 @@ establish a competitive PDHCG mission backend.
 
 ## Current checkpoint and next work
 
+The v633 diagnostics make the immediate experiments more specific. The joint
+equality/L1 reference still qualifies zero of two saved captures: successful
+factors and zero virtual-control complementarity do not resolve the remaining
+original equations. Both cases stop at an inner merit-decrease check. Test the
+stable decrease formula and existing residual-stop handling on exact tiny cases
+before a new bounded comparison. Separately, one CUDA interval replay localizes
+the failed v632 mission return to an 82.854828 m/s first-interval velocity
+discontinuity. Thrust there is already at its limit. Test two later arrivals with
+the exact cargo and certified prefix; do not interpret the local failure as an
+infeasibility proof. Neither diagnostic changes the verified fleet score.
+[Core evidence](PDHCG_JOINT_PROX_DESIGN.md),
+[mission evidence](../results/local/2026-09-09/interval-defect-replay-v633/RESULTS.md).
+
 The [performance assessment and complementary-method plan](PERFORMANCE_POSITION_2026-09-09.md)
 distinguishes measured gains from PDHCG's proposed operating regime. The v631
 CPU reference resolves the two captured equality failures to approximately
 machine precision, but both outputs still fail the unchanged original gap,
 stationarity and cone gates after 10,000 updates each. Original L1 virtual-control
-complementarity dominates the gap. A joint treatment of dynamics equalities and
-that penalty is the next numerical hypothesis; equality projection alone is
-not a qualified solver. [Exact reference and outcomes](PDHCG_EQUALITY_PRIMAL_REFERENCE.md).
+complementarity dominates the gap. This motivated the subsequent joint treatment
+of dynamics equalities and that penalty described above; equality projection
+alone is not a qualified solver.
+[Exact reference and outcomes](PDHCG_EQUALITY_PRIMAL_REFERENCE.md).
 
 Separately committed catalogue-prefix retention reduces complete search time in
 the paired two-route H100 experiment, with throughput improvements of 7.33–7.48%.

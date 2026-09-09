@@ -25,6 +25,14 @@ mission choices. Neither obstacle is resolved by faster individual kernels.
   control L1 complementarity dominates the gap; thrust cones and stationarity
   also fail. This isolates a numerical target rather than completing a GPU
   implementation. [Reformulation, arithmetic and measured failures](PDHCG_EQUALITY_PRIMAL_REFERENCE.md).
+- The subsequent joint equality/L1 proximal reference removes the saved points'
+  virtual-control complementarity error, but still qualifies **0/2 captures**.
+  It stops on a numerical merit-decrease check, after zero and 73 committed
+  outer updates. Factors succeed; other original cone, stationarity and gap
+  errors remain. This is a more specific numerical diagnosis, not a completed
+  solver or a throughput improvement. The next bounded intervention tests a
+  cancellation-resistant decrease calculation and honors the unchanged inner
+  residual stop before Armijo. [Design and recorded failures](PDHCG_JOINT_PROX_DESIGN.md).
 - Host work still matters. Retained catalogue fingerprints improve complete
   route-search throughput by **7.33–7.48% on H100** in the paired two-route
   experiment. Those are surrogate search candidates, not certified trajectories.
@@ -66,12 +74,17 @@ dynamics/virtual defects about 0.002782, still far above unchanged gates. No
 candidate certificate or fleet improvement results. The two-case worker takes
 9.589 seconds; the different iteration paths and single observations do not
 establish a speedup. This confirms the acceptance repair while exposing a
-remaining trajectory-refinement problem. Saved ZOH mass algebra limits the
-largest mass-balance defect to 1.16e-10 kg, so the dominant remaining dynamics
-error is in position or velocity. The saved outputs do not identify its exact
-axis or interval; an existing-API propagation replay is the next diagnostic.
+remaining trajectory-refinement problem. The subsequent one-call CUDA interval
+replay reproduces the reported maximum defect exactly and localizes the sole
+component exceeding the original gate: **82.854828 m/s in the first interval's
+heliocentric y-velocity**. Thrust in that interval is already at the 0.6 N limit.
+Each interval starts from its own saved node, so small remaining interval defects
+do not establish a continuous feasible route. This identifies a discontinuity
+and does not prove global infeasibility. Two later Earth arrivals, with unchanged
+cargo and certified prefix, are the next bounded schedule hypothesis.
 [Initialization](GPU_MASS_SCALED_INITIALIZATION.md),
-[implemented repair and matched outcome](GPU_MASS_MERIT.md).
+[implemented repair and matched outcome](GPU_MASS_MERIT.md),
+[interval replay and exact scope](../results/local/2026-09-09/interval-defect-replay-v633/RESULTS.md).
 
 ## Where the method is most promising
 
@@ -125,12 +138,13 @@ not a claim that copying one technique establishes first place.
 
 1. **Repair reliable refinement and the measured numerical obstruction.** The
    mass-merit repair and matched control are complete; the candidate still fails.
-   Identify its remaining dynamics defect and distinguish poor local convergence
-   from an overconstrained fixed schedule before another refinement. For the
-   core, address dynamics together with the original L1 virtual-control
-   term; a joint proximal step or compatible structured preconditioner needs
-   an independent mathematical reference before CUDA integration. Preserve
-   failed cases and stop repeating unchanged experiments.
+   The localized departure-interval velocity defect now motivates a bounded
+   later-arrival test, preserving cargo and preceding certified flights. For
+   the core, the joint dynamics/L1 reference has identified a numerical
+   line-search obstruction. Validate the stable decrease calculation on tiny
+   exact cases before another fixed capture comparison; CUDA integration
+   requires a qualified reference. Preserve failed cases and stop repeating
+   unchanged experiments.
 2. **Establish the backend crossover.** Use fixed nontrivial zero/nonzero-Q
    captures, then held-out missions. Compare upstream, persistent PDHCG, GPU
    QOCO and CPU reference outputs under identical objectives and gates. Include
