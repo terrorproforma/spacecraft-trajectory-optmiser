@@ -1,0 +1,93 @@
+{
+  "passed": true,
+  "scope": "Saved metadata, exact input bytes and uploaded/readback arrays only; no dynamics replay or new certificate",
+  "Result_sha256": "1f420928bbef8da91e3a6f8b74d3bf00039c78d4257215c103a484bc55bb22da",
+  "ready_sha256": "ac6379bdaf8bdc28f4296509ab9aa3bddbac2903c53c9edd15759529879d5edf",
+  "cases": [
+    {
+      "arrival_MJD": 69743,
+      "days_added": 30,
+      "nodes": 241,
+      "native_updates": 44,
+      "accepted_updates": 7,
+      "inner_conic_qualified": 19,
+      "inner_conic_unqualified": 25,
+      "conditioning_retry_calls": 11,
+      "last_accepted_update": 15,
+      "terminal_history": {
+        "iteration": 44,
+        "accepted": 0.0,
+        "solver": "QOCO_4_unqualified",
+        "retry_unchanged": false,
+        "trust_state": 1.2800000000000007e-06,
+        "trust_control": 1.52587890625e-06
+      },
+      "reported_max_defect": 0.004298365325523523,
+      "reported_virtual_inf": 0.004298365325523491,
+      "defect_gate": 5e-09,
+      "returned_node_final_mass_kg_unverified": 1177.207392197104,
+      "reported_propellant_kg_unverified": 261.6809116380955,
+      "native_call_seconds": 10.433910522999895,
+      "raw_metadata_sha256": "8b976958349104d44f966d95aaddc6c602ca17db218fd6d406ed429fd8a6d9c0",
+      "raw_arrays_sha256": "7f9d3a055888f26bb7ce8cc4551319043d1a67c56199cac2e71e9c1ce9834f05",
+      "no_certificate_or_fleet_check": true,
+      "defect_larger_than_original_horizon": true
+    },
+    {
+      "arrival_MJD": 69773,
+      "days_added": 60,
+      "nodes": 256,
+      "native_updates": 32,
+      "accepted_updates": 4,
+      "inner_conic_qualified": 15,
+      "inner_conic_unqualified": 17,
+      "conditioning_retry_calls": 7,
+      "last_accepted_update": 6,
+      "terminal_history": {
+        "iteration": 32,
+        "accepted": 0.0,
+        "solver": "QOCO_4_unqualified",
+        "retry_unchanged": false,
+        "trust_state": 1.2500000000000005e-06,
+        "trust_control": 1.9073486328125e-06
+      },
+      "reported_max_defect": 0.024889981199908484,
+      "reported_virtual_inf": 0.024889981199908442,
+      "defect_gate": 5e-09,
+      "returned_node_final_mass_kg_unverified": 1177.2073921971253,
+      "reported_propellant_kg_unverified": 261.6809116380741,
+      "native_call_seconds": 10.364973364000207,
+      "raw_metadata_sha256": "8826dca4acfb5e85934e3295ed2b5e938a9eec656f61bf65e3cd6069ec346e44",
+      "raw_arrays_sha256": "4e5e20dea13bfe0b1ab2fb1ae90b5fe38113efca2296b498a66434472c8b4acf",
+      "no_certificate_or_fleet_check": true,
+      "defect_larger_than_original_horizon": true
+    }
+  ],
+  "worker_seconds": 22.40705394800011,
+  "native_returns": 2,
+  "native_updates": 76,
+  "accepted_updates": 11,
+  "certificates": 0,
+  "full_fleet_checks": 0,
+  "ephemeris_calls": 1,
+  "ephemeris_states": 2,
+  "ephemeris_bytes": {
+    "elements_H2D": 56,
+    "requests_H2D": 32,
+    "results_D2H": 112
+  },
+  "original_horizon_reference": {
+    "path": "build/performance/mass-merit-return-v632/output/candidate_mass_return/legs/00/native-raw.json",
+    "sha256": "6593f7a61873db094abd0f3ea66cb7e71539691d1076d57165e2d57209dfaef3",
+    "reported_max_defect": 0.0027817923491237906,
+    "accepted_updates": 2
+  },
+  "returned_virtual_vector_saved": false,
+  "new_residual_axis_or_interval_not_identified": true,
+  "score_gain_kg": 0,
+  "incumbent_retained": true,
+  "cleanup_verified_empty": true,
+  "fresh_audit_optimizer_calls": 0,
+  "fresh_audit_propagations": 0,
+  "fresh_audit_GPU_calls": 0
+}

@@ -1,0 +1,9 @@
+# A distinct initialization hypothesis
+
+Further zero-coast extensions of the same archived controls are poorly supported by this run: both selected later arrivals increased the reported dynamics defect while consuming essentially the full fixed propellant allowance. The records do not show that no feasible trajectory exists, nor do they identify the new defects' physical components.
+
+One bounded alternative is to use the **saved v632 returned thrust controls** at the original MJD 69263→69713 horizon, while discarding its dynamically inconsistent state nodes. Start from the actual certified prefix position, fixed asteroid velocity and 1438.8883038351994 kg mass, and let the existing GPU ZOH replay rebuild every state. Those thrust values are already expressed for the candidate mass: apply **no second mass scaling**. This changes the initialization controls, unlike v634's archived-control plus zero-coast policy. It needs no new CUDA API.
+
+That proposal would permit at most one fresh return optimization, with the original 40+4 update cap, fixed cargo, unchanged numerical/physical gates and a fresh independent return certificate. Both original full-fleet checkers would remain mandatory before claiming the prescribed 5.528863601559237 weighted kg gain. The uploaded control source would be the exact v632 raw NPZ `8c7e08d6f7f8e5bf13cb02f6cf243e999b1e7c06bcaa8826b2bb8d1d6ddb2778`, not the unqualified state nodes. Its new physical rollout endpoint is unknown; this is a hypothesis, not a qualified seed or an automatic retry.
+
+A broader score search should also address preceding-leg fuel and weighted route selection. That work should be a separate finite experiment with fixed cargo and full-fleet budget accounting, rather than silently adding more return dates to this completed batch.

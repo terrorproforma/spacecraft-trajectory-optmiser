@@ -33,6 +33,15 @@ mission choices. Neither obstacle is resolved by faster individual kernels.
   solver or a throughput improvement. The next bounded intervention tests a
   cancellation-resistant decrease calculation and honors the unchanged inner
   residual stop before Armijo. [Design and recorded failures](PDHCG_JOINT_PROX_DESIGN.md).
+- That intervention has now run. The v635 CPU reference completes 10,000 outer
+  updates on each capture without an inner failure. Both final points pass the
+  original primal, cone and complementarity gates, but dual stationarity
+  (about 2.07e-8) and objective gap (about 0.001261) still fail the 1e-9 gates.
+  All eight saved points fail both independent original-coordinate audits.
+  Complete worker-process time is 19.765 seconds for both cases, including
+  diagnosis and export; this is not GPU throughput. The improvement establishes
+  a working inner operation and isolates the remaining outer convergence tail.
+  [Exact sources, inputs and outcomes](../results/local/2026-09-09/core-joint-reference-v635/README.md).
 - Host work still matters. Retained catalogue fingerprints improve complete
   route-search throughput by **7.33–7.48% on H100** in the paired two-route
   experiment. Those are surrogate search candidates, not certified trajectories.
@@ -65,6 +74,32 @@ mission choices. Neither obstacle is resolved by faster individual kernels.
   beam yields 1,960 candidates and 509 additional asteroid orders, still
   unrefined. This earns broader search at lower cost, not certified throughput
   or a PDHCG advantage. [Paired evidence](GPU_BEAM_EXPANSION.md).
+- The following CUDA admission checkpoint removes about 99% of ranked downloads
+  and reduces materialized children from 105,755 to 1,092. Its complete-search
+  throughput changes are modest: +0.59%/+3.85% on H100 and -2.15%/+1.62% on RTX
+  5090, with overlapping RTX sample ranges. This does not establish a general
+  speedup. The saved profile now points to route completion, collection-DP
+  preparation and forward scheduling as the next substantial recurring costs.
+  All candidate bytes match the preceding expansion checkpoint; score is
+  unchanged. [Admission measurements and profile](GPU_BEAM_ADMISSION.md).
+
+The saved wider pool has now been compared with the new 24-ship incumbent.
+None of its 509 additional asteroid orders provides a positive standalone
+weighted replacement. The only positive request in the 1,960-candidate pool
+is the same ship-10 prescription already blocked at its return. This is a
+saved proxy-data comparison, not a proof that those orders cannot be improved
+by continuous optimization or coordinated fleet changes. It does mean that
+more width around these two fixed families has not supplied a new profitable
+refinement shortlist. The frozen benchmark constructs its beam with every
+asteroid weight set to 1.0, applying the original bonus weights only when
+sorting completed plans. It also fixes one incumbent Earth seed per ship,
+restricts each pool to local neighbors, and supplies no master opportunity
+prices. Production already supports bonus weights and opportunity prices;
+this campaign does not exercise them. First test the original bonus weights
+during beam construction, then broaden Earth seeds/families and apply actual
+fleet opportunity prices. That intervention is distinct from repeating the
+raw-mass beam at greater width.
+[Saved pool comparison and exact campaign configuration](../results/local/2026-09-09/wide-pool-selection-v635/README.md).
 
 The native GTOC12 trajectory refinements currently use **GPU QOCO inside SCvx**.
 The custom persistent PDHCG-inspired backend is still awaiting reliable
@@ -91,10 +126,18 @@ heliocentric y-velocity**. Thrust in that interval is already at the 0.6 N limit
 Each interval starts from its own saved node, so small remaining interval defects
 do not establish a continuous feasible route. This identifies a discontinuity
 and does not prove global infeasibility. Two later Earth arrivals, with unchanged
-cargo and certified prefix, are the next bounded schedule hypothesis.
+cargo and certified prefix, have now been tested on the local GPU. The +30-day
+and +60-day cases remain uncertified after 44 and 32 SCvx updates, with normalized
+defects 0.004298 and 0.024890. The worker takes 22.407 seconds, including one CUDA
+batch for the two new Earth targets. Neither case reaches an independent flight
+certificate or full-fleet check. Simply extending this seed with coast does not
+resolve the failure; the next mission work must couple timing and control
+initialization across the itinerary. These local failures do not prove global
+infeasibility or change the verified score.
 [Initialization](GPU_MASS_SCALED_INITIALIZATION.md),
 [implemented repair and matched outcome](GPU_MASS_MERIT.md),
-[interval replay and exact scope](../results/local/2026-09-09/interval-defect-replay-v633/RESULTS.md).
+[interval replay and exact scope](../results/local/2026-09-09/interval-defect-replay-v633/RESULTS.md),
+[two later-arrival outcomes](../results/local/2026-09-09/return-horizon-v634/README.md).
 
 ## Where the method is most promising
 
@@ -147,25 +190,30 @@ not a claim that copying one technique establishes first place.
 ## Execution order
 
 1. **Repair reliable refinement and the measured numerical obstruction.** The
-   mass-merit repair and matched control are complete; the candidate still fails.
-   The localized departure-interval velocity defect now motivates a bounded
-   later-arrival test, preserving cargo and preceding certified flights. For
-   the core, the joint dynamics/L1 reference has identified a numerical
-   line-search obstruction. Validate the stable decrease calculation on tiny
-   exact cases before another fixed capture comparison; CUDA integration
-   requires a qualified reference. Preserve failed cases and stop repeating
-   unchanged experiments.
+   mass-merit and inner line-search repairs have passed their focused tests.
+   The mission candidate still fails after two later-arrival tests; the next
+   refinement must change coupled timing/control initialization rather than
+   append more coast. The joint dynamics/L1 reference now reaches its outer
+   cap, with dual stationarity and gap remaining. The saved decomposition
+   attributes about 98.7% of that gap to Gamma/thrust stationarity. Test a
+   bounded dual correction on the now-eligible fixed primal points. Preserve
+   the original objective and gates, and require a qualified reference before
+   CUDA integration. Do not repeat unchanged failed experiments.
 2. **Establish the backend crossover.** Use fixed nontrivial zero/nonzero-Q
    captures, then held-out missions. Compare upstream, persistent PDHCG, GPU
    QOCO and CPU reference outputs under identical objectives and gates. Include
    cold setup, retained solves, all failed work, handoffs and certification.
    Only a qualified path advances into the native mission backend comparison.
-3. **Broaden mission search in parallel.** Generate diverse new route columns,
+3. **Broaden mission search in parallel.** The existing wider pool supplies no
+   new positive standalone replacement. Use the original bonus weights during
+   beam construction, then test different Earth seeds and master opportunity
+   prices. Generate diverse new route columns,
    jointly modify conflicting ships, optimize deployment/collection timing,
    and explore feasible fleet growth. Preserve profitable weighted-score
    replacements that use the actual fleet raw-mass margin.
-4. **Move productive recurring work into retained C++/CUDA.** Prioritize host
-   search/packing, native workspace ownership, structured interval operators
+4. **Move productive recurring work into retained C++/CUDA.** With deploy
+   admission now on CUDA, prioritize collection-tour preparation, scheduling
+   and batched route completion, plus native workspace ownership and structured interval operators
    and compatible batches after measuring their complete cost. CPU file I/O
    and independent audit remain explicit and timed boundaries.
 5. **Earn the SOTA claim.** Track certified trajectories/second, success rate,

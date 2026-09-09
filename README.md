@@ -30,6 +30,17 @@ asteroid orders; these have not yet been trajectory-refined. These gains belong
 to mission search, while reliable PDHCG qualification remains under development.
 [Paired measurements and remaining host work](docs/GPU_BEAM_EXPANSION.md).
 
+The saved wider pool supplies no new asteroid order with a positive standalone
+weighted replacement against the current fleet. That frozen benchmark builds
+its beam using raw mass and applies bonus weights only to completed survivors.
+The next quality experiment will use the supported bonus weights during search,
+then broaden route families and coordinated fleet changes. The latest joint
+equality/L1 CPU reference completes 10,000 updates on both frozen captures with
+no inner failure, but still fails the original dual-stationarity and gap gates.
+Two later-arrival GPU return tests also remain uncertified. These diagnostics
+leave the verified fleet score unchanged.
+[Performance conclusions and next experiments](docs/PERFORMANCE_POSITION_2026-09-09.md).
+
 The preceding GPU refinement frontier reaches **13,023.705 weighted kg / 14,291.006
 raw kg**, with 23 ships, 199 asteroids and **621.348 raw kg per ship**. Four route
 alternatives all certify; composing the best two into the preceding fleet adds
@@ -903,8 +914,8 @@ apply to their named fixtures; they are not universal speedup claims.
 ## GTOC12 score versus the published leaderboard
 
 The comparison below records the earlier v595 snapshot. The current independently
-verified result is **13,023.705 weighted kg**; see the
-[new mission evidence](docs/GPU_MASS_BUDGETED_FRONTIER.md). This update makes no new
+verified result is **13,526.961 weighted kg**; see the
+[new fleet evidence](docs/GTOC12_FLEET_ADDITION.md). This update makes no new
 official leaderboard-placement claim.
 
 Our verified `orphan_recovery_v595` snapshot collects **14,051.855 kg**, using **23 ships**

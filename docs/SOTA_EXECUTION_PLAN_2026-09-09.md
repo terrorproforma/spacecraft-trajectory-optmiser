@@ -26,27 +26,54 @@ future replacements must use this updated budget. Do not use the prior
 
 CUDA beam child pricing/ranking now cuts the paired H100 route-search times by
 factors of 2.58 and 2.72, with about 74.1 surrogate candidates/s combined.
-The saved wider beam already contains 509 additional asteroid orders among
-1,960 candidates, without any new trajectory refinement. Use this pool for a
-bounded, diverse refinement comparison against the updated 24-ship fleet before
-generating another wider pool. Charge complete refinement failures and both
-checks; maintain asteroid conflicts and the new raw-mass margin. Resident
-screening-to-expansion transfer, beam admission and collection scheduling remain
-the next measured opportunities for removing host work.
+The saved wider beam contains 509 additional asteroid orders among 1,960
+candidates. Its comparison against the updated 24-ship fleet is now complete:
+no new order provides a positive standalone weighted replacement. The only
+positive prescription is the previously failed ship-10 return. Its frozen run
+uses unit weights to construct the beam, then bonus-weights only the surviving
+completed plans. It fixes the incumbent Earth seeds and passes no master
+opportunity prices. Existing production search supports these capabilities.
+First test actual bonus weights during beam construction with a matched
+configuration; then broaden Earth seeds/asteroid families and use fleet-aware
+pricing. Do not spend another refinement campaign on the same saved pool.
+Include coordinated exchanges and
+the actual raw-mass margin. Negative standalone columns can remain useful to
+a joint fleet change, but require a positive combined objective before costly
+refinement. Charge complete refinement failures and both checks. The following
+CUDA admission checkpoint is now committed: it removes about 99% of ranked
+downloads and most Python child materialization, but produces only small/mixed
+whole-search timing changes. Its profile identifies collection-tour preparation,
+DP orchestration and forward scheduling as the next major recurring work to
+batch and retain on the GPU. Screening-to-expansion transfer also remains.
+[Admission evidence and profile](GPU_BEAM_ADMISSION.md).
 [Exact comparison, scope and retained candidates](GPU_BEAM_EXPANSION.md).
 
-The v633 diagnostics make the immediate experiments more specific. The joint
-equality/L1 reference still qualifies zero of two saved captures: successful
-factors and zero virtual-control complementarity do not resolve the remaining
-original equations. Both cases stop at an inner merit-decrease check. Test the
-stable decrease formula and existing residual-stop handling on exact tiny cases
-before a new bounded comparison. Separately, one CUDA interval replay localizes
-the failed v632 mission return to an 82.854828 m/s first-interval velocity
-discontinuity. Thrust there is already at its limit. Test two later arrivals with
-the exact cargo and certified prefix; do not interpret the local failure as an
-infeasibility proof. Neither diagnostic changes the verified fleet score.
+[Saved selection audit and frozen search configuration](../results/local/2026-09-09/wide-pool-selection-v635/README.md).
+
+The v633 diagnostics have now led to two completed bounded interventions.
+The v635 joint equality/L1 reference passes its exact tiny cases and completes
+10,000 updates per saved capture without inner failures. Both final points pass
+the original primal, cone and complementarity gates, but stationarity around
+2.07e-8 and gap around 0.001261 still fail the original 1e-9 gates. All eight
+saved readouts fail both independent audits. The saved 65-digit decomposition
+attributes about 98.7% of the gap to Gamma/thrust stationarity, while proximal
+stationarity is around 7e-16. Next test bounded dual correction on these newly
+eligible fixed primal points; do not tighten the already accurate inner solve,
+add unchanged iterations or relax accuracy. This remains a CPU numerical
+reference, awaiting qualification and CUDA implementation.
+
+Separately, the CUDA interval replay localized the failed v632 return to an
+82.854828 m/s first-interval velocity discontinuity. The two later-arrival tests
+now also fail: +30/+60 days, 44/32 SCvx updates, defects 0.004298/0.024890.
+Neither output reaches flight certification. Keep those failures and change
+coupled itinerary timing/control initialization rather than merely extending
+the archived seed with more coast. These outcomes do not prove infeasibility
+and leave the verified fleet unchanged.
 [Core evidence](PDHCG_JOINT_PROX_DESIGN.md),
 [mission evidence](../results/local/2026-09-09/interval-defect-replay-v633/RESULTS.md).
+
+[Completed core experiment](../results/local/2026-09-09/core-joint-reference-v635/README.md),
+[completed GPU horizon experiment](../results/local/2026-09-09/return-horizon-v634/README.md).
 
 The [performance assessment and complementary-method plan](PERFORMANCE_POSITION_2026-09-09.md)
 distinguishes measured gains from PDHCG's proposed operating regime. The v631
