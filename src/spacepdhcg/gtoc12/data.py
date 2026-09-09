@@ -15,7 +15,7 @@ import hashlib
 import json
 import os
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, fields, replace
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -146,6 +146,25 @@ class AsteroidCatalogue:
     def semi_major_axis_au(self) -> FloatArray:
         return self.semi_major_axis_km / AU_KM
 
+    def immutable_copy(self) -> AsteroidCatalogue:
+        """Own byte-backed arrays that cannot be made writable through NumPy.
+
+        A read-only view of mutable storage is insufficient for retained GPU
+        input fingerprints. Custom catalogues remain mutable unless copied.
+        """
+        return replace(
+            self,
+            **{
+                field.name: np.ndarray(
+                    getattr(self, field.name).shape,
+                    dtype=getattr(self, field.name).dtype,
+                    buffer=getattr(self, field.name).tobytes(),
+                )
+                for field in fields(self)
+                if field.name != "source_sha256"
+            },
+        )
+
 
 def parse_catalogue_text(text: str, *, source_sha256: str = "") -> AsteroidCatalogue:
     rows = np.loadtxt(text.splitlines(), skiprows=1, dtype=np.float64)
@@ -171,10 +190,11 @@ def parse_catalogue_text(text: str, *, source_sha256: str = "") -> AsteroidCatal
 
 @lru_cache(maxsize=1)
 def load_catalogue() -> AsteroidCatalogue:
+    """Load the shared, immutable pinned catalogue; use array copies for edits."""
     path = verified_path("GTOC12_Asteroids_Data.txt")
     return parse_catalogue_text(
         path.read_text(encoding="utf-8"), source_sha256=pinned_file(path.name)["sha256"]
-    )
+    ).immutable_copy()
 
 
 @dataclass(frozen=True, slots=True)

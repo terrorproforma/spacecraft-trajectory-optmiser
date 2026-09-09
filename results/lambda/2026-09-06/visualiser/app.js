@@ -55,6 +55,7 @@ const canvas = $("trajectory-canvas");
 const ARCHIVE_CAMERA = { yaw: -0.72, pitch: 0.48, distance: 3.25, target: [0, 0, 0] };
 const ARCHIVE_ZOOM = { minimum: 1.35, maximum: 12 };
 const FLEET_DATASETS = {
+  "gtoc12-catalogue-v822": { directory: "./data/gtoc12-catalogue-v822", label: "H100 catalogue cache v822 (23 ships, 13,023.705 weighted kg; verified dense replay)" },
   "gtoc12-collect-composition-v807": { directory: "./data/gtoc12-collect-composition-v807", label: "H100 fleet plus local ship 8 (23 ships, 12,999.825 weighted kg; both hosts verified)" },
   gtoc12: { directory: "./data/gtoc12", label: "Historical baseline v11" },
   "gtoc12-v200": { directory: "./data/gtoc12-v200", label: "GPU campaign v200 (before fix)" },
@@ -913,7 +914,7 @@ try {
   const params = new URLSearchParams(location.search);
   const datasetParam = params.get("dataset");
   // Prefer the verified current composition; stay on archive if explicitly requested.
-  const initialDataset = availableFleets.has(datasetParam) ? datasetParam : "gtoc12-frontier-v629";
+  const initialDataset = availableFleets.has(datasetParam) ? datasetParam : "gtoc12-catalogue-v822";
   const wantsFleet = availableFleets.has(initialDataset) && datasetParam !== "archive";
   if (wantsFleet) {
     const ship = params.has("ship") ? Number(params.get("ship")) - 1 : null;

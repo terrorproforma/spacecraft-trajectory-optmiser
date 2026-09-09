@@ -1,0 +1,8 @@
+{
+  "pid": 258073,
+  "complete": true,
+  "success": false,
+  "runs": [],
+  "comparison": "Retained immutable catalogue digest; collection DP reuse enabled in both modes",
+  "error": "Traceback (most recent call last):\n  File \"/home/ubuntu/spacepdhcg-catalogue-bench-v809/run.py\", line 11, in <module>\n    assert json.loads((build/'report.json').read_text())['success']\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^\nAssertionError\n"
+}

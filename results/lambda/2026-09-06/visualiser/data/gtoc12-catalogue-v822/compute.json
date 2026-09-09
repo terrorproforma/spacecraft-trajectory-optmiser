@@ -1,0 +1,25 @@
+{
+  "run_id": "gpu_catalogue_cache_v822_h100",
+  "fleet_run_id": "gpu_catalogue_integrated_v817",
+  "commit": "5f698731",
+  "result_sha256": "6d43d6f495d5766631d2a05ac131c236e8ebdb995b43dc01db01dba5fe837a41",
+  "source_revision_note": "Frozen final host cache v819 and unchanged integrated CUDA core v808. Fleet replay v817 retains the frontier score and has fresh full-fleet checks on both hosts. Frontier ships 8/19 retain their local GPU-refinement provenance.",
+  "weighted_score_fixed_bonus_kg": 13023.704900978253,
+  "raw_kg_per_ship": 621.3480939202304,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB HBM3",
+    "upstream_search": "Paired two-route benchmark: 517 + 472 surrogate candidates; exact files in all repeats. H100 search throughput improves 7.3–7.5%."
+  },
+  "timing": {
+    "wall_seconds_total": 56.37179698096588,
+    "wall_human": "56.372 s CUDA selection/full-fleet checks/export; measured route searches separately take median 18.086 s and 17.379 s on H100"
+  },
+  "model": {
+    "dynamics": "Original GTOC12 physics and tolerances; both complete-fleet checkers pass on both hosts",
+    "local_refine": "Integrated-core replay: 147 native QOCO/SCvx attempts, 138 converge, five complete routes certify. No meaningful new fleet score. Frontier routes retain their recorded source identities."
+  },
+  "optimisation": {
+    "strategy": "Retain 13,023.705 fixed-bonus weighted kg. Four catalogue hashes replace 1,302 scans across the benchmark routes; mutable input changes remain detectable. Python orchestration and request packing remain. Dense verifier replay includes coast intervals.",
+    "proven_optimal": false
+  }
+}

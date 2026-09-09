@@ -35,6 +35,8 @@ from spacepdhcg.gtoc12.gpu_completion_model import (
     LEG,
     MODEL,
     ORBIT,
+    ORBIT_NAMES,
+    CatalogueFingerprint,
     NativeModelOwner,
     model_sources,
     pack_requests,
@@ -120,6 +122,82 @@ def test_cached_return_row_overflow_fixture_reaches_metadata_validation():
         pack_inputs(search, [row])
 
 
+def freeze_catalogue(search):
+    for name in ("ids", *ORBIT_NAMES):
+        value = getattr(search.catalogue, name)
+        setattr(search.catalogue, name, np.frombuffer(value.tobytes(), dtype=value.dtype))
+
+
+@pytest.mark.parametrize("immutable", [False, True])
+def test_cached_catalogue_prefix_keeps_exact_signature_and_tracks_changes(immutable):
+    search, partial, tour = real_geometry_fixture()
+    if immutable:
+        freeze_catalogue(search)
+    rows = [request(search, partial, tour)]
+    cache = CatalogueFingerprint()
+    first = model_sources(search, rows, cache)[0]
+    assert first == model_sources(search, rows)[0] == model_sources(search, rows, cache)[0]
+    assert (cache.hashes, cache.reuses) == ((1, 1) if immutable else (2, 0))
+    # Mutable grids remain live even when the large catalogue prefix is cached.
+    search.collect_table._return_overrides[11][0][0, 0] += 0.01
+    grid_changed = model_sources(search, rows, cache)[0]
+    assert grid_changed != first and grid_changed == model_sources(search, rows)[0]
+    changed = search.catalogue.mean_anomaly_rad.copy()
+    changed[0] += 0.01
+    search.catalogue.mean_anomaly_rad = changed
+    catalogue_changed = model_sources(search, rows, cache)[0]
+    assert catalogue_changed != grid_changed
+    changed[0] += 0.01
+    assert model_sources(search, rows, cache)[0] != catalogue_changed
+
+
+def test_readonly_view_cannot_mask_mutation_of_writable_backing_storage():
+    search, partial, tour = real_geometry_fixture()
+    parent = search.catalogue.mean_anomaly_rad
+    view = parent.view()
+    view.setflags(write=False)
+    search.catalogue.mean_anomaly_rad = view
+    cache = CatalogueFingerprint()
+    rows = [request(search, partial, tour)]
+    first = model_sources(search, rows, cache)[0]
+    parent[0] += 0.01
+    assert model_sources(search, rows, cache)[0] != first
+    assert cache.reuses == 0
+
+
+def test_immutable_replacement_and_policy_changes_refresh_prefix(monkeypatch):
+    search, partial, tour = real_geometry_fixture()
+    freeze_catalogue(search)
+    rows = [request(search, partial, tour)]
+    cache = CatalogueFingerprint()
+    first = model_sources(search, rows, cache)[0]
+    freeze_catalogue(search)
+    assert model_sources(search, rows, cache)[0] == first
+    assert cache.hashes == 2
+    search.settings = dataclasses.replace(search.settings, hop_inflation=1.7)
+    assert model_sources(search, rows, cache)[0] != first
+    assert cache.hashes == 3
+    monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_CACHE_CATALOGUE_DIGEST", "0")
+    assert model_sources(search, rows, cache)[0] == model_sources(search, rows)[0]
+    assert cache.hashes == 4 and cache.reuses == 0
+
+
+def test_alternating_policies_reuse_catalogue_and_bound_retained_state():
+    search, partial, tour = real_geometry_fixture()
+    freeze_catalogue(search)
+    cached = CatalogueFingerprint()
+    table, plain = [request(search, partial, tour)], [request(search, partial, tour, False)]
+    expected = [model_sources(search, rows)[0] for rows in (table, plain)]
+    for _ in range(5):
+        for rows, signature in zip((table, plain), expected, strict=True):
+            assert model_sources(search, rows, cached)[0] == signature
+    assert cached.hashes == 2 and cached.reuses == 8
+    for inflation in np.linspace(1.0, 2.0, 20):
+        search.settings = dataclasses.replace(search.settings, hop_inflation=float(inflation))
+        assert model_sources(search, table, cached)[0] == model_sources(search, table)[0]
+        assert len(cached.prefixes) <= 4
+
+
 requires_gpu = pytest.mark.skipif(
     os.environ.get("SPACEPDHCG_GTOC12_GPU_TESTS") != "1",
     reason="explicit serialized CUDA test only",
@@ -165,8 +243,11 @@ def save_comparison(model, size, compact, full, actual, expected, expanded):
 
 @requires_gpu
 @pytest.mark.parametrize("model", ["fit", "flat", "ratio"])
-def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, monkeypatch):
+@pytest.mark.parametrize("immutable", [False, True])
+def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, immutable, monkeypatch):
     search, partial, tour = real_geometry_fixture(fit=model == "fit")
+    if immutable:
+        freeze_catalogue(search)
     if model == "ratio":
         search.settings = dataclasses.replace(search.settings, hop_inflation_slope=0.3)
     rows = []
@@ -221,6 +302,7 @@ def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, monkeypatc
             assert_records_close(actual[1], expected[1])
             np.testing.assert_array_equal(actual[2], expected[2])
         assert native.rebuilds == 1
+        assert native.catalogue_fingerprint.reuses == int(immutable)
         # An updated grid must create a replacement model and release its old one.
         search.collect_table._return_overrides[11][0][0, 0] += 0.01
         native.configure(search, rows[:3])

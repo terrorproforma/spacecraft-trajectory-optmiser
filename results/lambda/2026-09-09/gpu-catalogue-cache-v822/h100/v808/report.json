@@ -1,0 +1,81 @@
+{
+  "pid": 257032,
+  "complete": true,
+  "success": false,
+  "stages": [
+    {
+      "name": "git-init",
+      "code": 0,
+      "seconds": 0.002344569016713649,
+      "command": [
+        "git",
+        "init"
+      ]
+    },
+    {
+      "name": "git-add",
+      "code": 0,
+      "seconds": 0.3175680660060607,
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ]
+    },
+    {
+      "name": "git-freeze",
+      "code": 0,
+      "seconds": 0.11116583802504465,
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Freeze integrated endpoint and catalogue fingerprint runtime"
+      ]
+    },
+    {
+      "name": "configure",
+      "code": 0,
+      "seconds": 2.3522052030311897,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-catalogue-v808/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-catalogue-v808/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "code": 0,
+      "seconds": 101.98166100401431,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-catalogue-v808/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "gtoc12_scvx_test",
+        "-j3"
+      ]
+    }
+  ],
+  "stage": "build",
+  "child_pid": 257187,
+  "core_sha256": "021e6fb498e4701a4a83c32605e6eb458912b21854eeca113e6414bfd449af1d",
+  "error": "Traceback (most recent call last):\n  File \"/home/ubuntu/spacepdhcg-catalogue-v808/worker.py\", line 35, in <module>\n    run('controller',[str(root/'build/cuda/gtoc12_scvx_test')])\n  File \"/home/ubuntu/spacepdhcg-catalogue-v808/worker.py\", line 20, in run\n    child=subprocess.Popen(command,cwd=repo,env=env,stdout=log,stderr=subprocess.STDOUT)\n  File \"/usr/lib/python3.10/subprocess.py\", line 971, in __init__\n    self._execute_child(args, executable, preexec_fn, close_fds,\n  File \"/usr/lib/python3.10/subprocess.py\", line 1863, in _execute_child\n    raise child_exception_type(errno_num, err_msg, err_filename)\nFileNotFoundError: [Errno 2] No such file or directory: '/home/ubuntu/spacepdhcg-catalogue-v808/build/cuda/gtoc12_scvx_test'\n"
+}

@@ -1,0 +1,8 @@
+{
+  "pid": 7476,
+  "complete": true,
+  "success": false,
+  "runs": [],
+  "comparison": "Retained immutable catalogue digest; collection DP reuse enabled in both modes",
+  "error": "Traceback (most recent call last):\n  File \"/home/angus/spacepdhcg-catalogue-bench-v812/run.py\", line 10, in <module>\n    while not json.loads((home/'spacepdhcg-catalogue-tests-v811/report.json').read_text())['complete']:time.sleep(2)\n                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py\", line 1027, in read_text\n    with self.open(mode='r', encoding=encoding, errors=errors) as f:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/angus/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/pathlib.py\", line 1013, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/home/angus/spacepdhcg-catalogue-tests-v811/report.json'\n"
+}

@@ -1,0 +1,219 @@
+{
+  "v808": {
+    "success": false
+  },
+  "v809": {
+    "success": false
+  },
+  "v810": {
+    "success": false,
+    "seconds": 0.0002454449995639152,
+    "native_solves": 0
+  },
+  "v811": {
+    "success": false
+  },
+  "v812": {
+    "success": false
+  },
+  "v813": {
+    "success": false,
+    "seconds": 4.000910122000278,
+    "native_solves": 0
+  },
+  "v814": {
+    "success": true
+  },
+  "v815": {
+    "success": true,
+    "seconds": 89.06241623800088,
+    "score_kg": 12999.452764189346,
+    "qualified": true,
+    "replacements": [
+      4
+    ],
+    "native_solves": 147,
+    "solution_sha256": "b7c77b93011cc63d0a9cf0f4a08d158ee1eca7cecfdff99e96c17ee741617aca",
+    "native_status_counts": {
+      "converged": 138,
+      "infeasible": 6,
+      "failed": 3
+    },
+    "native_seconds": 64.71611049799958
+  },
+  "v816": {
+    "success": true,
+    "medians": {
+      "10": {
+        "fresh_seconds": 21.456502195000212,
+        "reuse_seconds": 21.50017069400019,
+        "speedup": 0.9979689231484956
+      },
+      "21": {
+        "fresh_seconds": 19.956888451999475,
+        "reuse_seconds": 19.509639490000154,
+        "speedup": 1.0229245118664834
+      }
+    }
+  },
+  "v817": {
+    "success": true,
+    "seconds": 64.30151834499975,
+    "score_kg": 13023.704900978166,
+    "qualified": true,
+    "replacements": [
+      11,
+      9,
+      4
+    ],
+    "solution_sha256": "a43044d7e39922cd29adf07932e9b316ce8ff323cadaf4271ec3ea4c7d6e465a",
+    "budget_sweep": [
+      {
+        "cap": 2000000,
+        "objective": 13023.70490097826,
+        "seconds": 0.053515131000494875,
+        "nodes": 1000000,
+        "exhaustive": false,
+        "selected": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          1032,
+          1036,
+          1044
+        ]
+      },
+      {
+        "cap": 20000000,
+        "objective": 13023.70490097826,
+        "seconds": 0.5240584080002009,
+        "nodes": 10000000,
+        "exhaustive": false,
+        "selected": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          1032,
+          1036,
+          1044
+        ]
+      },
+      {
+        "cap": 200000000,
+        "objective": 13023.70490097826,
+        "seconds": 5.200846712000384,
+        "nodes": 63371221,
+        "exhaustive": false,
+        "selected": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          1032,
+          1036,
+          1044
+        ]
+      },
+      {
+        "cap": 2000000000,
+        "objective": 13023.70490097826,
+        "seconds": 33.40452664700024,
+        "nodes": 101649321,
+        "exhaustive": true,
+        "selected": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          1032,
+          1036,
+          1044
+        ]
+      }
+    ]
+  },
+  "v819": {
+    "success": true
+  },
+  "v820": {
+    "success": true,
+    "medians": {
+      "10": {
+        "fresh_seconds": 21.817466766000507,
+        "reuse_seconds": 21.03022003499973,
+        "speedup": 1.0374340700996278
+      },
+      "21": {
+        "fresh_seconds": 19.791685303000122,
+        "reuse_seconds": 19.613661139000214,
+        "speedup": 1.0090765391906318
+      }
+    }
+  }
+}

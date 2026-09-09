@@ -2,8 +2,9 @@
 
 This explicit experimental mode derives geometry from the catalogue, not custom
 entries injected into CollectPairTable._geometry. It retains CUDA metadata across
-new routes. Source arrays are hashed on every batch so changing a catalogue or a
-certified grid cannot silently reuse stale prices. That host cost is timed too.
+new routes. Immutable catalogue bytes retain their hash state; mutable sources
+and certified grids are hashed on every batch to prevent stale prices. That host
+cost is timed too.
 """
 
 from __future__ import annotations
@@ -81,7 +82,49 @@ def enabled():
     return value == "1"
 
 
-def model_sources(search, requests):
+class CatalogueFingerprint:
+    """Four policy prefixes for one immutable byte-backed catalogue snapshot."""
+
+    def __init__(self):
+        self.key = None
+        self.sources = ()
+        self.prefixes = {}
+        self.hashes = 0
+        self.reuses = 0
+
+    def digest(self, policy, arrays):
+        immutable = os.environ.get("SPACEPDHCG_TEST_GTOC12_CACHE_CATALOGUE_DIGEST", "1") != "0"
+        immutable = immutable and all(
+            type(a) is np.ndarray and type(a.base) is bytes and a.flags.c_contiguous
+            for a in arrays
+        )
+        key = tuple(
+            (id(a.base), a.ctypes.data, a.dtype.str, a.shape, a.strides) for a in arrays
+        ) if immutable else None
+        if immutable and key == self.key and policy in self.prefixes:
+            self.reuses += 1
+            prefix = self.prefixes.pop(policy)
+            self.prefixes[policy] = prefix
+            return prefix.copy()
+        digest = hashlib.sha256(policy)
+        for a in arrays:
+            digest.update(str((a.dtype.str, a.shape)).encode())
+            digest.update(np.ascontiguousarray(a).view(np.uint8))
+        self.hashes += 1
+        if not immutable or key != self.key:
+            self.prefixes.clear()
+        self.key = key
+        # Keep backing objects alive: addresses/IDs must not be recycled while
+        # a prefix is cached, even if a caller replaces catalogue attributes.
+        self.sources = tuple(a.base for a in arrays) if immutable else ()
+        if immutable:
+            if len(self.prefixes) == 4:
+                self.prefixes.pop(next(iter(self.prefixes)))
+            self.prefixes[policy] = digest.copy()
+        return digest
+
+
+def model_sources(search, requests, catalogue_fingerprint=None):
     """Describe and fingerprint immutable native inputs; never compute pair geometry."""
     use_table = any(row[4] for row in requests)
     _compatible(search, use_table)
@@ -144,10 +187,10 @@ def model_sources(search, requests):
             if inflation.dtype != np.float64 or ok.dtype != np.bool_:
                 raise ValueError("native completion requires FP64 return cells and bool masks")
             grids.append((int(body), inflation, ok))
-    digest = hashlib.sha256(p.tobytes())
-    for a in [*arrays, tofs]:
-        digest.update(str((a.dtype.str, a.shape)).encode())
-        digest.update(np.ascontiguousarray(a).view(np.uint8))
+    fingerprint = catalogue_fingerprint or CatalogueFingerprint()
+    digest = fingerprint.digest(p.tobytes(), arrays)
+    digest.update(str((tofs.dtype.str, tofs.shape)).encode())
+    digest.update(np.ascontiguousarray(tofs).view(np.uint8))
     for body, values, ok in grids:
         digest.update(str((body, values.shape)).encode())
         digest.update(np.ascontiguousarray(values).view(np.uint8))
@@ -257,9 +300,18 @@ class NativeModelOwner:
             np.zeros(nl, LEG),
         )
         self.rebuilds = 0
+        self.catalogue_fingerprint = CatalogueFingerprint()
 
     def configure(self, search, requests):
-        key, policy, arrays, tofs, grids = model_sources(search, requests)
+        fingerprint = self.catalogue_fingerprint
+        before = fingerprint.hashes, fingerprint.reuses
+        key, policy, arrays, tofs, grids = model_sources(search, requests, fingerprint)
+        for name, delta in zip(
+            ("completion_catalogue_hashes", "completion_catalogue_hash_reuses"),
+            (fingerprint.hashes - before[0], fingerprint.reuses - before[1]),
+            strict=True,
+        ):
+            self.owner.gpu.telemetry[name] = self.owner.gpu.telemetry.get(name, 0) + delta
         if key == self.signature:
             return
         ids, *elements = arrays
