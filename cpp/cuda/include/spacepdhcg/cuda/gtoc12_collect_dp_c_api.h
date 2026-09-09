@@ -75,6 +75,39 @@ int spacepdhcg_collect_create_tables(const spacepdhcg_collect_policy*,
  * Validated table handles are held against eviction for the duration of copy. */
 int spacepdhcg_collect_update_tables(void* workspace,const spacepdhcg_collect_policy*,
     const spacepdhcg_collect_inputs*,void* const* pairs,void* const* returns,int32_t t0);
+/* Native mining and two-pass burn scheduling. Only O(n+k) schedule data is
+ * uploaded; mined epoch values and all 2^k subset masses are computed on CUDA.
+ * Existing APIs/structs retain their ABI. inputs.mined is ignored by plan APIs.
+ * Epochs are strictly increasing; weights may be any finite numbers.
+ * All pointers are host arrays copied before create/update returns. */
+typedef struct spacepdhcg_collect_plan_inputs {
+    int32_t abi_version,reserved;
+    const double *epochs,*deploy_epochs,*weights;
+    double minimum_stay,mining_rate,year_days,floor_mass;
+} spacepdhcg_collect_plan_inputs;
+typedef struct spacepdhcg_collect_plan_result {
+    spacepdhcg_collect_result_v2 tour;
+    double burn_per_hop,first_objective;
+    int32_t passes,has_first_objective;
+} spacepdhcg_collect_plan_result;
+int spacepdhcg_collect_create_plan(const spacepdhcg_collect_policy*,
+    const spacepdhcg_collect_inputs*,const spacepdhcg_collect_plan_inputs*,void**);
+int spacepdhcg_collect_update_plan(void*,const spacepdhcg_collect_policy*,
+    const spacepdhcg_collect_inputs*,const spacepdhcg_collect_plan_inputs*);
+int spacepdhcg_collect_create_plan_tables(const spacepdhcg_collect_policy*,
+    const spacepdhcg_collect_inputs*,const spacepdhcg_collect_plan_inputs*,
+    void* const*,void* const*,int32_t,void**);
+int spacepdhcg_collect_update_plan_tables(void*,const spacepdhcg_collect_policy*,
+    const spacepdhcg_collect_inputs*,const spacepdhcg_collect_plan_inputs*,
+    void* const*,void* const*,int32_t);
+/* NaN burn selects the reference automatic heavy/estimated-burn policy.
+ * A finite burn requests one pass (negative values clamp to zero).
+ * Pass selection, fallback and mean-hop calculation stay on CUDA; one final
+ * result download. Invalid inputs leave the output and current problem intact.
+ * Legacy updates disable plan solve until a successful plan update.
+ * Updating a legacy-only allocation to a plan returns capacity status 4. */
+int spacepdhcg_collect_solve_plan(void*,double camp_mass,double price,double burn,
+    spacepdhcg_collect_plan_result*);
 #ifdef __cplusplus
 }
 #endif

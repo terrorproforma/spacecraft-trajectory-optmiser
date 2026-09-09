@@ -618,6 +618,23 @@ def plan_collect_tour(
     if t0 >= table.epochs.shape[0]:
         return None
     epochs = table.epochs[t0:]  # local lattice: the collect phase starts at the camp
+    from .gpu_collect_dp import cuda_collect_plan
+
+    native = cuda_collect_plan(
+        table,
+        ids,
+        camp_i,
+        t0,
+        epochs,
+        weights,
+        banned,
+        w,
+        mass_after_deploys,
+        burn_per_hop,
+        deploy_epoch,
+    )
+    if native is not NotImplemented:
+        return native
     n_t = epochs.shape[0]
     full = (1 << k) - 1
     min_stay = C.MIN_MINING_STAY_YEARS * C.YEAR_DAYS

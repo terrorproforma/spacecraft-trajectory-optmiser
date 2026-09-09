@@ -1,0 +1,434 @@
+{
+  "local": {
+    "verified_members": 990,
+    "archive_sha256": "8842184cf047d2ab5bb7e4c38e8409ed324063497a4e7a6c142fc78d7e1d9a64",
+    "core_sha256": "1e839308d2dc0e66089af9ad3d231787fd1d2dc807d69ec15f9279fb07d60084",
+    "source_manifest_sha256": "dd5686e55a266fc9fc6ee984fba5f10a48cc2e68b8e85e440e924b2b90a8ad4f",
+    "comparison": {
+      "10": {
+        "host": {
+          "seconds": 10.469985990000168,
+          "range": [
+            10.358116446000167,
+            10.522421888999816
+          ],
+          "candidates_per_second": 49.37924468034476,
+          "counters": {
+            "completed_collection_dp_passes": 1731,
+            "collect_dp_allocations": 26,
+            "collect_dp_rebinds": 1126
+          },
+          "result_download_bytes": 1093992
+        },
+        "native": {
+          "seconds": 9.891107794000163,
+          "range": [
+            9.806495517999792,
+            10.009564213000886
+          ],
+          "candidates_per_second": 52.269170528462595,
+          "counters": {
+            "completed_collection_dp_passes": 1731,
+            "collect_dp_allocations": 26,
+            "collect_dp_rebinds": 1126,
+            "native_collection_plans": 1152,
+            "collection_plan_metadata_upload_bytes": 2299200,
+            "collection_plan_result_download_bytes": 755712
+          }
+        },
+        "speedup": 1.0585251124602186,
+        "plans_sha256": "3568175931f3b7e08d5a994ab6fa3d6a12b26a968c9ae85c2d0c623d08711da5"
+      },
+      "21": {
+        "host": {
+          "seconds": 8.60286326700043,
+          "range": [
+            8.515080561000104,
+            8.935608734000198
+          ],
+          "candidates_per_second": 54.86545413438528,
+          "counters": {
+            "completed_collection_dp_passes": 1548,
+            "collect_dp_allocations": 25,
+            "collect_dp_rebinds": 1007
+          },
+          "result_download_bytes": 978336
+        },
+        "native": {
+          "seconds": 8.381182561999594,
+          "range": [
+            8.309798886999488,
+            8.448404654000115
+          ],
+          "candidates_per_second": 56.31663509396096,
+          "counters": {
+            "completed_collection_dp_passes": 1548,
+            "collect_dp_allocations": 25,
+            "collect_dp_rebinds": 1007,
+            "native_collection_plans": 1032,
+            "collection_plan_metadata_upload_bytes": 2177952,
+            "collection_plan_result_download_bytes": 676992
+          }
+        },
+        "speedup": 1.0264498122264916,
+        "plans_sha256": "26541eca159974041f36bc2d1f39220929ea21e5461c1e2329f2cbffa6c682c8"
+      }
+    },
+    "tests": 236,
+    "sanitizer_tests_per_tool": 98,
+    "leak_tests": 31,
+    "gpu_context": [
+      {
+        "run": "warm-fresh",
+        "gpu": "NVIDIA GeForce RTX 5090, 8 %, 16992 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "warm-reuse",
+        "gpu": "NVIDIA GeForce RTX 5090, 12 %, 17012 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-0-fresh",
+        "gpu": "NVIDIA GeForce RTX 5090, 4 %, 16983 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-0-reuse",
+        "gpu": "NVIDIA GeForce RTX 5090, 4 %, 16984 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-1-reuse",
+        "gpu": "NVIDIA GeForce RTX 5090, 21 %, 16996 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-1-fresh",
+        "gpu": "NVIDIA GeForce RTX 5090, 4 %, 16994 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-2-fresh",
+        "gpu": "NVIDIA GeForce RTX 5090, 4 %, 16989 MiB\n",
+        "compute_processes": ""
+      },
+      {
+        "run": "measured-2-reuse",
+        "gpu": "NVIDIA GeForce RTX 5090, 3 %, 16987 MiB\n",
+        "compute_processes": ""
+      }
+    ]
+  },
+  "h100": {
+    "verified_members": 1005,
+    "archive_sha256": "b58e4634f04c3d9950528021bbb2714a18bb2f36563bbb159e6a15e5c2f6cfc3",
+    "core_sha256": "8aebb21b45a3f427d155e72e8b27565799240b855bac5e1b6b31fd9efe9a9934",
+    "source_manifest_sha256": "dd5686e55a266fc9fc6ee984fba5f10a48cc2e68b8e85e440e924b2b90a8ad4f",
+    "comparison": {
+      "10": {
+        "host": {
+          "seconds": 5.992309344001114,
+          "range": [
+            5.967520906997379,
+            6.0448172820033506
+          ],
+          "candidates_per_second": 86.27725478117503,
+          "counters": {
+            "completed_collection_dp_passes": 1731,
+            "collect_dp_allocations": 26,
+            "collect_dp_rebinds": 1126
+          },
+          "result_download_bytes": 1093992
+        },
+        "native": {
+          "seconds": 5.57623105798848,
+          "range": [
+            5.551009303017054,
+            5.5868235679809
+          ],
+          "candidates_per_second": 92.71495291776844,
+          "counters": {
+            "completed_collection_dp_passes": 1731,
+            "collect_dp_allocations": 26,
+            "collect_dp_rebinds": 1126,
+            "native_collection_plans": 1152,
+            "collection_plan_metadata_upload_bytes": 2299200,
+            "collection_plan_result_download_bytes": 755712
+          }
+        },
+        "speedup": 1.0746163998022578,
+        "plans_sha256": "3e39083ba3327289c3c7adeec78a16176f6ced90fd77eb270e8537caeeffdf20"
+      },
+      "21": {
+        "host": {
+          "seconds": 5.200408353994135,
+          "range": [
+            5.171630583994556,
+            5.243586280965246
+          ],
+          "candidates_per_second": 90.76210325627292,
+          "counters": {
+            "completed_collection_dp_passes": 1548,
+            "collect_dp_allocations": 25,
+            "collect_dp_rebinds": 1007
+          },
+          "result_download_bytes": 978336
+        },
+        "native": {
+          "seconds": 4.940642651985399,
+          "range": [
+            4.939481205015909,
+            4.953662766958587
+          ],
+          "candidates_per_second": 95.53413052658779,
+          "counters": {
+            "completed_collection_dp_passes": 1548,
+            "collect_dp_allocations": 25,
+            "collect_dp_rebinds": 1007,
+            "native_collection_plans": 1032,
+            "collection_plan_metadata_upload_bytes": 2177952,
+            "collection_plan_result_download_bytes": 676992
+          }
+        },
+        "speedup": 1.0525773103432907,
+        "plans_sha256": "cd3bbc486fb2bd03ca58ca8e970237cf1eef3dcd0501c55ee214833e037d8c2e"
+      }
+    },
+    "tests": 236,
+    "sanitizer_tests_per_tool": 98,
+    "leak_tests": 31,
+    "gpu_context": null,
+    "profiles": {
+      "10": {
+        "top_cumulative": [
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1193,
+            "function": "run",
+            "primitive_calls": 1,
+            "calls": 1,
+            "self_seconds": 0.0037591200000000003,
+            "cumulative_seconds": 7.739359059000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2010,
+            "function": "_complete",
+            "primitive_calls": 577,
+            "calls": 577,
+            "self_seconds": 0.043748677,
+            "cumulative_seconds": 5.783652142
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2093,
+            "function": "_schedule_dp",
+            "primitive_calls": 576,
+            "calls": 576,
+            "self_seconds": 0.013038035000000002,
+            "cumulative_seconds": 3.1834278150000004
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 573,
+            "function": "plan_collect_tour",
+            "primitive_calls": 1152,
+            "calls": 1152,
+            "self_seconds": 0.014358622000000001,
+            "cumulative_seconds": 2.7530214440000003
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 422,
+            "function": "cuda_collect_plan",
+            "primitive_calls": 1152,
+            "calls": 1152,
+            "self_seconds": 0.015821037,
+            "cumulative_seconds": 2.727143557
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2259,
+            "function": "_schedule_forward",
+            "primitive_calls": 6448,
+            "calls": 6448,
+            "self_seconds": 0.060832830000000004,
+            "cumulative_seconds": 2.4264666580000003
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 332,
+            "function": "expand_and_select",
+            "primitive_calls": 9,
+            "calls": 9,
+            "self_seconds": 0.001104867,
+            "cumulative_seconds": 1.944268466
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 239,
+            "function": "pack",
+            "primitive_calls": 9,
+            "calls": 9,
+            "self_seconds": 0.23661489700000002,
+            "cumulative_seconds": 1.8009915170000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 103,
+            "function": "__init__",
+            "primitive_calls": 1152,
+            "calls": 1152,
+            "self_seconds": 0.27263475800000003,
+            "cumulative_seconds": 1.4949095810000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 831,
+            "function": "hops_from",
+            "primitive_calls": 2052,
+            "calls": 2052,
+            "self_seconds": 0.010013999,
+            "cumulative_seconds": 1.441201315
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 332,
+            "function": "solve_plan",
+            "primitive_calls": 1152,
+            "calls": 1152,
+            "self_seconds": 1.150107487,
+            "cumulative_seconds": 1.208743975
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/screening.py",
+            "line": 298,
+            "function": "screen_asteroid_hops",
+            "primitive_calls": 964,
+            "calls": 964,
+            "self_seconds": 0.019197154,
+            "cumulative_seconds": 1.1388807790000002
+          }
+        ],
+        "total_calls": 5471366,
+        "total_self_seconds": 7.710965392
+      },
+      "21": {
+        "top_cumulative": [
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1193,
+            "function": "run",
+            "primitive_calls": 1,
+            "calls": 1,
+            "self_seconds": 0.0036598040000000004,
+            "cumulative_seconds": 6.929658263
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2010,
+            "function": "_complete",
+            "primitive_calls": 517,
+            "calls": 517,
+            "self_seconds": 0.040525842,
+            "cumulative_seconds": 5.139944822
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2259,
+            "function": "_schedule_forward",
+            "primitive_calls": 5908,
+            "calls": 5908,
+            "self_seconds": 0.062284386000000004,
+            "cumulative_seconds": 2.533963779
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2093,
+            "function": "_schedule_dp",
+            "primitive_calls": 516,
+            "calls": 516,
+            "self_seconds": 0.011584991000000001,
+            "cumulative_seconds": 2.41159076
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 573,
+            "function": "plan_collect_tour",
+            "primitive_calls": 1032,
+            "calls": 1032,
+            "self_seconds": 0.012317089000000002,
+            "cumulative_seconds": 2.025024336
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 422,
+            "function": "cuda_collect_plan",
+            "primitive_calls": 1032,
+            "calls": 1032,
+            "self_seconds": 0.014058116,
+            "cumulative_seconds": 2.002998056
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 332,
+            "function": "expand_and_select",
+            "primitive_calls": 9,
+            "calls": 9,
+            "self_seconds": 0.000998687,
+            "cumulative_seconds": 1.7809952230000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 239,
+            "function": "pack",
+            "primitive_calls": 9,
+            "calls": 9,
+            "self_seconds": 0.22753178000000002,
+            "cumulative_seconds": 1.639508578
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 831,
+            "function": "hops_from",
+            "primitive_calls": 2052,
+            "calls": 2052,
+            "self_seconds": 0.009065395,
+            "cumulative_seconds": 1.2881980690000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 103,
+            "function": "__init__",
+            "primitive_calls": 1032,
+            "calls": 1032,
+            "self_seconds": 0.225921318,
+            "cumulative_seconds": 1.0733203390000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 70,
+            "function": "cuda_select_collection",
+            "primitive_calls": 9966,
+            "calls": 9966,
+            "self_seconds": 0.015920056000000002,
+            "cumulative_seconds": 1.0660819670000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-native-collect-plan-v856/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 280,
+            "function": "select_collection",
+            "primitive_calls": 9966,
+            "calls": 9966,
+            "self_seconds": 0.061496293,
+            "cumulative_seconds": 1.047873855
+          }
+        ],
+        "total_calls": 5001986,
+        "total_self_seconds": 6.9011518700000005
+      }
+    }
+  },
+  "passed": true
+}

@@ -78,13 +78,16 @@ def test_resident_tour_never_downloads_tables(monkeypatch, capacity):
 
 
 def test_legacy_result_buffer_stays_496_bytes(monkeypatch):
+    monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_NATIVE_COLLECT_PLAN", "0")
     import ctypes as ct
 
     from spacepdhcg.gtoc12.gpu_collect_dp import GpuCollectDP
 
     original = GpuCollectDP.solve
+    calls = []
 
     def checked(self, masses, camp_mass, price, *args):
+        calls.append(True)
         values = np.ascontiguousarray(masses, dtype=np.float64)
         buffer = (ct.c_ubyte * 528)(*([0xA5] * 528))
         legacy = self.gpu.library.spacepdhcg_collect_solve
@@ -96,3 +99,4 @@ def test_legacy_result_buffer_stays_496_bytes(monkeypatch):
 
     monkeypatch.setattr(GpuCollectDP, "solve", checked)
     test_resident_tour_never_downloads_tables(monkeypatch, 1)
+    assert calls

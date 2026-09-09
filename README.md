@@ -29,12 +29,14 @@ changes produce a **16-flight certified prefix**, but the Earth return still
 fails. The campaign makes 38 unique native calls and claims no score gain.
 [Downloaded controls, work counts and remaining failure](docs/GPU_NEW_DEPARTURE_CAMPAIGN.md).
 
-The latest paired route-search benchmarks reach about **88 surrogate candidates
-per second on H100 and 53 on RTX 5090**, excluding process startup and catalogue
-loading. Shared native Earth-return rows improve these two searches by
-**15.5–17.0% on H100** and **29.6–30.5% locally**, with unchanged candidate files
-within each GPU. These are search rates; qualified PDHCG throughput remains
-unproved. [Exact paired measurements and remaining host work](docs/GPU_SHARED_RETURN_OPTIONS.md).
+The latest paired route-search benchmarks reach **93–96 surrogate candidates
+per second on H100 and 52–56 on RTX 5090**, excluding process startup and catalogue
+loading. Native mining, subset masses and burn-pass selection add another
+**5.3–7.5% throughput on H100** and **2.6–5.9% locally**, retaining the previous
+candidate files exactly. Both GPUs pass 236 tests and CUDA safety/leak checks.
+The local timings include recorded desktop GPU activity. These are search rates;
+qualified PDHCG throughput remains unproved.
+[Exact paired measurements and remaining host work](docs/GPU_NATIVE_COLLECTION_PLAN.md).
 
 The saved wider pool supplies no new asteroid order with a positive standalone
 weighted replacement against the current fleet. That frozen benchmark builds
