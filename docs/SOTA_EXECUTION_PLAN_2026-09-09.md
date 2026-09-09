@@ -33,9 +33,15 @@ positive prescription is the previously failed ship-10 return. Its frozen run
 uses unit weights to construct the beam, then bonus-weights only the surviving
 completed plans. It fixes the incumbent Earth seeds and passes no master
 opportunity prices. Existing production search supports these capabilities.
-First test actual bonus weights during beam construction with a matched
-configuration; then broaden Earth seeds/asteroid families and use fleet-aware
-pricing. Do not spend another refinement campaign on the same saved pool.
+The matched v636 bonus-weighted construction experiment is now complete. Both
+unit-weight controls reproduce the saved pools exactly. Bonus-weighted search
+produces 1,736 candidates, including 1,520 new fixed-cargo prescriptions and
+644 additional deployment orders, but no profitable eligible standalone or
+paired replacement of ships 10/21. Its best weighted cargo is lower on both
+ships. No new refinement is warranted from these pools. Preserve the productive
+unit-weight arm while broadening Earth seeds/asteroid families and testing
+fleet-aware pricing. Retain raw/weighted tradeoffs and avoid another width or
+weight sweep around these same two fixed seeds.
 Include coordinated exchanges and
 the actual raw-mass margin. Negative standalone columns can remain useful to
 a joint fleet change, but require a positive combined objective before costly
@@ -48,7 +54,16 @@ batch and retain on the GPU. Screening-to-expansion transfer also remains.
 [Admission evidence and profile](GPU_BEAM_ADMISSION.md).
 [Exact comparison, scope and retained candidates](GPU_BEAM_EXPANSION.md).
 
+The subsequent shared native Earth-return cache now reaches about **88 surrogate
+candidates/s on H100 and 53 locally** on the two narrow paired probes. It improves
+search throughput by 15.5–17.0%/29.6–30.5% (H100/local) with unchanged candidate
+bytes within each GPU. This is a separate paired performance experiment; the
+wide weight ablation above deliberately uses its frozen preceding v841 runtime.
+Collection-DP preparation/control and batched completion remain the next major
+native migration targets. [Exact cache measurements](GPU_SHARED_RETURN_OPTIONS.md).
+
 [Saved selection audit and frozen search configuration](../results/local/2026-09-09/wide-pool-selection-v635/README.md).
+[Matched weight experiment and complete retained pools](../results/local/2026-09-09/weighted-beam-v636/README.md).
 
 The v633 diagnostics have now led to two completed bounded interventions.
 The v635 joint equality/L1 reference passes its exact tiny cases and completes
@@ -57,10 +72,28 @@ the original primal, cone and complementarity gates, but stationarity around
 2.07e-8 and gap around 0.001261 still fail the original 1e-9 gates. All eight
 saved readouts fail both independent audits. The saved 65-digit decomposition
 attributes about 98.7% of the gap to Gamma/thrust stationarity, while proximal
-stationarity is around 7e-16. Next test bounded dual correction on these newly
-eligible fixed primal points; do not tighten the already accurate inner solve,
-add unchanged iterations or relax accuracy. This remains a CPU numerical
-reference, awaiting qualification and CUDA implementation.
+stationarity is around 7e-16. The subsequent same-input comparison finds both
+primal objectives about **3.631% above** qualified saved QOCO outputs. A fixed-primal
+dual correction cannot improve those costs, so that proposal was canceled before
+conversion or execution. The fixed-metric reflected-Halpern/restart intervention
+has also completed after passing independent tiny tests: 10,000 maps and eight
+restarts per input, with no inner failures. All eight stored original readouts
+fail both unchanged audits. Final costs remain about 3.517% above QOCO, while
+cone feasibility and complementarity worsen. This is no qualified improvement,
+and the variant will not be ported to CUDA. Preserve the working joint prox and
+inspect coefficient/conditioning effects before another intervention. Do not
+tighten the already accurate inner solve, add unchanged iterations or relax
+accuracy. This remains a CPU numerical reference, awaiting qualification.
+[Saved objective comparison and decision](../results/local/2026-09-09/core-primal-decision-v636/README.md).
+[Completed restart experiment and original audits](../results/local/2026-09-09/core-joint-halpern-v636/README.md).
+
+The next crossover controls are now identified from existing source: displaced
+HCW box/SOC recipes and the existing powered-descent reference. Their quadratic
+values are positive but diagonal, so they test quadratic correctness without
+inherently requiring CG. Exact matched coefficient/vector captures still need
+to be exported; the current inventory runs no model or solver. A CG-specific
+advantage needs an appropriate existing coupled workload, not artificial changes
+to zero-Q GTOC12. [Concrete recipes and unchanged gates](../results/local/2026-09-09/nonzero-q-inventory-v636/REPORT.md).
 
 Separately, the CUDA interval replay localized the failed v632 return to an
 82.854828 m/s first-interval velocity discontinuity. The two later-arrival tests
@@ -68,12 +101,19 @@ now also fail: +30/+60 days, 44/32 SCvx updates, defects 0.004298/0.024890.
 Neither output reaches flight certification. Keep those failures and change
 coupled itinerary timing/control initialization rather than merely extending
 the archived seed with more coast. These outcomes do not prove infeasibility
-and leave the verified fleet unchanged.
+and leave the verified fleet unchanged. A separate v636 test rebuilds the entire
+return seed on CUDA from the saved optimized physical thrust and prescribed
+initial state, discarding inconsistent state nodes. It also remains uncertified:
+27 updates, three accepted, defect 0.002781793, and no flight/fleet checker calls.
+This is essentially the earlier aggregate defect; it does not establish the same
+interval or axis without a fresh replay. Stop repeating this unchanged local
+return prescription and seek different timing, cargo or itinerary choices.
 [Core evidence](PDHCG_JOINT_PROX_DESIGN.md),
 [mission evidence](../results/local/2026-09-09/interval-defect-replay-v633/RESULTS.md).
 
 [Completed core experiment](../results/local/2026-09-09/core-joint-reference-v635/README.md),
-[completed GPU horizon experiment](../results/local/2026-09-09/return-horizon-v634/README.md).
+[completed GPU horizon experiment](../results/local/2026-09-09/return-horizon-v634/README.md),
+[completed optimized-control seed experiment](../results/local/2026-09-09/optimized-control-seed-v636/README.md).
 
 The [performance assessment and complementary-method plan](PERFORMANCE_POSITION_2026-09-09.md)
 distinguishes measured gains from PDHCG's proposed operating regime. The v631

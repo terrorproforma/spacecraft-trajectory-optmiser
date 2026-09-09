@@ -42,6 +42,22 @@ mission choices. Neither obstacle is resolved by faster individual kernels.
   diagnosis and export; this is not GPU throughput. The improvement establishes
   a working inner operation and isolates the remaining outer convergence tail.
   [Exact sources, inputs and outcomes](../results/local/2026-09-09/core-joint-reference-v635/README.md).
+- The v636 saved-data comparison finds those two final primal objectives about
+  **3.631% higher** than qualified QOCO outputs on the identical inputs. A
+  fixed-primal dual correction cannot improve the objective, so that proposal
+  was canceled before execution. The subsequent bounded numerical intervention changes
+  the primal iteration using the working joint prox and fixed-metric reflected
+  Halpern/restarts. Original accuracy gates and the same-input cost comparison
+  remain visible. [Decision and retained evidence](../results/local/2026-09-09/core-primal-decision-v636/README.md).
+- That restart experiment also fails qualification: all eight saved readouts
+  fail both independent audits after the bounded two-input run. Each case reaches
+  10,000 maps and eight restarts, with no inner failure. Costs are slightly lower
+  but cone feasibility and complementarity worsen; final cone violations are
+  about 1.01e-5 and 5.91e-6. Objectives remain about 3.517% above the qualified
+  QOCO references. Complete CPU worker time is 24.077 seconds for both cases.
+  This is not a usable improvement or a CUDA rollout candidate. Conditioning
+  diagnosis must precede another core intervention.
+  [Complete negative experiment](../results/local/2026-09-09/core-joint-halpern-v636/README.md).
 - Host work still matters. Retained catalogue fingerprints improve complete
   route-search throughput by **7.33–7.48% on H100** in the paired two-route
   experiment. Those are surrogate search candidates, not certified trajectories.
@@ -82,6 +98,16 @@ mission choices. Neither obstacle is resolved by faster individual kernels.
   preparation and forward scheduling as the next substantial recurring costs.
   All candidate bytes match the preceding expansion checkpoint; score is
   unchanged. [Admission measurements and profile](GPU_BEAM_ADMISSION.md).
+- Shared native Earth-return rows subsequently improve the same two narrow
+  searches by **15.5–17.0% on H100** and **29.6–30.5% on RTX 5090**. Combined
+  throughput reaches about **88/53 surrogate candidates per second**. Three
+  alternating measured samples follow warm-up; startup and catalogue loading
+  are excluded. Candidate bytes remain unchanged within each GPU. Reuse avoids
+  12,992,408 repeated branch requests, which are correctly excluded from fresh
+  work counters. Both GPUs pass 205 tests and the recorded sanitizer/leak checks.
+  Collection-DP preparation/control remains the main profiled recurring cost.
+  This is a search-layer gain and adds no certified trajectory or fleet score.
+  [Native ownership, paired records and limits](GPU_SHARED_RETURN_OPTIONS.md).
 
 The saved wider pool has now been compared with the new 24-ship incumbent.
 None of its 509 additional asteroid orders provides a positive standalone
@@ -95,11 +121,27 @@ asteroid weight set to 1.0, applying the original bonus weights only when
 sorting completed plans. It also fixes one incumbent Earth seed per ship,
 restricts each pool to local neighbors, and supplies no master opportunity
 prices. Production already supports bonus weights and opportunity prices;
-this campaign does not exercise them. First test the original bonus weights
-during beam construction, then broaden Earth seeds/families and apply actual
-fleet opportunity prices. That intervention is distinct from repeating the
-raw-mass beam at greater width.
+this historical campaign does not exercise them.
 [Saved pool comparison and exact campaign configuration](../results/local/2026-09-09/wide-pool-selection-v635/README.md).
+
+The v636 matched weight experiment now tests that hypothesis on the same frozen
+GPU implementation. Both unit controls reproduce the complete old pools exactly.
+The first control initially stopped on an in-memory integer-key versus JSON
+string-key comparison bug; saved-data equality proved no numerical mismatch,
+and the continuation ran only the three unconsumed searches. All four searches
+completed within their original budgets with no refinement or certificate.
+
+Bonus-weighted construction yields 851/885 candidates for ships 10/21, with
+745/775 new fixed-cargo prescriptions and 355/289 additional deployment orders.
+It supplies no positive eligible standalone or paired replacement. Best predicted
+weighted cargo falls from 579.157 to 534.734 kg for ship 10 and from 539.208 to
+516.524 kg for ship 21. Actual bonus weights change both deploy ranking and
+collection scheduling while the heuristic propellant penalties remain fixed;
+the final pools do not isolate which rejected prefix causes the loss. This is
+negative evidence for this single weight substitution, not a reason to optimize
+the competition score using raw mass alone. Preserve both useful objectives in
+route generation, broaden Earth seeds/families and use fleet opportunity prices.
+[Complete experiment, comparison repair and saved selection audit](../results/local/2026-09-09/weighted-beam-v636/README.md).
 
 The native GTOC12 trajectory refinements currently use **GPU QOCO inside SCvx**.
 The custom persistent PDHCG-inspired backend is still awaiting reliable
@@ -139,6 +181,14 @@ infeasibility or change the verified score.
 [interval replay and exact scope](../results/local/2026-09-09/interval-defect-replay-v633/RESULTS.md),
 [two later-arrival outcomes](../results/local/2026-09-09/return-horizon-v634/README.md).
 
+The v636 optimized-control seed experiment also fails: CUDA regenerates the
+trajectory from the saved optimized physical thrust and prescribed initial state,
+then returns a defect of 0.002781793 after 27 SCvx updates, three accepted.
+No certificate or fleet check runs. The nearly identical aggregate defect
+rejects this particular initialization hypothesis; it is not an infeasibility
+proof or a new localization of the residual.
+[Exact seed inputs and complete outcome](../results/local/2026-09-09/optimized-control-seed-v636/README.md).
+
 ## Where the method is most promising
 
 PDHCG's attraction is sparse matrix-vector work, vector updates, and manageable
@@ -162,6 +212,16 @@ zero-Q regressions alongside held-out mission captures, while nontrivial existin
 nonzero-quadratic trajectory fixtures
 must test the broader numerical design. Adding an artificial smoothing objective
 to GTOC12 merely to favor the solver would change the problem and is not the plan.
+
+A source inventory identifies displaced HCW and powered-descent recipes with
+positive actual quadratic coefficients. All inspected Hessians are diagonal,
+including the synthetic trajectory-banded fixture; free/box quadratic proximal
+updates therefore have a closed form. These are useful quadratic correctness
+and crossover controls, but do not inherently demonstrate a CG advantage.
+No fully bound serialized nonzero-Q physical capture or coupled-Hessian physical
+workload was established in this bounded inventory. Export exact matched inputs
+from existing recipes before timing them; preserve the CPU Euler versus native
+RK4 descent distinction. [Recipes, original gates and source pins](../results/local/2026-09-09/nonzero-q-inventory-v636/REPORT.md).
 
 Small isolated problems, poor conditioning, and the final tight-accuracy phase
 can favor an interior-point method. We will measure that crossover rather than
@@ -191,12 +251,15 @@ not a claim that copying one technique establishes first place.
 
 1. **Repair reliable refinement and the measured numerical obstruction.** The
    mass-merit and inner line-search repairs have passed their focused tests.
-   The mission candidate still fails after two later-arrival tests; the next
-   refinement must change coupled timing/control initialization rather than
-   append more coast. The joint dynamics/L1 reference now reaches its outer
+   The mission candidate still fails after two later-arrival tests and a fresh
+   CUDA propagation of the optimized-control seed. The latter returns a nearly
+   unchanged 0.002781793 aggregate defect after 27 updates, with no certificate.
+   Seek different timing, cargo or itinerary choices. The joint dynamics/L1 reference now reaches its outer
    cap, with dual stationarity and gap remaining. The saved decomposition
-   attributes about 98.7% of that gap to Gamma/thrust stationarity. Test a
-   bounded dual correction on the now-eligible fixed primal points. Preserve
+   attributes about 98.7% of that gap to Gamma/thrust stationarity. Both primal
+   objectives remain about 3.631% above the saved qualified QOCO references.
+   The subsequent fixed-metric restart trial fails and worsens cone feasibility.
+   Inspect coefficient/conditioning effects before another numerical intervention. Preserve
    the original objective and gates, and require a qualified reference before
    CUDA integration. Do not repeat unchanged failed experiments.
 2. **Establish the backend crossover.** Use fixed nontrivial zero/nonzero-Q
@@ -205,9 +268,10 @@ not a claim that copying one technique establishes first place.
    cold setup, retained solves, all failed work, handoffs and certification.
    Only a qualified path advances into the native mission backend comparison.
 3. **Broaden mission search in parallel.** The existing wider pool supplies no
-   new positive standalone replacement. Use the original bonus weights during
-   beam construction, then test different Earth seeds and master opportunity
-   prices. Generate diverse new route columns,
+   new positive standalone replacement, and the matched bonus-weighted variant
+   also produces no profitable eligible standalone or paired replacement.
+   Preserve the productive unit-weight arm and raw/weighted tradeoffs while
+   testing different Earth seeds and master opportunity prices. Generate diverse new route columns,
    jointly modify conflicting ships, optimize deployment/collection timing,
    and explore feasible fleet growth. Preserve profitable weighted-score
    replacements that use the actual fleet raw-mass margin.

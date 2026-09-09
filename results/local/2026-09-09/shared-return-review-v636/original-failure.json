@@ -1,0 +1,22 @@
+{
+  "scope": "Observed saved-data audit failure; no GPU or numerical mission calls",
+  "source": "results/lambda/2026-09-09/gpu-shared-return-options-v846/audit_saved.py",
+  "source_sha256": "a13246091d565efea79199228b9e41220088988e54dc1594c75792c3942c3aa3",
+  "interpreter": "C:/Users/Angus/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe",
+  "python_version": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+  "arguments": ["-B", "results/lambda/2026-09-09/gpu-shared-return-options-v846/audit_saved.py"],
+  "exit_code": 1,
+  "exception": "AssertionError",
+  "line": 89,
+  "statement": "assert expected==summaries[str(ship)]",
+  "first_mismatch": {
+    "side": "local",
+    "ship": 10,
+    "field": "total_seconds",
+    "python312_sum": 11.483544069,
+    "saved_sequential_sum": 11.483544069000011,
+    "difference_seconds": -1.0658141036401503e-14,
+    "difference_ulps": -6
+  },
+  "preservation": "This is an observation record, not a fabricated raw stderr file. The original package and audit source remain unchanged. The companion exact compatibility audit retains the original equality assertion."
+}

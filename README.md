@@ -22,23 +22,29 @@ physics tolerances. This is a fleet-selection gain from existing trajectories;
 no new optimizer or PDHCG solve produced the added route.
 [Exact result, provenance and display](docs/GTOC12_FLEET_ADDITION.md).
 
-CUDA beam expansion and ranking now make two paired route searches **2.58x and
-2.72x faster on H100** (**1.61x and 1.75x on RTX 5090**). Combined search rates
-are about **74.1 / 41.6 surrogate candidates per second** on H100/local, excluding
-process startup and catalogue loading. The wider saved beam includes 509 new
-asteroid orders; these have not yet been trajectory-refined. These gains belong
-to mission search, while reliable PDHCG qualification remains under development.
-[Paired measurements and remaining host work](docs/GPU_BEAM_EXPANSION.md).
+The latest paired route-search benchmarks reach about **88 surrogate candidates
+per second on H100 and 53 on RTX 5090**, excluding process startup and catalogue
+loading. Shared native Earth-return rows improve these two searches by
+**15.5–17.0% on H100** and **29.6–30.5% locally**, with unchanged candidate files
+within each GPU. These are search rates; qualified PDHCG throughput remains
+unproved. [Exact paired measurements and remaining host work](docs/GPU_SHARED_RETURN_OPTIONS.md).
 
 The saved wider pool supplies no new asteroid order with a positive standalone
 weighted replacement against the current fleet. That frozen benchmark builds
 its beam using raw mass and applies bonus weights only to completed survivors.
-The next quality experiment will use the supported bonus weights during search,
-then broaden route families and coordinated fleet changes. The latest joint
-equality/L1 CPU reference completes 10,000 updates on both frozen captures with
+The matched bonus-weighted search is now complete: it produces 1,736 candidates
+and 644 additional deployment orders, but no profitable eligible standalone or
+paired replacement. Broader route families and coordinated fleet changes remain
+necessary; replacing the existing search weights alone did not improve quality.
+The v635 joint equality/L1 CPU reference completes 10,000 updates on both frozen captures with
 no inner failure, but still fails the original dual-stationarity and gap gates.
-Two later-arrival GPU return tests also remain uncertified. These diagnostics
-leave the verified fleet score unchanged.
+Its primal objectives are about **3.631% worse** than qualified QOCO results on
+the same convex inputs. That requires improving the primal iteration; a
+dual-only correction cannot improve those costs. The subsequent fixed-metric
+restart experiment also fails both captures and worsens cone feasibility, so
+it will not be ported to CUDA. Two later-arrival GPU return tests and a fresh
+propagation of the optimized-control seed also remain
+uncertified. These diagnostics leave the verified fleet score unchanged.
 [Performance conclusions and next experiments](docs/PERFORMANCE_POSITION_2026-09-09.md).
 
 The preceding GPU refinement frontier reaches **13,023.705 weighted kg / 14,291.006

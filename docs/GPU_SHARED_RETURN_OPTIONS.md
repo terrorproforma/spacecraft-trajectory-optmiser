@@ -69,6 +69,13 @@ v847 checks leaks and v848 profiles the same runtime afterwards. Exact source,
 binaries, every paired candidate file and raw profiles are retained in the
 [downloaded v846 evidence and audit instructions](../results/lambda/2026-09-09/gpu-shared-return-options-v846/README.md).
 
+A later saved-data review verifies the exact source overlays, candidate bytes,
+sample medians and branch accounting. Python 3.12's floating-point `sum` can
+disagree with the recorded sequential profile-time totals by a few ULPs. The
+[portable compatibility audit](../results/local/2026-09-09/shared-return-review-v636/README.md)
+reproduces the original addition order and passes every original assertion
+without adding a tolerance. The v846 package bytes remain unchanged.
+
 ## Remaining work and score
 
 The subsequent RTX ship-10 profile attributes 6.48 cumulative seconds of an

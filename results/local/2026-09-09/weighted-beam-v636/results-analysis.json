@@ -1,0 +1,137 @@
+{
+  "complete": true,
+  "scope": "Saved candidates and exact frozen bonus/raw-ledger arithmetic; no new generation, geometry, refinement or certification.",
+  "GPU_calls_in_this_audit": 0,
+  "current_Result_sha256": "1f420928bbef8da91e3a6f8b74d3bf00039c78d4257215c103a484bc55bb22da",
+  "current_raw_kg": "14915.0444900762",
+  "current_weighted_kg": "13526.96124117307",
+  "minimum_raw_for24_kg": "14909.4398987280018613782568790332730447909449592595597598563",
+  "raw_headroom_kg": "5.6045913481981386217431209667269552090550407404402401437",
+  "meaningful_positive_reporting_threshold_kg": "1E-8",
+  "physical_request_schema": "flights endpoints/epochs + deployment/collection epochs + exact cargo; proxy delta-v/inflation/final mass/score excluded",
+  "original_search_calls": 1,
+  "continuation_search_calls": 3,
+  "combined_search_calls": 4,
+  "bindings": {
+    "unit-ship-10": {
+      "plans_sha256": "24a46575a3ce47859aa77e4dd3040e2d9b4657ff80cc0e31e8fe3133f7dc7cab",
+      "report_sha256": "f0bbeafdb670d0d23560ba45f37363dffbe3c43d01ed9b8f68769f4303d150e8",
+      "search_seconds": 26.99747420699987,
+      "plans": 1020,
+      "expansions": 1025,
+      "lambert_requests": 36727114
+    },
+    "unit-ship-21": {
+      "plans_sha256": "5d6be0c405685c657b0c529fe05ce63bd58f234d4699bfe0bd4b9c93c977a322",
+      "report_sha256": "4c003d9ab1a2eed6305c3c65bd974f683a56caee7830daa006ff2b84777e5318",
+      "search_seconds": 22.638949567000054,
+      "plans": 940,
+      "expansions": 1025,
+      "lambert_requests": 28101614
+    },
+    "bonus-ship-10": {
+      "plans_sha256": "6d79797c33fa8d02bd6c57560c59d56d06f2543d99002b450724c4931ecbe234",
+      "report_sha256": "51a0dac83741d93665ebb725a45fee3cb76360290f641b306523658a74a5f3a2",
+      "search_seconds": 32.20080355099981,
+      "plans": 851,
+      "expansions": 1025,
+      "lambert_requests": 39717932
+    },
+    "bonus-ship-21": {
+      "plans_sha256": "387b0bc8ae9ffb8675eca60c4e59c9c56ef8a2c582762ebe261d68fe00271d74",
+      "report_sha256": "0a7ca7568a05d66855920b80bae8ee7b8f20d780cf83cf7cc12803dced6dd9f1",
+      "search_seconds": 26.053269710000222,
+      "plans": 885,
+      "expansions": 1025,
+      "lambert_requests": 30236488
+    }
+  },
+  "ships": {
+    "10": {
+      "unit_unique_physical_requests": 1020,
+      "bonus_unique_physical_requests": 851,
+      "new_bonus_physical_requests": 745,
+      "new_bonus_deployment_orders": 355,
+      "new_bonus_itinerary_orders": 369,
+      "unit_eligible_standalone": [
+        "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af"
+      ],
+      "bonus_eligible_standalone": [],
+      "new_bonus_eligible_standalone": [],
+      "unit_best_weighted_kg": "579.1572244519977699495505751650495",
+      "bonus_best_weighted_kg": "534.7337107820094406766083276321208"
+    },
+    "21": {
+      "unit_unique_physical_requests": 940,
+      "bonus_unique_physical_requests": 885,
+      "new_bonus_physical_requests": 775,
+      "new_bonus_deployment_orders": 289,
+      "new_bonus_itinerary_orders": 331,
+      "unit_eligible_standalone": [],
+      "bonus_eligible_standalone": [],
+      "new_bonus_eligible_standalone": [],
+      "unit_best_weighted_kg": "539.207632593988845403265873709907",
+      "bonus_best_weighted_kg": "516.5240872436359228829318579503746"
+    }
+  },
+  "paired_replacements": {
+    "unit": {
+      "saved_ledger_pairs_considered": 816651,
+      "footprint_conflicts": 0,
+      "raw_rule_failures": 816610,
+      "positive_eligible_pairs": 3,
+      "positive_pairs_with_new_bonus_prescription": 0,
+      "top10": [
+        {
+          "ship10_request": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+          "ship21_request": "incumbent",
+          "ship10_index": 0,
+          "ship21_index": -1,
+          "weighted_gain_kg": "5.5288636015592699495505751650495",
+          "raw_gain_kg": "5.749486652824983",
+          "predicted_weighted_kg": "13532.4901047746292699495505751650495",
+          "predicted_raw_kg": "14920.793976729024983",
+          "contains_new_bonus_prescription": false,
+          "certified": false,
+          "neither_standalone_eligible": false
+        },
+        {
+          "ship10_request": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+          "ship21_request": "85555f3b3fc000d4d372ddfb6b21c2ba4b1a686518d7de7b47ccb7778ca1a991",
+          "ship10_index": 0,
+          "ship21_index": 0,
+          "weighted_gain_kg": "5.5288636014406153528164488749565",
+          "raw_gain_kg": "5.749486652678165",
+          "predicted_weighted_kg": "13532.4901047745106153528164488749565",
+          "predicted_raw_kg": "14920.793976728878165",
+          "contains_new_bonus_prescription": false,
+          "certified": false,
+          "neither_standalone_eligible": false
+        },
+        {
+          "ship10_request": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af",
+          "ship21_request": "be3d912b15f126c39cde61ac2183a3ad1639737acae82dceec6f987788d83863",
+          "ship10_index": 0,
+          "ship21_index": 1,
+          "weighted_gain_kg": "4.8585301211257984332133408049405",
+          "raw_gain_kg": "4.928131416538533",
+          "predicted_weighted_kg": "13531.8197712941957984332133408049405",
+          "predicted_raw_kg": "14919.972621492738533",
+          "contains_new_bonus_prescription": false,
+          "certified": false,
+          "neither_standalone_eligible": false
+        }
+      ]
+    },
+    "bonus": {
+      "saved_ledger_pairs_considered": 712908,
+      "footprint_conflicts": 0,
+      "raw_rule_failures": 712907,
+      "positive_eligible_pairs": 0,
+      "positive_pairs_with_new_bonus_prescription": 0,
+      "top10": []
+    }
+  },
+  "metrics_rows": 3696,
+  "known_failed_original_ship10_request": "dcfc0573a6d96ca76120347a4e22ba91f33bbd53bfc1c59704c0481a8053a6af"
+}

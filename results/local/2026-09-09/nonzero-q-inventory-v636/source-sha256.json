@@ -1,0 +1,101 @@
+{
+  "files": {
+    "artifacts/performance/medium-dispatch-hcw-50.json": {
+      "bytes": 27376,
+      "sha256": "5d2fba97726fdd4bc29af57104a3d67bafa3ca2a4b29e625006af29c52f8c13d"
+    },
+    "artifacts/performance/qoco-queued-planner-pd3-baseline-sample.json": {
+      "bytes": 84045,
+      "sha256": "ea58cade18bdd3db3b9584c003261757f80947bbcfafb9070ed9d6c5693dc600"
+    },
+    "benchmarks/paper1_matrix.json": {
+      "bytes": 8701,
+      "sha256": "922905dde36ff8485c7bf2ad246e589e6483f256a8a27ec87c1230b2a0c15bad"
+    },
+    "build/performance/warm-capture-v623/PLAN.md": {
+      "bytes": 13968,
+      "sha256": "9455c72118d55c07ced9576afd58f27bb612f6829928ca37090e83577c61d39f"
+    },
+    "build/performance/warm-capture-v623/findings.json": {
+      "bytes": 16657,
+      "sha256": "e94bf41e624638d4ae5e2bbb2d793445f42251c437ecf41dd366fb509963ac01"
+    },
+    "build/performance/warm-capture-v623/source/cpp/include/spacepdhcg/transcription/hcw_rendezvous.hpp": {
+      "bytes": 25132,
+      "sha256": "f0330f10db5f959de6eb2bf7f9ee46c906cb1ae764ef9eeae3f0e6eac13fcc8c"
+    },
+    "build/performance/warm-capture-v623/source/cpp/tests/hcw_rendezvous_smoke.cpp": {
+      "bytes": 4534,
+      "sha256": "cc29260cc01f7de00ba89d707262aa723c2d797d20a7b24dba6914828354aacc"
+    },
+    "cpp/cuda/tests/device_scvx_integration_test.cu": {
+      "bytes": 263027,
+      "sha256": "9fb8ac11487eaa7209c5cfe4acff5983d37455aec62eab9d37619d1d170010b7"
+    },
+    "cpp/include/spacepdhcg/transcription/hcw_rendezvous.hpp": {
+      "bytes": 25132,
+      "sha256": "f0330f10db5f959de6eb2bf7f9ee46c906cb1ae764ef9eeae3f0e6eac13fcc8c"
+    },
+    "cpp/include/spacepdhcg/transcription/powered_descent_3dof.hpp": {
+      "bytes": 44902,
+      "sha256": "f6bc1bbb8f1a9e17881fe8b1fba358ee43f736705b54893b96332ef858122a08"
+    },
+    "cpp/tests/hcw_rendezvous_smoke.cpp": {
+      "bytes": 4534,
+      "sha256": "cc29260cc01f7de00ba89d707262aa723c2d797d20a7b24dba6914828354aacc"
+    },
+    "examples/planner/powered_descent_3dof.json": {
+      "bytes": 1018,
+      "sha256": "1aa720d6cd652ecc39709cf54c8b3a135748b139ea10ca3471f9fb63695c00e8"
+    },
+    "scripts/cpu/run_supported_matrix.py": {
+      "bytes": 45731,
+      "sha256": "3164e544aab3da51e809d3c40812b9cd54fbe6c4502d6809707768aa5c0ae3d5"
+    },
+    "src/spacepdhcg/benchmarks/cw_repeat.py": {
+      "bytes": 6021,
+      "sha256": "3bc850b774ae480ef5661a4c4f29aa77ab92afecfeba26c037912cffbc839504"
+    },
+    "src/spacepdhcg/benchmarks/cw_socp_repeat.py": {
+      "bytes": 6236,
+      "sha256": "a7f41ef91653f95775193d66ac4a333008c19674a751044b870d6ee4ca1830a6"
+    },
+    "src/spacepdhcg/benchmarks/powered_descent_scvx.py": {
+      "bytes": 6602,
+      "sha256": "d84efdd0913e62ec0c1e30b3483c5284ca42a851ad834178d693ae305471f5c9"
+    },
+    "src/spacepdhcg/benchmarks/trajectory_banded.py": {
+      "bytes": 17334,
+      "sha256": "b437009e0bf103244bf37c83a587f1fb6e5b91829a691cad1c93f063868a698f"
+    },
+    "src/spacepdhcg/models/cw.py": {
+      "bytes": 16499,
+      "sha256": "8e06ae145506f9eb6726efc4d3aacdaf515693ed9a0da417cd73bca25beb4926"
+    },
+    "src/spacepdhcg/models/powered_descent_3dof.py": {
+      "bytes": 16635,
+      "sha256": "2ae2721fb04da6e2050e7256a1c587aa12741491060fbe72b235a923076903a3"
+    },
+    "src/spacepdhcg/scvx/powered_descent_3dof.py": {
+      "bytes": 43484,
+      "sha256": "f606a72d25b790aa22b38af5798356c17d505ab8a87b69e7e6ea0b5c0ce5ae13"
+    },
+    "src/spacepdhcg/transcription/powered_descent_3dof.py": {
+      "bytes": 32832,
+      "sha256": "b5a62c735a1816a86c400ee08e6d1519f6b7fb573334947c49d4ed4948e964e1"
+    },
+    "tests/test_cpu_reference_campaign.py": {
+      "bytes": 8959,
+      "sha256": "c6f5c4449eca1dae0d0fb1d410c9dc6fcc21bcaf5414933e130f4401cce0b42c"
+    },
+    "tests/test_powered_descent_scvx.py": {
+      "bytes": 5369,
+      "sha256": "23ead39832ade8349e371728843be79e57c51b94a709513459939a83ba2cf6ee"
+    },
+    "tests/test_trajectory_banded.py": {
+      "bytes": 3047,
+      "sha256": "e0d4e80e3df15c5c20392c0611e04cb2130381297d67316c4010d85f449a9e74"
+    }
+  },
+  "scope": "read-only source/saved-data inventory; no numerical routine executed"
+}

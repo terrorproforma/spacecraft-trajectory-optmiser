@@ -1,0 +1,322 @@
+{
+  "all_selected_quadratics_diagonal": true,
+  "cases": [
+    {
+      "actual_positive_values_source_derived": 78,
+      "affine_rows": 0,
+      "entry": "cpp/tests/hcw_rendezvous_smoke.cpp:71",
+      "gates": {
+        "first_physical_initial_terminal_dynamics_control": 2e-06,
+        "second_terminal_dynamics": 2e-06,
+        "solved_status_both": true,
+        "solver_iteration_cap": 200000,
+        "solver_tolerance": 1e-07,
+        "update_warm_start_solve_counts": [
+          1,
+          1,
+          2
+        ]
+      },
+      "id": "hcw_box_smoke_n8",
+      "initial": [
+        1,
+        -0.5,
+        0.2,
+        0,
+        0,
+        0
+      ],
+      "intervals": 8,
+      "kind": "existing deterministic C++ test recipe",
+      "next_initial": [
+        0.8,
+        -0.3,
+        0.1,
+        0,
+        0,
+        0
+      ],
+      "off_diagonal_values": 0,
+      "quadratic_value_counts": {
+        "0.0002": 27,
+        "0.02": 27,
+        "2": 24
+      },
+      "reference": "DenseADMM existing test",
+      "scalar_rows": 84,
+      "step_seconds": 25,
+      "stored_diagonal_slots": 78,
+      "target": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "variables": 78
+    },
+    {
+      "actual_positive_values_source_derived": 186,
+      "affine_rows": 80,
+      "entry": "cpp/cuda/tests/device_scvx_integration_test.cu:4144",
+      "existing_n50_variant": {
+        "affine_rows": 200,
+        "positive_diagonal_values": 456,
+        "scalar_rows": 312,
+        "variables": 456
+      },
+      "gates": {
+        "canonical": 1e-06,
+        "coefficient_parity": 1e-06,
+        "cpu_gpu_trajectory": 1e-09,
+        "maximum_nonlinear_and_virtual": 1e-06,
+        "production_cqp_exit_is_qualification": false,
+        "production_outer_cap": 12
+      },
+      "id": "hcw_displaced_soc_n20",
+      "initial": [
+        0.1,
+        -0.05,
+        0.02,
+        0.0001,
+        -0.0002,
+        5e-05
+      ],
+      "intervals": 20,
+      "kind": "existing deterministic native test recipe",
+      "off_diagonal_values": 0,
+      "quadratic_value_counts": {
+        "0.0002": 63,
+        "0.02": 63,
+        "2": 60
+      },
+      "reference": "existing native persistent path; same-model DenseADMM/OSQP/Clarabel recipes exist but no matched new run",
+      "reference_controls": "zeros; exact HCW rollout from displaced initial",
+      "scalar_rows": 132,
+      "soc4_count": 20,
+      "step_seconds": 10,
+      "stored_diagonal_slots": 186,
+      "target": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "variables": 186
+    },
+    {
+      "actual_positive_values_source_derived": 507,
+      "affine_cone_blocks": 62,
+      "affine_rows": 391,
+      "discretisation": "forward_euler",
+      "entry": "scripts/cpu/run_supported_matrix.py:427",
+      "final_polish": false,
+      "gates": {
+        "accepted_dynamics_path_terminal_final_path_virtual": 1e-05,
+        "accepted_optimizer_required": true,
+        "converged_required": true,
+        "independent_primal_dual_natural_cone": 1e-07,
+        "outer_cap": 8,
+        "outer_tolerance": 0.001
+      },
+      "id": "pd3_cpu_coordinate_n20",
+      "initial": [
+        20,
+        -10,
+        120,
+        0,
+        0,
+        -7,
+        2000
+      ],
+      "initial_dispersion_scale": 0,
+      "intervals": 20,
+      "kind": "existing deterministic Python benchmark recipe; not run or instantiated here",
+      "nontrivial_work_not_guaranteed_from_recipe": "retain accepted-optimizer guard; do not count a preserved feasible reference as useful work",
+      "off_diagonal_values": 0,
+      "quadratic_value_counts": {
+        "0.0001": 63,
+        "0.01": 63,
+        "1e-10": 140,
+        "1e-8": 241
+      },
+      "reference": "PersistentClarabel through PoweredDescentSCvxSolver",
+      "scalar_rows": 453,
+      "step_seconds": 2,
+      "stored_diagonal_slots": 507,
+      "target_position_velocity": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "variables": 507
+    }
+  ],
+  "closed_form_prox": "For free/box primal variables: clip((v-tau*g)/(1+tau*q),lower,upper); affine cones handled separately on dual side. Coupled primal-cone formulations are a different prox contract.",
+  "coupled_physical_quadratic_fixture_established": false,
+  "date": "2026-09-09",
+  "exact_serialized_nonzero_q_trajectory_snapshot_established": false,
+  "excluded_zero_q_captures": [
+    {
+      "exact_zero_quadratic": true,
+      "n": 1886,
+      "name": "early"
+    },
+    {
+      "exact_zero_quadratic": true,
+      "n": 1886,
+      "name": "near_converged"
+    }
+  ],
+  "historical_hcw_work_indicator": {
+    "full_qp_coefficients_not_saved_here": true,
+    "intervals": 50,
+    "not_new_matched_benchmark": true,
+    "path": "artifacts/performance/medium-dispatch-hcw-50.json",
+    "record": {
+      "accepted": 6,
+      "canonical": 8.68079488e-09,
+      "inner_iterations": 882,
+      "recovery_iterations": 0,
+      "retained_change": 0.174312268,
+      "terminal": 1.29867753e-07
+    },
+    "source_commit": "d36c5c6c3d748225764a11c1d1b7d489da0adedb"
+  },
+  "historical_native_landing_reference": {
+    "certificate": {
+      "certified": true,
+      "continuous_time_violation": 0,
+      "continuous_time_within_tolerance": true,
+      "definition": "certified only when the device SCvx driver converged with canonical, dynamics, path, terminal, and virtual-control residuals within tolerance AND an independent host RK4/ZOH replay of the returned controls reproduces the device trajectory to the parity tolerance, satisfies the nonlinear dynamics/path/terminal gates at the same tolerance, used no hidden CPU fallback, kept steady-state residency, and matched host/device coefficients; continuous-time violation is reported but not gated",
+      "failed_gates": [],
+      "gates": {
+        "canonical_residual": {
+          "limit": 1e-06,
+          "passed": true,
+          "value": 6.888625448594853e-13
+        },
+        "coefficient_parity": {
+          "limit": 5e-12,
+          "passed": true,
+          "value": 2.220446049250313e-16
+        },
+        "converged": {
+          "limit": 0,
+          "passed": true,
+          "value": 0
+        },
+        "device_dynamics_defect": {
+          "limit": 1e-06,
+          "passed": true,
+          "value": 0
+        },
+        "device_path_violation": {
+          "limit": 1e-06,
+          "passed": true,
+          "value": 0
+        },
+        "device_terminal_residual": {
+          "limit": 1e-06,
+          "passed": true,
+          "value": 6.7331516824462035e-09
+        },
+        "independent_dynamics_defect": {
+          "limit": 1e-06,
+          "passed": true,
+          "value": 0
+        },
+        "independent_path_violation": {
+          "limit": 1e-06,
+          "passed": true,
+          "value": 0
+        },
+        "independent_replay_evaluated": {
+          "limit": 0,
+          "passed": true,
+          "value": 0
+        },
+        "independent_replay_parity": {
+          "limit": 1e-09,
+          "passed": true,
+          "value": 0
+        },
+        "independent_terminal_residual": {
+          "limit": 1e-06,
+          "passed": true,
+          "value": 6.7331516824462035e-09
+        },
+        "no_hidden_cpu_fallback": {
+          "limit": 0,
+          "passed": true,
+          "value": 0
+        },
+        "solver_api_success": {
+          "limit": 0,
+          "passed": true,
+          "value": 0
+        },
+        "steady_state_residency": {
+          "limit": 0,
+          "passed": true,
+          "value": 0
+        },
+        "virtual_control": {
+          "limit": 1e-06,
+          "passed": true,
+          "value": 0
+        }
+      },
+      "replay_parity_tolerance": 1e-09,
+      "tolerance": 1e-06
+    },
+    "dimensions": {
+      "affine_rows": 771,
+      "scalar_rows": 893,
+      "variables": 1007
+    },
+    "distinct_from_selected_cpu_euler_coordinate": true,
+    "full_qp_coefficients_not_saved_here": true,
+    "path": "artifacts/performance/qoco-queued-planner-pd3-baseline-sample.json",
+    "source_commit": "0b3c130a19ab69537c1b459b45dccbd2cdc3b7f3",
+    "summary": {
+      "accepted_steps": 2,
+      "final_mass": 1923.7678486760694,
+      "final_trust_radius": 1,
+      "inner_iterations": 44,
+      "objective": 0.552213923782104,
+      "objective_definition": "mean_k(sigma_k) / maximum_thrust (normalised fuel)",
+      "outer_iterations": 2,
+      "propellant_used": 76.23215132393057,
+      "rejected_steps": 0,
+      "resolved_steps": 0,
+      "terminal_position_error": 6.7331516824462034e-06,
+      "terminal_velocity_error": 2.5264072203712296e-07,
+      "trajectory_step": 0
+    }
+  },
+  "limitations": [
+    "Existing test source is evidence of an available recipe, not a new executed pass.",
+    "Historical timings were not remeasured and do not supply a matched complete-path crossover.",
+    "TrajectoryBandedFixture is synthetic known-optimum and diagonal, not a physical CG workload.",
+    "H1/sanitizer HCW and easy already-feasible descent can have zero useful work."
+  ],
+  "quadratic_proof_scope": "Exact coefficient formulas and counts read from positive-validated defaults and fill loops. No source generator imported, no actual new sparse snapshot assembled. These recipes have real positive values rather than structural zero placeholders.",
+  "recommendation": "Use unchanged displaced HCW and descent recipes as quadratic-handling controls; freeze assembled original coefficients/vectors and compare complete methods under unchanged gates. Include exact diagonal prox as control. No CG-specific performance conclusion until an existing coupled-Q/coupled-primal-cone workload is established; do not add curvature to GTOC12.",
+  "schema": "nonzero-q-source-inventory-v1",
+  "scope_counts": {
+    "factorizations": 0,
+    "gpu_calls": 0,
+    "model_evaluations": 0,
+    "optimizer_calls": 0,
+    "problem_assemblies": 0,
+    "proximal_calls": 0
+  },
+  "status": "complete_read_only_inventory_no_runs"
+}
