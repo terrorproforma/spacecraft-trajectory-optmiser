@@ -1,0 +1,167 @@
+{
+  "passed": true,
+  "archive_sha256": "663098aca788b0e05e6eb7af2e7e953869deabd65227165d257a72cd10db2037",
+  "verified_files": 1159,
+  "campaigns": [
+    {
+      "version": 851,
+      "native_solves": 3,
+      "cached_solve_readbacks": 6,
+      "outer_updates": 22,
+      "accepted_updates": 14,
+      "flight_certificate_calls": 6,
+      "complete_verified_routes": 0,
+      "worker_seconds": 3.2332248740131035,
+      "attempts": [
+        {
+          "rank": 0,
+          "legs": 3,
+          "certified_legs": 2
+        },
+        {
+          "rank": 1,
+          "legs": 3,
+          "certified_legs": 2
+        },
+        {
+          "rank": 2,
+          "legs": 3,
+          "certified_legs": 2
+        }
+      ]
+    },
+    {
+      "version": 852,
+      "native_solves": 2,
+      "cached_solve_readbacks": 0,
+      "outer_updates": 56,
+      "accepted_updates": 7,
+      "flight_certificate_calls": 0,
+      "complete_verified_routes": 0,
+      "worker_seconds": 23.112067737965845,
+      "attempts": []
+    },
+    {
+      "version": 853,
+      "native_solves": 0,
+      "cached_solve_readbacks": 0,
+      "outer_updates": 0,
+      "accepted_updates": 0,
+      "flight_certificate_calls": 0,
+      "complete_verified_routes": 0,
+      "worker_seconds": 0.8479132050415501,
+      "attempts": []
+    },
+    {
+      "version": 854,
+      "native_solves": 30,
+      "cached_solve_readbacks": 4,
+      "outer_updates": 198,
+      "accepted_updates": 120,
+      "flight_certificate_calls": 32,
+      "complete_verified_routes": 0,
+      "worker_seconds": 29.57402852800442,
+      "attempts": [
+        {
+          "rank": 0,
+          "legs": 17,
+          "certified_legs": 16
+        },
+        {
+          "rank": 1,
+          "legs": 17,
+          "certified_legs": 16
+        }
+      ]
+    },
+    {
+      "version": 855,
+      "native_solves": 3,
+      "cached_solve_readbacks": 48,
+      "outer_updates": 93,
+      "accepted_updates": 14,
+      "flight_certificate_calls": 48,
+      "complete_verified_routes": 0,
+      "worker_seconds": 41.26634032599395,
+      "attempts": [
+        {
+          "rank": 0,
+          "legs": 17,
+          "certified_legs": 16
+        },
+        {
+          "rank": 1,
+          "legs": 17,
+          "certified_legs": 16
+        },
+        {
+          "rank": 2,
+          "legs": 17,
+          "certified_legs": 16
+        }
+      ]
+    }
+  ],
+  "unique_native_solves": 38,
+  "unique_numerically_qualified_flight_solutions": 30,
+  "flight_certificate_calls_including_rechecks": 86,
+  "fleet_checks": 0,
+  "new_verified_routes": 0,
+  "summed_native_outer_updates": 369,
+  "summed_accepted_updates": 155,
+  "baseline_third_leg_defect": 0.00043414140948613497,
+  "penalty_probes": [
+    {
+      "virtual_weight": 100000.0,
+      "status": "infeasible",
+      "defect": 0.00043414140970181314,
+      "iterations": 31,
+      "accepted": 4,
+      "seconds": 9.877998946001753,
+      "certification": null
+    },
+    {
+      "virtual_weight": 1000000.0,
+      "status": "infeasible",
+      "defect": 0.00560692770741161,
+      "iterations": 25,
+      "accepted": 3,
+      "seconds": 13.195495651045348,
+      "certification": null
+    }
+  ],
+  "return_failures": [
+    {
+      "version": 854,
+      "rank": 0,
+      "defect": 0.0011861568838931191,
+      "diagnostic": "virtual control remains 1.186e-03"
+    },
+    {
+      "version": 854,
+      "rank": 1,
+      "defect": 0.0002444979795507285,
+      "diagnostic": "virtual control remains 2.445e-04"
+    },
+    {
+      "version": 855,
+      "rank": 0,
+      "defect": 0.013177146868714629,
+      "diagnostic": "virtual control remains 1.318e-02"
+    },
+    {
+      "version": 855,
+      "rank": 1,
+      "defect": 0.0020157082750210664,
+      "diagnostic": "virtual control remains 2.016e-03"
+    },
+    {
+      "version": 855,
+      "rank": 2,
+      "defect": 0.7722100567057308,
+      "diagnostic": "virtual control remains inf"
+    }
+  ],
+  "score_unchanged": true,
+  "physics_replayed_by_this_audit": false
+}

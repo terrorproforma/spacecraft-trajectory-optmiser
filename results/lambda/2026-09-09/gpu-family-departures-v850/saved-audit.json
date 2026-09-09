@@ -1,0 +1,160 @@
+{
+  "passed": true,
+  "archive_sha256": "fc61c5e09aa4c67885fc7bb71b4f2cdd4607b69989689a6342152602fdaf1722",
+  "verified_files": 50,
+  "rows": [
+    {
+      "ship": 2,
+      "arm": "unit",
+      "candidates": 483,
+      "unique_physical_requests": 483,
+      "positive_weighted_forecasts": 0,
+      "raw_budget_passes": 8,
+      "refinement_ranks": [],
+      "search_seconds": null
+    },
+    {
+      "ship": 2,
+      "arm": "bonus",
+      "candidates": 441,
+      "unique_physical_requests": 441,
+      "positive_weighted_forecasts": 2,
+      "raw_budget_passes": 0,
+      "refinement_ranks": [],
+      "search_seconds": 6.6890173819847405
+    },
+    {
+      "ship": 5,
+      "arm": "unit",
+      "candidates": 433,
+      "unique_physical_requests": 433,
+      "positive_weighted_forecasts": 0,
+      "raw_budget_passes": 0,
+      "refinement_ranks": [],
+      "search_seconds": 6.0553836959879845
+    },
+    {
+      "ship": 5,
+      "arm": "bonus",
+      "candidates": 427,
+      "unique_physical_requests": 427,
+      "positive_weighted_forecasts": 0,
+      "raw_budget_passes": 0,
+      "refinement_ranks": [],
+      "search_seconds": 5.866386061999947
+    },
+    {
+      "ship": 12,
+      "arm": "unit",
+      "candidates": 441,
+      "unique_physical_requests": 441,
+      "positive_weighted_forecasts": 0,
+      "raw_budget_passes": 0,
+      "refinement_ranks": [],
+      "search_seconds": 6.355759800993837
+    },
+    {
+      "ship": 12,
+      "arm": "bonus",
+      "candidates": 441,
+      "unique_physical_requests": 441,
+      "positive_weighted_forecasts": 0,
+      "raw_budget_passes": 0,
+      "refinement_ranks": [],
+      "search_seconds": 6.242977478017565
+    },
+    {
+      "ship": 18,
+      "arm": "unit",
+      "candidates": 416,
+      "unique_physical_requests": 416,
+      "positive_weighted_forecasts": 3,
+      "raw_budget_passes": 8,
+      "refinement_ranks": [
+        0,
+        1,
+        2
+      ],
+      "search_seconds": 6.281700807972811
+    },
+    {
+      "ship": 18,
+      "arm": "bonus",
+      "candidates": 420,
+      "unique_physical_requests": 420,
+      "positive_weighted_forecasts": 3,
+      "raw_budget_passes": 8,
+      "refinement_ranks": [
+        0,
+        1,
+        2
+      ],
+      "search_seconds": 6.321053575025871
+    }
+  ],
+  "total_candidates": 3502,
+  "unique_physical_requests": 2076,
+  "qualified_forecasts": [
+    {
+      "request_identity": "e8af3366fab6e83cc01060b375657578c0a876bc60bb6e21a692e83f7b2e9706",
+      "ship": 18,
+      "weighted_gain_kg": "8.076659821888734",
+      "raw_gain_kg": "8.076659821888734",
+      "fleet_raw_margin_kg": "13.681251170086872621743120966726955209055040740440240143673884",
+      "references": [
+        {
+          "member": "continued/ship-18-unit/plans.json",
+          "rank": 0
+        },
+        {
+          "member": "continued/ship-18-bonus/plans.json",
+          "rank": 0
+        }
+      ]
+    },
+    {
+      "request_identity": "517460d8aa89e0f92b65040a3bfce923553d65a67e77f98da3fcedc4bff2cd1d",
+      "ship": 18,
+      "weighted_gain_kg": "6.433949349609472",
+      "raw_gain_kg": "6.433949349609472",
+      "fleet_raw_margin_kg": "12.038540697807610621743120966726955209055040740440240143673884",
+      "references": [
+        {
+          "member": "continued/ship-18-unit/plans.json",
+          "rank": 1
+        },
+        {
+          "member": "continued/ship-18-bonus/plans.json",
+          "rank": 1
+        }
+      ]
+    },
+    {
+      "request_identity": "224054fd988528691564960ff51f2a5a03cbed005afdf31f95a1601c7f281818",
+      "ship": 18,
+      "weighted_gain_kg": "1.505817932771676",
+      "raw_gain_kg": "1.505817932771676",
+      "fleet_raw_margin_kg": "7.110409280969814621743120966726955209055040740440240143673884",
+      "references": [
+        {
+          "member": "continued/ship-18-unit/plans.json",
+          "rank": 2
+        },
+        {
+          "member": "continued/ship-18-bonus/plans.json",
+          "rank": 2
+        }
+      ]
+    }
+  ],
+  "known_search_seconds": 43.81227880198276,
+  "known_search_candidates": 3019,
+  "known_lambert_branches": 104076562,
+  "candidates_per_second_for_seven_recorded_searches": 68.90762321779467,
+  "missing_measurement": "First search completed before reporting failed; no invented timer or branch count.",
+  "fleet_weighted_kg": "13526.961241173071481030315330392",
+  "fleet_raw_kg": "14915.0444900762",
+  "fleet_raw_margin_kg": "5.604591348198138621743120966726955209055040740440240143673884",
+  "new_trajectory_certificates": 0,
+  "score_gain_claimed": false
+}

@@ -22,6 +22,13 @@ physics tolerances. This is a fleet-selection gain from existing trajectories;
 no new optimizer or PDHCG solve produced the added route.
 [Exact result, provenance and display](docs/GTOC12_FLEET_ADDITION.md).
 
+A new H100 campaign explores four other route families and different Earth
+departure targets: **3,502 proxy plans, 2,076 distinct prescriptions and three
+profitable fleet-budget candidates**. Native refinement and bounded timing
+changes produce a **16-flight certified prefix**, but the Earth return still
+fails. The campaign makes 38 unique native calls and claims no score gain.
+[Downloaded controls, work counts and remaining failure](docs/GPU_NEW_DEPARTURE_CAMPAIGN.md).
+
 The latest paired route-search benchmarks reach about **88 surrogate candidates
 per second on H100 and 53 on RTX 5090**, excluding process startup and catalogue
 loading. Shared native Earth-return rows improve these two searches by
