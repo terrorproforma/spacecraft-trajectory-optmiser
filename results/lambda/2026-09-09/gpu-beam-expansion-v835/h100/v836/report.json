@@ -1,0 +1,24 @@
+{
+  "complete": true,
+  "success": true,
+  "stage": "leakcheck",
+  "command": [
+    "/usr/local/cuda/bin/compute-sanitizer",
+    "--tool",
+    "memcheck",
+    "--leak-check",
+    "full",
+    "--error-exitcode",
+    "86",
+    "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+    "-c",
+    "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+    "-q",
+    "tests/test_gtoc12_gpu_expansion.py",
+    "-k",
+    "not layout and not empty"
+  ],
+  "core_sha256": "33e0d7c8ad2cafc531a31ab9dc055488698bbf711ec71083d124b51865be6194",
+  "source_manifest_sha256": "89128dfd123e7545148d578b1959f0d06ff9eb0ce0d137f99b47b5f0ca84953d",
+  "returncode": 0
+}

@@ -1,0 +1,156 @@
+{
+  "local": {
+    "verified_members": 1040,
+    "comparison": {
+      "10": {
+        "fresh_seconds": 20.851321963000373,
+        "reuse_seconds": 12.961348136001106,
+        "speedup": 1.6087309548521638,
+        "seconds_range": {
+          "fresh_seconds": [
+            20.244249071998638,
+            21.05268732299919
+          ],
+          "reuse_seconds": [
+            12.481953168999098,
+            13.254288423999242
+          ]
+        },
+        "candidates_per_second": {
+          "fresh_seconds": 24.794591005663364,
+          "reuse_seconds": 39.887826063709696
+        },
+        "maximum_numeric_difference": 4.547473508864641e-13,
+        "valid_children": 621850,
+        "materialized_children": 10123,
+        "plans_sha256": {
+          "False": "b695cb21e57152f4ebc36cb0c88157afb3277b3d31d6b5f0a0e72922e3def169",
+          "True": "3568175931f3b7e08d5a994ab6fa3d6a12b26a968c9ae85c2d0c623d08711da5"
+        }
+      },
+      "21": {
+        "fresh_seconds": 18.96881304499948,
+        "reuse_seconds": 10.817677085999094,
+        "speedup": 1.7535015044542315,
+        "seconds_range": {
+          "fresh_seconds": [
+            17.742983084001025,
+            19.26018736399965
+          ],
+          "reuse_seconds": [
+            10.808377737999763,
+            11.587041541999497
+          ]
+        },
+        "candidates_per_second": {
+          "fresh_seconds": 24.88294859990872,
+          "reuse_seconds": 43.63228780519725
+        },
+        "maximum_numeric_difference": 4.547473508864641e-13,
+        "valid_children": 630066,
+        "materialized_children": 95632,
+        "plans_sha256": {
+          "False": "6077df1027159c373fe893878eb53621010da47e8758e115f6e1f07aca79438c",
+          "True": "26541eca159974041f36bc2d1f39220929ea21e5461c1e2329f2cbffa6c682c8"
+        }
+      }
+    },
+    "wide": [
+      {
+        "ship": 10,
+        "candidates": 1020,
+        "seconds": 26.173803488999994,
+        "branches": 36727114,
+        "best_weighted_proxy_kg": 579.1572244519978,
+        "distinct_orders": 530,
+        "new_orders": 264
+      },
+      {
+        "ship": 21,
+        "candidates": 940,
+        "seconds": 22.34630781200002,
+        "branches": 28101614,
+        "best_weighted_proxy_kg": 539.2076325939888,
+        "distinct_orders": 492,
+        "new_orders": 245
+      }
+    ]
+  },
+  "h100": {
+    "verified_members": 1039,
+    "comparison": {
+      "10": {
+        "fresh_seconds": 18.113415036001243,
+        "reuse_seconds": 7.012559152033646,
+        "speedup": 2.582996398789498,
+        "seconds_range": {
+          "fresh_seconds": [
+            17.638837715960108,
+            18.21571043098811
+          ],
+          "reuse_seconds": [
+            6.98145989299519,
+            7.0151954449829645
+          ]
+        },
+        "candidates_per_second": {
+          "fresh_seconds": 28.54238137714168,
+          "reuse_seconds": 73.7248683100334
+        },
+        "maximum_numeric_difference": 9.094947017729282e-13,
+        "valid_children": 621850,
+        "materialized_children": 10123,
+        "plans_sha256": {
+          "False": "74a645360dabab9c540e3ec0ac7f87898629f191a2f25071a1885ced8056c332",
+          "True": "3e39083ba3327289c3c7adeec78a16176f6ced90fd77eb270e8537caeeffdf20"
+        }
+      },
+      "21": {
+        "fresh_seconds": 17.278856962977443,
+        "reuse_seconds": 6.342546696017962,
+        "speedup": 2.7242774536962604,
+        "seconds_range": {
+          "fresh_seconds": [
+            16.790581531997304,
+            17.359011691005435
+          ],
+          "reuse_seconds": [
+            6.329646492027678,
+            6.367109304002952
+          ]
+        },
+        "candidates_per_second": {
+          "fresh_seconds": 27.316621754050697,
+          "reuse_seconds": 74.41805675570912
+        },
+        "maximum_numeric_difference": 4.547473508864641e-13,
+        "valid_children": 630066,
+        "materialized_children": 95632,
+        "plans_sha256": {
+          "False": "38a5e32f0c5cdb893885e457eebfd78f947cbecc492468d131f545d65f374f57",
+          "True": "cd3bbc486fb2bd03ca58ca8e970237cf1eef3dcd0501c55ee214833e037d8c2e"
+        }
+      }
+    },
+    "wide": [
+      {
+        "ship": 10,
+        "candidates": 1020,
+        "seconds": 14.294751019042451,
+        "branches": 36727114,
+        "best_weighted_proxy_kg": 579.1572244519978,
+        "distinct_orders": 530,
+        "new_orders": 264
+      },
+      {
+        "ship": 21,
+        "candidates": 940,
+        "seconds": 12.65543714701198,
+        "branches": 28101614,
+        "best_weighted_proxy_kg": 539.2076325939888,
+        "distinct_orders": 492,
+        "new_orders": 245
+      }
+    ]
+  }
+}

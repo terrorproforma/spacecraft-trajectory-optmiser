@@ -194,6 +194,7 @@ class GpuLambert:
         self.retime_workspace = None
         self.joint_workspace = None
         self.completion_workspace = None
+        self.expansion_workspace = None
         self.telemetry = {
             "backend": "cuda",
             "completed_batches": 0,
@@ -216,6 +217,9 @@ class GpuLambert:
         if self.closed:
             return
         self._owned()
+        if self.expansion_workspace is not None:
+            self.expansion_workspace.close()
+            self.expansion_workspace = None
         if self.completion_workspace is not None:
             self.completion_workspace.close()
             self.completion_workspace = None

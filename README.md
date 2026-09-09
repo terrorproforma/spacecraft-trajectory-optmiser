@@ -32,6 +32,14 @@ tests per GPU and CUDA safety checks. Its downloaded dense verifier replay is
 displayed in the web visualiser, including the coast intervals.
 [Measurements, source ownership, remaining CPU work and loading instructions](docs/GPU_CATALOGUE_OWNERSHIP.md).
 
+CUDA beam expansion and ranking now improve paired whole-search throughput
+by **2.58–2.72x on H100** and **1.61–1.75x on RTX 5090**. Candidate ordering
+matches, with maximum numeric differences below 1e-12. Final validation passes
+183 tests per GPU and CUDA safety/leak checks. A wider search finds 1,960
+surrogate candidates and 509 additional distinct asteroid orders; these need
+trajectory refinement before score promotion. Host beam admission and collection
+scheduling remain. [Measurements and exact downloaded evidence](docs/GPU_BEAM_EXPANSION.md).
+
 CUDA pricing models now share their resident catalogue across updates. In the
 same two route searches this reduces catalogue uploads from **854.4 MB to 4.8 MB**.
 Paired whole-search medians improve **2.3–2.4% on RTX 5090** and **0.1–1.1% on

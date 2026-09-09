@@ -1,0 +1,6 @@
+{
+  "kind": "operator observation, not a raw process log",
+  "incident": "WSL failed to start with Wsl/Service/CreateInstance/E_FAIL; wsl --list --verbose showed Ubuntu-22.04 Stopped.",
+  "recovery": "One wsl --shutdown followed by wsl --exec /bin/true restored access. The stopped local wider v837 directory was absent; local wider search resumed under fresh v838. Completed remote v837 was not restarted.",
+  "verification": "Completed paired results, default validation, leak logs and native binary hashes were checked after recovery. Both evidence archives and all payload members passed audit after retrieval."
+}

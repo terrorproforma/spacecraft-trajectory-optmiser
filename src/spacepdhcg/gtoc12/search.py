@@ -1219,11 +1219,17 @@ class RouteSearch:
                 failures.append({"reason": "time budget exhausted", "depth": depth - 1})
                 depth -= 1
                 break
-            next_beam: list[_Partial] = []
-            for partial in current:
-                expansions += 1
-                next_beam.extend(self._expand(partial))
-            current = self._select(next_beam)
+            from .gpu_expansion import expand_and_select
+
+            next_native = expand_and_select(self, current)
+            expansions += len(current)
+            if next_native is not None:
+                current = next_native
+            else:
+                next_beam: list[_Partial] = []
+                for partial in current:
+                    next_beam.extend(self._expand(partial))
+                current = self._select(next_beam)
             if not current:
                 depth -= 1
                 break
@@ -1669,8 +1675,12 @@ class RouteSearch:
                 - self._price_of(partial.deployed)
             )
         ordered = self._ordered(partials)
-        s = self.settings
         depth = len(partials[0].deployed) if partials else 0
+        return self._select_ranked(ordered, depth)
+
+    def _select_ranked(self, ordered, depth):
+        """Admit a ranked stream; the CUDA pool materializes only its needed prefix."""
+        s = self.settings
         if not (s.chain_tour_scoring and s.collect_dp and depth >= s.chain_tour_min_deploys):
             return self._filter(ordered, s.beam_width)
         # chain-level objective: the shortlist (heuristic order, same pruning and diversity
