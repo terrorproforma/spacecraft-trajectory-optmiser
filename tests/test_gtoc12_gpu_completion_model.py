@@ -307,6 +307,8 @@ def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, immutable,
         search.collect_table._return_overrides[11][0][0, 0] += 0.01
         native.configure(search, rows[:3])
         assert native.rebuilds == 2
+        assert owner.gpu.telemetry["completion_catalogue_uploads"] == (1 if immutable else 2)
+        assert owner.gpu.telemetry["completion_resident_catalogue_reuses"] == int(immutable)
         malformed = [a.copy() for a in compact]
         malformed[3]["candidate"][-1] = 99
         untouched = tuple(a.copy() for a in actual)
@@ -355,4 +357,125 @@ def test_compact_native_metadata_gates_reuse_and_invalid_batch(model, immutable,
         assert search.collect_table.lambert_evaluations == 0
     finally:
         owner.close()
+        owner.close()
+
+
+@requires_gpu
+@pytest.mark.parametrize("retain", [False, True])
+def test_resident_catalogue_pricing_changes_and_replacement(retain, monkeypatch):
+    monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_RETAIN_COMPLETION_CATALOGUE", str(int(retain)))
+    search, partial, tour = real_geometry_fixture()
+    freeze_catalogue(search)
+    owner = GpuCompletion(StandaloneOwner(), 4, 20, 40)
+    native = owner.native_model = NativeModelOwner(owner)
+    try:
+        for i in range(6):
+            rows = [request(search, partial, tour, i % 2 == 0)]
+            if i == 3:
+                # A new immutable catalogue must upload even when it has the same size.
+                changed = search.catalogue.mean_anomaly_rad.copy()
+                changed[10] += 0.25
+                search.catalogue.mean_anomaly_rad = np.frombuffer(changed.tobytes(), dtype=float)
+                # The independent scalar reference caches pair geometry itself.
+                search.collect_table._geometry.clear()
+            native.configure(search, rows)
+            inputs = pack_requests(search, rows, native.inputs)
+            expected = pack_inputs(search, rows)
+            outputs = (
+                np.zeros(1, RESULT),
+                np.zeros(len(inputs[3]), LEG_RESULT),
+                np.zeros(len(inputs[2])),
+                np.zeros(1, STATS),
+            )
+            expanded = np.zeros(len(inputs[3]), EXPANDED_LEG)
+            native.run(inputs, outputs, expanded=expanded)
+            assert_records_close(expanded, expected[3], atol=1e-12)
+        assert native.rebuilds == 6
+        assert owner.gpu.telemetry["completion_catalogue_uploads"] == (2 if retain else 6)
+        assert owner.gpu.telemetry["completion_resident_catalogue_reuses"] == (4 if retain else 0)
+        assert owner.gpu.telemetry["completion_catalogue_upload_bytes"] == (
+            (2 if retain else 6) * 12 * ORBIT.itemsize
+        )
+    finally:
+        owner.close()
+
+
+@requires_gpu
+@pytest.mark.parametrize("parent_first", [False, True])
+def test_shared_catalogue_lifetime_and_failed_creation(parent_first):
+    # FIT5 actually reads the shared orbit allocation after either owner dies.
+    search, partial, tour = real_geometry_fixture(swept=False)
+    rows = [request(search, partial, tour)]
+    owner = GpuCompletion(StandaloneOwner(), 4, 20, 40)
+    native = owner.native_model = NativeModelOwner(owner)
+    child = ct.c_void_p()
+    try:
+        native.configure(search, rows)
+        _, policy, _, tofs, _ = model_sources(search, rows)
+        # Validation must leave the source usable and clear the failed output.
+        invalid = policy.copy()
+        invalid["reserved0"] = 1
+        child.value = 123
+        assert (
+            native.with_catalogue(
+                native.handle,
+                invalid.ctypes.data,
+                len(tofs),
+                tofs.ctypes.data,
+                0,
+                None,
+                0,
+                None,
+                None,
+                ct.byref(child),
+            )
+            == 4
+        )
+        assert child.value is None
+        assert (
+            native.with_catalogue(
+                None,
+                policy.ctypes.data,
+                len(tofs),
+                tofs.ctypes.data,
+                0,
+                None,
+                0,
+                None,
+                None,
+                ct.byref(child),
+            )
+            == 1
+        )
+        owner._check(
+            native.with_catalogue(
+                native.handle,
+                policy.ctypes.data,
+                len(tofs),
+                tofs.ctypes.data,
+                0,
+                None,
+                0,
+                None,
+                None,
+                ct.byref(child),
+            )
+        )
+        if parent_first:
+            native.close()
+            native.handle, child = child, ct.c_void_p()
+        else:
+            owner._check(native.destroy(ct.byref(child)))
+        inputs = pack_requests(search, rows, native.inputs)
+        outputs = (
+            np.zeros(1, RESULT),
+            np.zeros(len(inputs[3]), LEG_RESULT),
+            np.zeros(len(inputs[2])),
+            np.zeros(1, STATS),
+        )
+        expanded = np.zeros(len(inputs[3]), EXPANDED_LEG)
+        native.run(inputs, outputs, expanded=expanded)
+        assert_records_close(expanded, pack_inputs(search, rows)[3], atol=1e-12)
+    finally:
+        native.destroy(ct.byref(child))
         owner.close()

@@ -204,6 +204,20 @@ int spacepdhcg_gtoc12_completion_model_create(
     int32_t grid_count, const spacepdhcg_gtoc12_completion_return_grid* grids,
     int32_t cell_count, const double* cell_inflation, const uint8_t* cell_ok,
     void** model);
+/* Create independent immutable pricing/grid state using a source model's
+ * resident catalogue. No catalogue validation, allocation, or upload is repeated.
+ * Other inputs have the same validation/copy semantics as model_create.
+ * The source must remain alive until this call returns; afterwards either model
+ * may be destroyed first. The catalogue is released with its last model.
+ * The source is unchanged on failure and *model is null. Device is inherited;
+ * the caller's current device is restored, as for model_create.
+ */
+int spacepdhcg_gtoc12_completion_model_with_catalogue(
+    const void* source_model, const spacepdhcg_gtoc12_completion_model_policy* policy,
+    int32_t return_tof_count, const double* return_tofs,
+    int32_t grid_count, const spacepdhcg_gtoc12_completion_return_grid* grids,
+    int32_t cell_count, const double* cell_inflation, const uint8_t* cell_ok,
+    void** model);
 int spacepdhcg_gtoc12_completion_model_destroy(void** model);
 int spacepdhcg_gtoc12_completion_evaluate_compact_host(
     void* workspace, const void* model,

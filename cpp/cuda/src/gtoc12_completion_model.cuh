@@ -1,5 +1,6 @@
 // Included once by gtoc12_completion.cu; shares its retained workspace and gates.
 #include <vector>
+#include <atomic>
 
 namespace {
 using ModelPolicy = spacepdhcg_gtoc12_completion_model_policy;
@@ -7,10 +8,17 @@ using Orbit = spacepdhcg_gtoc12_completion_orbit;
 using ReturnGrid = spacepdhcg_gtoc12_completion_return_grid;
 static_assert(sizeof(ModelPolicy) == 176 && sizeof(Orbit) == 40 && sizeof(ReturnGrid) == 16);
 static_assert(sizeof(CompactCandidate) == 32 && sizeof(CompactDeploy) == 32 && sizeof(CompactLeg) == 48);
+// Host ownership only. Model stays trivially copyable for kernel arguments;
+// kernels use orbits directly and never dereference catalogue.
+struct ResidentCatalogue {
+    std::atomic<size_t> references{1};
+    Orbit* orbits{};
+};
 struct Model {
     int device = -1, orbit_count = 0, tof_count = 0;
     ModelPolicy policy{};
     Orbit* orbits{};
+    ResidentCatalogue* catalogue{};
     double* tofs{};
     ReturnGrid* grids{};
     int32_t* grid_for_body{};
@@ -21,7 +29,12 @@ struct Model {
 bool release_model(Model* m) {
     bool ok = true;
     const auto free_buffer = [&ok](void* p) { if (p && cudaFree(p) != cudaSuccess) ok = false; };
-    free_buffer(m->orbits); free_buffer(m->tofs); free_buffer(m->grids);
+    if (m->catalogue && m->catalogue->references.fetch_sub(1) == 1) {
+        free_buffer(m->catalogue->orbits);
+        delete m->catalogue;
+    }
+    m->catalogue = nullptr; m->orbits = nullptr;
+    free_buffer(m->tofs); free_buffer(m->grids);
     free_buffer(m->grid_for_body); free_buffer(m->inflation); free_buffer(m->ok);
     delete[] m->host_grid_for_body;
     m->host_grid_for_body = nullptr;
@@ -147,20 +160,20 @@ int validate_compact(const Model* m, int count, int nd, int nl, const Policy* p,
 }
 } // namespace
 
-extern "C" int spacepdhcg_gtoc12_completion_model_create(int32_t device, const ModelPolicy* p,
+static int create_completion_model(const Model* source, int32_t device, const ModelPolicy* p,
     int32_t no, const Orbit* orbits, int32_t nt, const double* tofs,
     int32_t ng, const ReturnGrid* grids, int32_t nc, const double* values, const uint8_t* ok,
     void** output) {
     if (!output) return 1;
     *output = nullptr;
-    if (device < 0 || !p || no < 1 || !orbits || nt < 1 || !tofs || ng < 0 || nc < 0 ||
+    if (device < 0 || !p || no < 1 || (!source && !orbits) || nt < 1 || !tofs || ng < 0 || nc < 0 ||
         (ng && !grids) || (nc && (!values || !ok))) return 1;
     if (p->abi_version != 1 || p->reserved0 || p->reserved1 || p->reserved2 ||
         p->hop_model < 0 || p->hop_model > 1 || p->table_hop_model < 0 || p->table_hop_model > 2 ||
         (p->return_model != 0 && p->return_model != 3) ||
         (p->table_return_model != 0 && p->table_return_model != 5)) return 4;
     if (!std::isfinite(p->epoch0) || !std::isfinite(p->step_days) || p->step_days <= 0.0) return 1;
-    for (int i = 0; i < no; ++i) {
+    for (int i = 0; !source && i < no; ++i) {
         const Orbit o = orbits[i];
         if (!std::isfinite(o.semi_major_axis_km) || o.semi_major_axis_km <= 0.0 ||
             !std::isfinite(o.epoch_mjd) || !std::isfinite(o.mean_anomaly_rad) ||
@@ -186,14 +199,23 @@ extern "C" int spacepdhcg_gtoc12_completion_model_create(int32_t device, const M
     int previous = -1;
     if (cudaGetDevice(&previous) != cudaSuccess || cudaSetDevice(device) != cudaSuccess) { delete m; return 2; }
     m->device = device; m->orbit_count = no; m->tof_count = nt; m->policy = *p;
+    if (source) {
+        m->catalogue = source->catalogue;
+        m->catalogue->references.fetch_add(1);
+    } else {
+        m->catalogue = new (std::nothrow) ResidentCatalogue;
+    }
+    bool success = m->catalogue && (source || allocate(m->catalogue->orbits, no));
+    if (m->catalogue) m->orbits = m->catalogue->orbits;
     m->host_grid_for_body = new (std::nothrow) int32_t[size_t(no)];
     if (m->host_grid_for_body) for (int i = 0; i < no; ++i) m->host_grid_for_body[i] = mapping[size_t(i)];
-    bool success = m->host_grid_for_body && allocate(m->orbits, no) && allocate(m->tofs, nt) && allocate(m->grids, ng) &&
+    success = success && m->host_grid_for_body && allocate(m->tofs, nt) && allocate(m->grids, ng) &&
         allocate(m->grid_for_body, no) && allocate(m->inflation, nc) && allocate(m->ok, nc);
     const auto copy = [&success](void* target, const void* source, size_t bytes) {
         if (success && bytes) success = cudaMemcpy(target, source, bytes, cudaMemcpyHostToDevice) == cudaSuccess;
     };
-    copy(m->orbits, orbits, size_t(no) * sizeof(Orbit)); copy(m->tofs, tofs, size_t(nt) * sizeof(double));
+    if (!source) copy(m->orbits, orbits, size_t(no) * sizeof(Orbit));
+    copy(m->tofs, tofs, size_t(nt) * sizeof(double));
     copy(m->grids, grids, size_t(ng) * sizeof(ReturnGrid)); copy(m->grid_for_body, mapping.data(), size_t(no) * sizeof(int32_t));
     copy(m->inflation, values, size_t(nc) * sizeof(double)); copy(m->ok, ok, size_t(nc));
     if (!success) release_model(m);
@@ -204,6 +226,24 @@ extern "C" int spacepdhcg_gtoc12_completion_model_create(int32_t device, const M
     if (!success) { delete m; return 2; }
     *output = m;
     return 0;
+}
+
+extern "C" int spacepdhcg_gtoc12_completion_model_create(int32_t device, const ModelPolicy* p,
+    int32_t no, const Orbit* orbits, int32_t nt, const double* tofs,
+    int32_t ng, const ReturnGrid* grids, int32_t nc, const double* values, const uint8_t* ok,
+    void** output) {
+    return create_completion_model(nullptr, device, p, no, orbits, nt, tofs, ng, grids, nc, values, ok, output);
+}
+
+extern "C" int spacepdhcg_gtoc12_completion_model_with_catalogue(const void* source,
+    const ModelPolicy* p, int32_t nt, const double* tofs, int32_t ng, const ReturnGrid* grids,
+    int32_t nc, const double* values, const uint8_t* ok, void** output) {
+    if (!output) return 1;
+    *output = nullptr;
+    const auto* m = static_cast<const Model*>(source);
+    if (!m) return 1;
+    return create_completion_model(m, m->device, p, m->orbit_count, nullptr,
+        nt, tofs, ng, grids, nc, values, ok, output);
 }
 
 extern "C" int spacepdhcg_gtoc12_completion_model_destroy(void** opaque) {

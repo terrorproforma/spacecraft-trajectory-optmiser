@@ -1,0 +1,136 @@
+{
+  "pid": 261502,
+  "complete": true,
+  "success": true,
+  "stages": [
+    {
+      "name": "controller",
+      "code": 0,
+      "seconds": 0.3944025689852424,
+      "command": [
+        "/home/ubuntu/spacepdhcg-resident-catalogue-v823/build/cuda-tests/gtoc12_scvx_test"
+      ]
+    },
+    {
+      "name": "pytest",
+      "code": 0,
+      "seconds": 3.3118198390002362,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_collect_dp.py",
+        "tests/test_gtoc12_gpu_collect_workspace.py",
+        "tests/test_gtoc12_gpu_collect_tables.py",
+        "tests/test_gtoc12_gpu_resident_collect_tables.py",
+        "tests/test_gtoc12_gpu_completion_model.py",
+        "tests/test_gtoc12_gpu_completion.py",
+        "tests/test_gtoc12_catalogue_immutability.py",
+        "tests/test_gtoc12_rules_and_data.py",
+        "tests/test_gtoc12_completion_costs.py",
+        "tests/test_gtoc12_completion_capture.py",
+        "tests/test_gtoc12_zoh_trajectory_seed.py"
+      ]
+    },
+    {
+      "name": "memcheck",
+      "code": 0,
+      "seconds": 5.890320940001402,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_collect_workspace.py",
+        "tests/test_gtoc12_gpu_resident_collect_tables.py",
+        "tests/test_gtoc12_gpu_completion_model.py"
+      ]
+    },
+    {
+      "name": "memcheck-controller",
+      "code": 0,
+      "seconds": 0.4724317750078626,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg-resident-catalogue-v823/build/cuda-tests/gtoc12_scvx_test"
+      ]
+    },
+    {
+      "name": "racecheck",
+      "code": 0,
+      "seconds": 5.1214109340216964,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_collect_workspace.py",
+        "tests/test_gtoc12_gpu_resident_collect_tables.py",
+        "tests/test_gtoc12_gpu_completion_model.py"
+      ]
+    },
+    {
+      "name": "racecheck-controller",
+      "code": 0,
+      "seconds": 2.032055825984571,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "racecheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg-resident-catalogue-v823/build/cuda-tests/gtoc12_scvx_test"
+      ]
+    },
+    {
+      "name": "synccheck",
+      "code": 0,
+      "seconds": 2.9680908570298925,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_collect_workspace.py",
+        "tests/test_gtoc12_gpu_resident_collect_tables.py",
+        "tests/test_gtoc12_gpu_completion_model.py"
+      ]
+    },
+    {
+      "name": "synccheck-controller",
+      "code": 0,
+      "seconds": 0.440597501990851,
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "synccheck",
+        "--error-exitcode",
+        "86",
+        "/home/ubuntu/spacepdhcg-resident-catalogue-v823/build/cuda-tests/gtoc12_scvx_test"
+      ]
+    }
+  ],
+  "core_sha256": "46822893beaa9768a84cef7629b089cde67400d1036aa4c52af2445c63b2fe6f",
+  "stage": "synccheck-controller",
+  "child_pid": 261660
+}

@@ -1,0 +1,164 @@
+{
+  "local": {
+    "verified_members": 994,
+    "comparison": {
+      "10": {
+        "fresh_seconds": 21.228855278000992,
+        "reuse_seconds": 20.73728422900058,
+        "speedup": 1.0237046974701232,
+        "packing": {
+          "fresh_seconds": 0.34958995397391845,
+          "reuse_seconds": 0.12535038601890847
+        },
+        "counts": {
+          "fresh_seconds": {
+            "completion_model_rebuilds": 147,
+            "completion_catalogue_uploads": 147,
+            "completion_resident_catalogue_reuses": 0,
+            "completion_catalogue_upload_bytes": 352800000
+          },
+          "reuse_seconds": {
+            "completion_model_rebuilds": 147,
+            "completion_catalogue_uploads": 1,
+            "completion_resident_catalogue_reuses": 146,
+            "completion_catalogue_upload_bytes": 2400000
+          }
+        },
+        "candidates_per_second": {
+          "fresh_seconds": 24.35364475520053,
+          "reuse_seconds": 24.93094053641741
+        },
+        "seconds_range": {
+          "fresh_seconds": [
+            21.131784047998735,
+            21.317014162001215
+          ],
+          "reuse_seconds": [
+            20.3758145110005,
+            22.330781231999936
+          ]
+        },
+        "plans_sha256": "b695cb21e57152f4ebc36cb0c88157afb3277b3d31d6b5f0a0e72922e3def169"
+      },
+      "21": {
+        "fresh_seconds": 19.248809224998695,
+        "reuse_seconds": 18.810443943999417,
+        "speedup": 1.0233043559367516,
+        "packing": {
+          "fresh_seconds": 0.47680810101701354,
+          "reuse_seconds": 0.14752377399599936
+        },
+        "counts": {
+          "fresh_seconds": {
+            "completion_model_rebuilds": 209,
+            "completion_catalogue_uploads": 209,
+            "completion_resident_catalogue_reuses": 0,
+            "completion_catalogue_upload_bytes": 501600000
+          },
+          "reuse_seconds": {
+            "completion_model_rebuilds": 209,
+            "completion_catalogue_uploads": 1,
+            "completion_resident_catalogue_reuses": 208,
+            "completion_catalogue_upload_bytes": 2400000
+          }
+        },
+        "candidates_per_second": {
+          "fresh_seconds": 24.52099735016372,
+          "reuse_seconds": 25.092443400336084
+        },
+        "seconds_range": {
+          "fresh_seconds": [
+            18.830603061998772,
+            19.547453679999307
+          ],
+          "reuse_seconds": [
+            18.750341218999893,
+            19.159763841000313
+          ]
+        },
+        "plans_sha256": "6077df1027159c373fe893878eb53621010da47e8758e115f6e1f07aca79438c"
+      }
+    }
+  },
+  "h100": {
+    "verified_members": 994,
+    "comparison": {
+      "10": {
+        "fresh_seconds": 17.862447319959756,
+        "reuse_seconds": 17.84636553301243,
+        "speedup": 1.0009011239245087,
+        "packing": {
+          "fresh_seconds": 0.2911980588687584,
+          "reuse_seconds": 0.1215250637033023
+        },
+        "counts": {
+          "fresh_seconds": {
+            "completion_model_rebuilds": 147,
+            "completion_catalogue_uploads": 147,
+            "completion_resident_catalogue_reuses": 0,
+            "completion_catalogue_upload_bytes": 352800000
+          },
+          "reuse_seconds": {
+            "completion_model_rebuilds": 147,
+            "completion_catalogue_uploads": 1,
+            "completion_resident_catalogue_reuses": 146,
+            "completion_catalogue_upload_bytes": 2400000
+          }
+        },
+        "candidates_per_second": {
+          "fresh_seconds": 28.943402364708263,
+          "reuse_seconds": 28.969483957035784
+        },
+        "seconds_range": {
+          "fresh_seconds": [
+            17.79576268501114,
+            18.27244793000864
+          ],
+          "reuse_seconds": [
+            17.67036441201344,
+            18.01857229799498
+          ]
+        },
+        "plans_sha256": "74a645360dabab9c540e3ec0ac7f87898629f191a2f25071a1885ced8056c332"
+      },
+      "21": {
+        "fresh_seconds": 17.12500989297405,
+        "reuse_seconds": 16.937716440006625,
+        "speedup": 1.0110577747378648,
+        "packing": {
+          "fresh_seconds": 0.36887921241577715,
+          "reuse_seconds": 0.12732388882432133
+        },
+        "counts": {
+          "fresh_seconds": {
+            "completion_model_rebuilds": 209,
+            "completion_catalogue_uploads": 209,
+            "completion_resident_catalogue_reuses": 0,
+            "completion_catalogue_upload_bytes": 501600000
+          },
+          "reuse_seconds": {
+            "completion_model_rebuilds": 209,
+            "completion_catalogue_uploads": 1,
+            "completion_resident_catalogue_reuses": 208,
+            "completion_catalogue_upload_bytes": 2400000
+          }
+        },
+        "candidates_per_second": {
+          "fresh_seconds": 27.56202787325977,
+          "reuse_seconds": 27.866802568801027
+        },
+        "seconds_range": {
+          "fresh_seconds": [
+            17.054956840001978,
+            17.474442115053535
+          ],
+          "reuse_seconds": [
+            16.838621333998162,
+            17.19772802904481
+          ]
+        },
+        "plans_sha256": "38a5e32f0c5cdb893885e457eebfd78f947cbecc492468d131f545d65f374f57"
+      }
+    }
+  }
+}

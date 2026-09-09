@@ -1,0 +1,24 @@
+{
+  "complete": true,
+  "success": true,
+  "stage": "leakcheck",
+  "command": [
+    "/usr/local/cuda-12.8/bin/compute-sanitizer",
+    "--tool",
+    "memcheck",
+    "--leak-check",
+    "full",
+    "--error-exitcode",
+    "86",
+    "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+    "-c",
+    "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+    "-q",
+    "tests/test_gtoc12_gpu_completion_model.py",
+    "-k",
+    "shared_catalogue_lifetime or resident_catalogue_pricing"
+  ],
+  "core_sha256": "a3189bc7457d5b50045c0478297d24d4c81888f86d54f68e98e44b629051b5ae",
+  "source_manifest_sha256": "08bbbd4768d23f3d43230435b5324f98c046f42764ddaca0f13b849d49f0194d",
+  "returncode": 0
+}

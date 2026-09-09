@@ -1,0 +1,111 @@
+{
+  "pid": 260361,
+  "complete": true,
+  "success": false,
+  "stages": [
+    {
+      "name": "git-init",
+      "code": 0,
+      "seconds": 0.0024425399606116116,
+      "command": [
+        "git",
+        "init"
+      ]
+    },
+    {
+      "name": "git-add",
+      "code": 0,
+      "seconds": 0.3237692739930935,
+      "command": [
+        "git",
+        "add",
+        "-f",
+        "."
+      ]
+    },
+    {
+      "name": "git-freeze",
+      "code": 0,
+      "seconds": 0.11157105799065903,
+      "command": [
+        "git",
+        "-c",
+        "user.name=GPU validation",
+        "-c",
+        "user.email=gpu-validation@localhost",
+        "commit",
+        "-m",
+        "Freeze resident catalogue ownership runtime"
+      ]
+    },
+    {
+      "name": "configure",
+      "code": 0,
+      "seconds": 2.36655564699322,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "-S",
+        "/home/ubuntu/spacepdhcg-resident-catalogue-v823/repo/cpp",
+        "-B",
+        "/home/ubuntu/spacepdhcg-resident-catalogue-v823/build",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSPACEPDHCG_BUILD_CUDA=ON",
+        "-DSPACEPDHCG_BUILD_NATIVE_TESTS=OFF",
+        "-DBUILD_TESTING=ON",
+        "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
+        "-DCMAKE_CUDA_ARCHITECTURES=90",
+        "-DSPACEPDHCG_PDHCG_SOURCE_ROOT=/home/ubuntu/spacepdhcg/v1/_upstream/pdhcg"
+      ]
+    },
+    {
+      "name": "build",
+      "code": 0,
+      "seconds": 100.98170644801576,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/cmake",
+        "--build",
+        "/home/ubuntu/spacepdhcg-resident-catalogue-v823/build",
+        "--target",
+        "spacepdhcg_cuda",
+        "gtoc12_scvx_test",
+        "-j3"
+      ]
+    },
+    {
+      "name": "controller",
+      "code": 0,
+      "seconds": 0.3892973180045374,
+      "command": [
+        "/home/ubuntu/spacepdhcg-resident-catalogue-v823/build/cuda-tests/gtoc12_scvx_test"
+      ]
+    },
+    {
+      "name": "pytest",
+      "code": 1,
+      "seconds": 3.361578258976806,
+      "command": [
+        "/home/ubuntu/spacepdhcg/v1/.venv/bin/python",
+        "-c",
+        "import sys;sys.meta_path=[f for f in sys.meta_path if f.__class__.__module__!='_editable_skbc_spacepdhcg'];import pytest;sys.exit(pytest.main(sys.argv[1:]))",
+        "-q",
+        "tests/test_gtoc12_gpu_collect_dp.py",
+        "tests/test_gtoc12_gpu_collect_workspace.py",
+        "tests/test_gtoc12_gpu_collect_tables.py",
+        "tests/test_gtoc12_gpu_resident_collect_tables.py",
+        "tests/test_gtoc12_gpu_completion_model.py",
+        "tests/test_gtoc12_gpu_completion.py",
+        "tests/test_gtoc12_catalogue_immutability.py",
+        "tests/test_gtoc12_rules_and_data.py",
+        "tests/test_gtoc12_completion_costs.py",
+        "tests/test_gtoc12_completion_capture.py",
+        "tests/test_gtoc12_zoh_trajectory_seed.py"
+      ]
+    }
+  ],
+  "stage": "pytest",
+  "child_pid": 261390,
+  "core_sha256": "46822893beaa9768a84cef7629b089cde67400d1036aa4c52af2445c63b2fe6f",
+  "error": "Traceback (most recent call last):\n  File \"/home/ubuntu/spacepdhcg-resident-catalogue-v823/worker.py\", line 37, in <module>\n    run('pytest',[py,'-c',boot,'-q',*tests])\n  File \"/home/ubuntu/spacepdhcg-resident-catalogue-v823/worker.py\", line 23, in run\n    if code:raise RuntimeError((name,code))\nRuntimeError: ('pytest', 1)\n"
+}

@@ -32,6 +32,13 @@ tests per GPU and CUDA safety checks. Its downloaded dense verifier replay is
 displayed in the web visualiser, including the coast intervals.
 [Measurements, source ownership, remaining CPU work and loading instructions](docs/GPU_CATALOGUE_OWNERSHIP.md).
 
+CUDA pricing models now share their resident catalogue across updates. In the
+same two route searches this reduces catalogue uploads from **854.4 MB to 4.8 MB**.
+Paired whole-search medians improve **2.3–2.4% on RTX 5090** and **0.1–1.1% on
+H100**, with identical candidates; the smallest H100 change is effectively flat.
+All 165 tests per GPU and focused device-memory leak checks pass. The verified
+fleet score is unchanged. [Native ownership, timings and remaining host work](docs/GPU_RESIDENT_CATALOGUE.md).
+
 The next three-route test leaves that score unchanged: 24 native leg calls and
 157 SCvx iterations produce no newly certified complete route. Production
 admission now uses the actual fleet mass budget, and route-boundary states run

@@ -95,12 +95,13 @@ class CatalogueFingerprint:
     def digest(self, policy, arrays):
         immutable = os.environ.get("SPACEPDHCG_TEST_GTOC12_CACHE_CATALOGUE_DIGEST", "1") != "0"
         immutable = immutable and all(
-            type(a) is np.ndarray and type(a.base) is bytes and a.flags.c_contiguous
-            for a in arrays
+            type(a) is np.ndarray and type(a.base) is bytes and a.flags.c_contiguous for a in arrays
         )
-        key = tuple(
-            (id(a.base), a.ctypes.data, a.dtype.str, a.shape, a.strides) for a in arrays
-        ) if immutable else None
+        key = (
+            tuple((id(a.base), a.ctypes.data, a.dtype.str, a.shape, a.strides) for a in arrays)
+            if immutable
+            else None
+        )
         if immutable and key == self.key and policy in self.prefixes:
             self.reuses += 1
             prefix = self.prefixes.pop(policy)
@@ -289,6 +290,12 @@ class NativeModelOwner:
             ct.POINTER(ct.c_void_p),
         ]
         self.destroy.argtypes = [ct.POINTER(ct.c_void_p)]
+        self.with_catalogue = getattr(
+            library, "spacepdhcg_gtoc12_completion_model_with_catalogue", None
+        )
+        if self.with_catalogue is not None:
+            self.with_catalogue.argtypes = [ct.c_void_p, ct.c_void_p, *self.create.argtypes[4:]]
+            self.with_catalogue.restype = ct.c_int
         self.evaluate.argtypes = [ct.c_void_p, ct.c_void_p] + [ct.c_int32] * 3 + [ct.c_void_p] * 9
         for f in (self.create, self.destroy, self.evaluate):
             f.restype = ct.c_int
@@ -301,6 +308,8 @@ class NativeModelOwner:
         )
         self.rebuilds = 0
         self.catalogue_fingerprint = CatalogueFingerprint()
+        self.catalogue_key = None
+        self.catalogue_sources = ()
 
     def configure(self, search, requests):
         fingerprint = self.catalogue_fingerprint
@@ -314,12 +323,20 @@ class NativeModelOwner:
             self.owner.gpu.telemetry[name] = self.owner.gpu.telemetry.get(name, 0) + delta
         if key == self.signature:
             return
-        ids, *elements = arrays
-        if not np.array_equal(ids, np.arange(1, len(ids) + 1)):
-            raise ValueError("native completion catalogue IDs must be in identity order")
-        orbits = np.empty(len(ids), ORBIT)
-        for name, values in zip(ORBIT_NAMES, elements, strict=True):
-            orbits[name] = values
+        retain = (
+            self.with_catalogue is not None
+            and self.handle.value is not None
+            and fingerprint.key is not None
+            and fingerprint.key == self.catalogue_key
+            and os.environ.get("SPACEPDHCG_TEST_GTOC12_RETAIN_COMPLETION_CATALOGUE", "1") != "0"
+        )
+        if not retain:
+            ids, *elements = arrays
+            if not np.array_equal(ids, np.arange(1, len(ids) + 1)):
+                raise ValueError("native completion catalogue IDs must be in identity order")
+            orbits = np.empty(len(ids), ORBIT)
+            for name, values in zip(ORBIT_NAMES, elements, strict=True):
+                orbits[name] = values
         records = np.zeros(len(grids), GRID)
         values, masks, offset = [], [], 0
         for i, (body, inflation, ok) in enumerate(grids):
@@ -333,35 +350,52 @@ class NativeModelOwner:
         cell_ok = np.concatenate(masks).astype(np.uint8) if masks else np.empty(0, np.uint8)
         tofs = np.ascontiguousarray(tofs)
         replacement = ct.c_void_p()
-        self.owner._check(
-            self.create(
+        pricing = (
+            len(tofs),
+            tofs.ctypes.data,
+            len(records),
+            records.ctypes.data,
+            len(cell_values),
+            cell_values.ctypes.data,
+            cell_ok.ctypes.data,
+            ct.byref(replacement),
+        )
+        if retain:
+            status = self.with_catalogue(self.handle, policy.ctypes.data, *pricing)
+        else:
+            status = self.create(
                 self.owner.gpu.device_id,
                 policy.ctypes.data,
                 len(orbits),
                 orbits.ctypes.data,
-                len(tofs),
-                tofs.ctypes.data,
-                len(records),
-                records.ctypes.data,
-                len(cell_values),
-                cell_values.ctypes.data,
-                cell_ok.ctypes.data,
-                ct.byref(replacement),
+                *pricing,
             )
-        )
+        self.owner._check(status)
         try:
             self.close()
         except BaseException:
             self.destroy(ct.byref(replacement))
             raise
         self.handle, self.signature = replacement, key
+        self.catalogue_key = fingerprint.key
+        self.catalogue_sources = fingerprint.sources
         self.rebuilds += 1
+        telemetry = self.owner.gpu.telemetry
+        for name, delta in (
+            ("completion_model_rebuilds", 1),
+            ("completion_catalogue_uploads", int(not retain)),
+            ("completion_resident_catalogue_reuses", int(retain)),
+            ("completion_catalogue_upload_bytes", 0 if retain else orbits.nbytes),
+        ):
+            telemetry[name] = telemetry.get(name, 0) + delta
 
     def close(self):
         if self.handle.value:
             self.owner.gpu._owned()
             self.owner._check(self.destroy(ct.byref(self.handle)))
         self.signature = None
+        self.catalogue_key = None
+        self.catalogue_sources = ()
 
     def run(self, inputs, outputs, *, expanded=None):
         _, candidates, deploys, legs = inputs
