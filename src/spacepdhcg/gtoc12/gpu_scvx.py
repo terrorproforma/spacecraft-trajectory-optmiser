@@ -136,16 +136,21 @@ def solve_native(
     if not path or not qoco or not Path(qoco).is_file():
         raise RuntimeError("CUDA outer loop requires configured native core and GPU QOCO libraries")
     library = ct.CDLL(str(Path(path).resolve(strict=True)))
+    scaled_seed = seed is not None and seed.target_initial_mass_kg is not None
     try:
         solve = (
-            library.spacepdhcg_gtoc12_scvx_solve_zoh_seed_host
+            library.spacepdhcg_gtoc12_scvx_solve_scaled_zoh_seed_host
+            if scaled_seed
+            else library.spacepdhcg_gtoc12_scvx_solve_zoh_seed_host
             if seed is not None
             else library.spacepdhcg_gtoc12_scvx_solve_host
         )
     except AttributeError as exc:
         if seed is not None:
             raise RuntimeError(
-                "Native core lacks CUDA ZOH replay seed extension; no fallback"
+                "Native core lacks CUDA "
+                + ("mass-scaled " if scaled_seed else "")
+                + "ZOH replay seed extension; no fallback"
             ) from exc
         raise RuntimeError("Native core lacks CUDA SCvx extension; no Python fallback") from exc
     if (
@@ -158,6 +163,7 @@ def solve_native(
         [ct.c_int] * 4
         + [ct.c_double] * 2
         + [_DoublePointer] * 5
+        + ([ct.c_double] if scaled_seed else [])
         + [
             ct.c_int,
             ct.POINTER(_Settings),
@@ -207,6 +213,7 @@ def solve_native(
         model.kappa,
         model.lam,
         *[None if a is None else _pointer(a) for a in arrays],
+        *([seed.target_initial_mass_kg] if scaled_seed else []),
         settings.qoco_ruiz_iterations,
         ct.byref(params),
         _pointer(states),
@@ -294,7 +301,9 @@ def solve_native(
         convex_solver_backend="qoco",
         solver_reports=solver_reports,
         outer_loop_backend="cuda",
-        seed_backend="cuda_zoh_replay"
+        seed_backend="cuda_zoh_mass_scaled_replay"
+        if scaled_seed
+        else "cuda_zoh_replay"
         if seed is not None
         else ("cuda" if seed_states is None else "numpy"),
         outer_transfer_bytes={

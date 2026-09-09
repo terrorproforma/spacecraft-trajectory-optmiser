@@ -332,6 +332,32 @@ __global__ void retain_graph_report(const State* s,const spacepdhcg_gtoc12_qoco_
 }
 
 template<class T> bool allocate(T** p,size_t n) { return cudaMalloc(p,n*sizeof(T))==cudaSuccess; }
+// Scaling mass and physical thrust together preserves acceleration and the
+// reference r/v trajectory. Read the archived mass from a scalar kernel input:
+// updating initial[6] must not race other blocks scaling their thrust samples.
+__global__ void scale_zoh_seed(int nodes,double source_mass,double target_mass,
+    double* initial,double* thrust) {
+    const int i=blockIdx.x*blockDim.x+threadIdx.x;
+    const double factor=target_mass/source_mass;
+    const bool valid_factor=isfinite(factor) && factor>0.0;
+    if(i<nodes) {
+        double scaled[3];
+        bool valid=valid_factor,nonzero=false;
+        double norm2=0.0;
+        for(int j=0;j<3;++j) {
+            const double source=thrust[3*i+j];
+            scaled[j]=source*factor;
+            valid=valid && isfinite(scaled[j]) && (source==0.0 || scaled[j]!=0.0);
+            nonzero=nonzero || scaled[j]!=0.0;
+            norm2+=scaled[j]*scaled[j];
+        }
+        // The downstream physical rollout uses this squared norm. Reject
+        // unrepresentable scaling instead of silently losing mass flow.
+        valid=valid && isfinite(norm2) && (!nonzero || norm2>0.0);
+        for(int j=0;j<3;++j) thrust[3*i+j]=valid ? scaled[j] : NAN;
+    }
+    if(!i) initial[6]=valid_factor ? target_mass : NAN;
+}
 // Optional host-wall phase trace. No added CUDA events, waits, or downloads.
 // A phase includes queued work consumed by its existing synchronization points;
 // these are not kernel timings. Declared before Workspace to include teardown.
@@ -398,14 +424,20 @@ struct Workspace {
         cudaFreeHost(host_command);
         if (stream) cudaStreamDestroy(stream);
     }
-    bool prepare_zoh(int nodes,const double* times,const double* initial,const double* thrust) {
-        return allocate(&seed_times,nodes) && allocate(&seed_initial,7)
+    bool prepare_zoh(int nodes,const double* times,const double* initial,const double* thrust,
+        double target_mass=0.0) {
+        if (!(allocate(&seed_times,nodes) && allocate(&seed_initial,7)
             && allocate(&seed_thrust,3*nodes) && allocate(&seed_report,1)
             && cudaMemcpyAsync(seed_times,times,nodes*sizeof(double),cudaMemcpyHostToDevice,stream)==cudaSuccess
             && cudaMemcpyAsync(seed_initial,initial,7*sizeof(double),cudaMemcpyHostToDevice,stream)==cudaSuccess
-            && cudaMemcpyAsync(seed_thrust,thrust,3*nodes*sizeof(double),cudaMemcpyHostToDevice,stream)==cudaSuccess
-            && spacepdhcg_gtoc12_verify_zoh_seed_launch(nodes,seed_times,seed_initial,seed_thrust,
-                100000,states,controls,seed_report,stream)==cudaSuccess;
+            && cudaMemcpyAsync(seed_thrust,thrust,3*nodes*sizeof(double),cudaMemcpyHostToDevice,stream)==cudaSuccess)) return false;
+        if(target_mass>0.0) {
+            scale_zoh_seed<<<(nodes+255)/256,256,0,stream>>>(
+                nodes,initial[6],target_mass,seed_initial,seed_thrust);
+            if(cudaGetLastError()!=cudaSuccess) return false;
+        }
+        return spacepdhcg_gtoc12_verify_zoh_seed_launch(nodes,seed_times,seed_initial,seed_thrust,
+            100000,states,controls,seed_report,stream)==cudaSuccess;
     }
 };
 bool valid(const Settings& p) {
@@ -436,7 +468,7 @@ static int solve_impl(int intervals,int hold,int free_dep,int free_arr,
     double kappa,double mass_flow,const double* times,const double* boundary,const double* fuel,
     const double* seed_states,const double* seed_controls,int ruiz,const Settings* settings,
     double* states,double* controls,Record* records,spacepdhcg_gtoc12_qoco_report* reports,Result* result,
-    bool physical_zoh_seed) {
+    bool physical_zoh_seed,double target_seed_mass=0.0) {
     if (!settings || !valid(*settings) || (bool(seed_states)!=bool(seed_controls)) || !states || !controls
         || !records || !reports || !result) return 1;
     *result={};
@@ -488,7 +520,7 @@ static int solve_impl(int intervals,int hold,int free_dep,int free_arr,
     }
     if (cudaMemcpyAsync(w.fuel,fuel,nodes*sizeof(double),cudaMemcpyHostToDevice,w.stream)!=cudaSuccess) return 2;
     if (physical_zoh_seed) {
-        if(!w.prepare_zoh(nodes,times,seed_states,seed_controls)) return 2;
+        if(!w.prepare_zoh(nodes,times,seed_states,seed_controls,target_seed_mass)) return 2;
     } else if (seed_states) {
         if (cudaMemcpyAsync(w.states,seed_states,7*nodes*sizeof(double),cudaMemcpyHostToDevice,w.stream)!=cudaSuccess
             || cudaMemcpyAsync(w.controls,seed_controls,4*nodes*sizeof(double),cudaMemcpyHostToDevice,w.stream)!=cudaSuccess) return 2;
@@ -712,16 +744,18 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_host(int intervals,int hold,int free
         seed_states,seed_controls,ruiz,settings,states,controls,records,reports,result,false);
 }
 
-extern "C" int spacepdhcg_gtoc12_scvx_solve_zoh_seed_host(int intervals,int hold,int free_dep,int free_arr,
+static int solve_zoh_seed_impl(int intervals,int hold,int free_dep,int free_arr,
     double kappa,double mass_flow,const double* times,const double* boundary,const double* fuel,
     const double* initial,const double* thrust,int ruiz,const Settings* settings,
-    double* states,double* controls,Record* records,spacepdhcg_gtoc12_qoco_report* reports,Result* result) {
+    double* states,double* controls,Record* records,spacepdhcg_gtoc12_qoco_report* reports,Result* result,
+    double target_seed_mass) {
     if(intervals<1 || intervals>(INT_MAX-1024)/512 || hold!=0 || !times || !boundary || !fuel
         || !initial || !thrust || !(initial[6]>0.0) || !std::isfinite(initial[6])) return 1;
     constexpr double du=1.49597870691e8;
     const double tu=std::sqrt(du*du*du/1.32712440018e11),vu=du/tu;
-    const double expected_kappa=0.6/(initial[6]*(du*1000.0/(tu*tu)));
-    const double expected_flow=0.6*tu/(4000.0*9.80665*initial[6]);
+    const double model_mass=target_seed_mass>0.0 ? target_seed_mass : initial[6];
+    const double expected_kappa=0.6/(model_mass*(du*1000.0/(tu*tu)));
+    const double expected_flow=0.6*tu/(4000.0*9.80665*model_mass);
     if(!(expected_kappa>0.0) || !(expected_flow>0.0)
         || !std::isfinite(expected_kappa) || !std::isfinite(expected_flow)
         || !(kappa>0.0) || !(mass_flow>0.0) || !std::isfinite(kappa) || !std::isfinite(mass_flow)
@@ -732,7 +766,24 @@ extern "C" int spacepdhcg_gtoc12_scvx_solve_zoh_seed_host(int intervals,int hold
         if((j<3 || !free_dep) && std::fabs(initial[j]/(j<3 ? du : vu)-boundary[j])>1e-12) return 1;
     }
     return solve_impl(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,fuel,
-        initial,thrust,ruiz,settings,states,controls,records,reports,result,true);
+        initial,thrust,ruiz,settings,states,controls,records,reports,result,true,target_seed_mass);
+}
+
+extern "C" int spacepdhcg_gtoc12_scvx_solve_zoh_seed_host(int intervals,int hold,int free_dep,int free_arr,
+    double kappa,double mass_flow,const double* times,const double* boundary,const double* fuel,
+    const double* initial,const double* thrust,int ruiz,const Settings* settings,
+    double* states,double* controls,Record* records,spacepdhcg_gtoc12_qoco_report* reports,Result* result) {
+    return solve_zoh_seed_impl(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,fuel,
+        initial,thrust,ruiz,settings,states,controls,records,reports,result,0.0);
+}
+
+extern "C" int spacepdhcg_gtoc12_scvx_solve_scaled_zoh_seed_host(int intervals,int hold,int free_dep,int free_arr,
+    double kappa,double mass_flow,const double* times,const double* boundary,const double* fuel,
+    const double* initial,const double* thrust,double target_mass,int ruiz,const Settings* settings,
+    double* states,double* controls,Record* records,spacepdhcg_gtoc12_qoco_report* reports,Result* result) {
+    if(!(target_mass>0.0) || !std::isfinite(target_mass)) return 1;
+    return solve_zoh_seed_impl(intervals,hold,free_dep,free_arr,kappa,mass_flow,times,boundary,fuel,
+        initial,thrust,ruiz,settings,states,controls,records,reports,result,target_mass);
 }
 
 extern "C" int spacepdhcg_gtoc12_zoh_seed_evaluate_host(int nodes,const double* times,
@@ -742,6 +793,23 @@ extern "C" int spacepdhcg_gtoc12_zoh_seed_evaluate_host(int nodes,const double* 
     if(cudaStreamCreateWithFlags(&w.stream,cudaStreamNonBlocking)!=cudaSuccess
         || !allocate(&w.states,7*nodes) || !allocate(&w.controls,4*nodes)
         || !w.prepare_zoh(nodes,times,initial,thrust)) return 2;
+    spacepdhcg_verify_result report{};
+    if(cudaMemcpyAsync(states,w.states,7*nodes*sizeof(double),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
+        || cudaMemcpyAsync(controls,w.controls,4*nodes*sizeof(double),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
+        || cudaMemcpyAsync(&report,w.seed_report,sizeof(report),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
+        || cudaStreamSynchronize(w.stream)!=cudaSuccess) return 2;
+    return report.status ? 3 : 0;
+}
+
+extern "C" int spacepdhcg_gtoc12_scaled_zoh_seed_evaluate_host(int nodes,const double* times,
+    const double* initial,const double* thrust,double target_mass,double* states,double* controls) {
+    if(nodes<2 || nodes>(INT_MAX-1024)/512 || !times || !initial || !thrust || !states || !controls
+        || !(initial[6]>0.0) || !std::isfinite(initial[6])
+        || !(target_mass>0.0) || !std::isfinite(target_mass)) return 1;
+    Workspace w;
+    if(cudaStreamCreateWithFlags(&w.stream,cudaStreamNonBlocking)!=cudaSuccess
+        || !allocate(&w.states,7*nodes) || !allocate(&w.controls,4*nodes)
+        || !w.prepare_zoh(nodes,times,initial,thrust,target_mass)) return 2;
     spacepdhcg_verify_result report{};
     if(cudaMemcpyAsync(states,w.states,7*nodes*sizeof(double),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess
         || cudaMemcpyAsync(controls,w.controls,4*nodes*sizeof(double),cudaMemcpyDeviceToHost,w.stream)!=cudaSuccess

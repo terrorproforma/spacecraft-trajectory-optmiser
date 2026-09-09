@@ -1,0 +1,53 @@
+{
+  "native_solves_started": 2,
+  "native_solves_returned": 2,
+  "native_iterations": 24,
+  "flight_certificate_calls": 1,
+  "wait_certificate_calls": 0,
+  "seeded_calls_started": 2,
+  "cold_calls_started": 0,
+  "full_fleet_CPU_checks": 0,
+  "full_fleet_official_checks": 0,
+  "complete": true,
+  "status": "candidate_return_failed",
+  "cases": [
+    {
+      "native_solves_started": 1,
+      "native_solves_returned": 1,
+      "native_iterations": 2,
+      "flight_certificate_calls": 1,
+      "wait_certificate_calls": 0,
+      "seeded_calls_started": 1,
+      "cold_calls_started": 0,
+      "full_fleet_CPU_checks": 0,
+      "full_fleet_official_checks": 0,
+      "case": "original_mass_control",
+      "certified": true,
+      "status": "feasible",
+      "fixed_mass_passed": true,
+      "certified_final_mass_kg": 1193.9107054861288
+    },
+    {
+      "native_solves_started": 1,
+      "native_solves_returned": 1,
+      "native_iterations": 22,
+      "flight_certificate_calls": 0,
+      "wait_certificate_calls": 0,
+      "seeded_calls_started": 1,
+      "cold_calls_started": 0,
+      "full_fleet_CPU_checks": 0,
+      "full_fleet_official_checks": 0,
+      "case": "candidate_mass_return",
+      "certified": false,
+      "status": "infeasible"
+    }
+  ],
+  "standalone_inspection_calls": 0,
+  "whole_route_reruns": 0,
+  "Lambert_calls": 0,
+  "fresh_prefix_propagations": 0,
+  "incumbent_promoted": false,
+  "saved_prefix_flight_certificates": 17,
+  "saved_prefix_wait_certificates": 1,
+  "worker_seconds": 10.78737286499927
+}

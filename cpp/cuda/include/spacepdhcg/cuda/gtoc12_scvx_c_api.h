@@ -85,10 +85,34 @@ int spacepdhcg_gtoc12_scvx_solve_zoh_seed_host(
     double* states, double* controls, spacepdhcg_gtoc12_scvx_record* records,
     spacepdhcg_gtoc12_qoco_report* reports, spacepdhcg_gtoc12_scvx_result* result);
 
+/* As above, with an explicit change of reference mass. Upload the archived
+ * initial_state and thrust_n unchanged. CUDA scales physical thrust by
+ * target_initial_mass / archived_initial_mass and sets the initial mass before
+ * the same DOP853 rollout. Position, velocity and epochs are unchanged inputs.
+ * kappa/mass_flow must describe target_initial_mass, which must be positive and
+ * finite. This preserves reference r/v dynamics mathematically; it does not
+ * guarantee thrust, cargo/minimum-mass or trajectory feasibility. All original
+ * optimization and independent certification gates remain required.
+ */
+int spacepdhcg_gtoc12_scvx_solve_scaled_zoh_seed_host(
+    int intervals, int hold, int free_departure, int free_arrival,
+    double kappa, double mass_flow, const double* times, const double* boundary,
+    const double* fuel_weights, const double* archived_initial_state, const double* archived_thrust_n,
+    double target_initial_mass, int ruiz_iterations, const spacepdhcg_gtoc12_scvx_settings* settings,
+    double* states, double* controls, spacepdhcg_gtoc12_scvx_record* records,
+    spacepdhcg_gtoc12_qoco_report* reports, spacepdhcg_gtoc12_scvx_result* result);
+
 /* Inspection bridge only: downloads the same GPU ZOH seed for an independent
  * reference comparison. Units and outputs match the seeded solve above. */
 int spacepdhcg_gtoc12_zoh_seed_evaluate_host(int nodes, const double* times,
     const double* initial_state, const double* thrust_n, double* states, double* controls);
+
+/* Inspection of the same mass-scaled GPU initializer, without an optimizer
+ * call. Unchanged inputs are not modified; outputs are normalized to the target
+ * initial mass. Return codes and failed-output rules match the seed bridge. */
+int spacepdhcg_gtoc12_scaled_zoh_seed_evaluate_host(int nodes, const double* times,
+    const double* archived_initial_state, const double* archived_thrust_n,
+    double target_initial_mass, double* states, double* controls);
 
 /* Standalone GPU seed bridge for seed inspection and independent parity checks.
  * Times and boundary are in the same scaled GTOC12 units as the solver.

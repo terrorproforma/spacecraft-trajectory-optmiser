@@ -14,6 +14,21 @@ establish a competitive PDHCG mission backend.
 
 ## Current checkpoint and next work
 
+The [performance assessment and complementary-method plan](PERFORMANCE_POSITION_2026-09-09.md)
+distinguishes measured gains from PDHCG's proposed operating regime. The v631
+CPU reference resolves the two captured equality failures to approximately
+machine precision, but both outputs still fail the unchanged original gap,
+stationarity and cone gates after 10,000 updates each. Original L1 virtual-control
+complementarity dominates the gap. A joint treatment of dynamics equalities and
+that penalty is the next numerical hypothesis; equality projection alone is
+not a qualified solver. [Exact reference and outcomes](PDHCG_EQUALITY_PRIMAL_REFERENCE.md).
+
+Separately committed catalogue-prefix retention reduces complete search time in
+the paired two-route H100 experiment, with throughput improvements of 7.33–7.48%.
+This is a host-overhead reduction feeding CUDA, not a PDHCG solver result. Its
+packing timings are for a different, smaller campaign than the 28.793-second
+historical campaign below. [Scope and measurements](GPU_CATALOGUE_OWNERSHIP.md).
+
 The subsequent v630 tests leave that verified fleet unchanged. Production
 fleet-budget admission now permits weighted gains with a tolerable raw-mass
 loss, but none of three additional archived route prescriptions certifies.
@@ -21,6 +36,15 @@ Their 24 native leg calls and 157 SCvx iterations expose three specific failed
 transfers. The next mission intervention must improve initialization or change
 the coupled itinerary around those transfers, rather than repeat admission of
 the same requests. [Production policy and failure evidence](GPU_FLEET_BUDGET_ADMISSION.md).
+
+The v631 GPU mass-scaled initializer reproduces the archived ship-10 return,
+which certifies in two accepted steps. The changed-mass return starts with a
+dynamically consistent seed but misses its required arrival mass by 10.28998 kg;
+all 22 candidate steps are rejected. The current reference merit omits this
+mass violation (the conic model enforces minimum mass at every node).
+Correcting and testing that omission is the next
+bounded mission intervention; success and physical feasibility remain unproven.
+[Validated initializer and two-return outcome](GPU_MASS_SCALED_INITIALIZATION.md).
 
 CUDA route-boundary ephemerides pass independent state and archived-seed checks,
 with a maximum 1.765 mm position difference. Their complete preparation step is

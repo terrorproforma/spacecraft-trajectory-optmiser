@@ -23,6 +23,10 @@ class ZohTrajectorySeed:
     FP64 buffers; no thrust clipping, normalization or interpolation occurs here.
     ``allow_mesh_refinement`` permits additional burn/coast boundaries while
     retaining every ordinary solver node and both leg endpoint epochs exactly.
+    ``target_initial_mass_kg`` requests CUDA mass/thrust scaling of the archived
+    inputs before propagation. The arrays remain unchanged here; the target
+    must exactly match the new leg's initial mass. This is an initializer, not
+    proof that the scaled trajectory meets thrust or final-mass constraints.
     """
 
     node_epochs_mjd: NDArray[np.float64]
@@ -30,10 +34,18 @@ class ZohTrajectorySeed:
     thrust_n: NDArray[np.float64]
     source_sha256: str
     allow_mesh_refinement: bool = False
+    target_initial_mass_kg: float | None = None
 
     def __post_init__(self) -> None:
         if type(self.allow_mesh_refinement) is not bool:
             raise ValueError("seed allow_mesh_refinement must be a bool")
+        if self.target_initial_mass_kg is not None and (
+            isinstance(self.target_initial_mass_kg, (bool, np.bool_))
+            or not isinstance(self.target_initial_mass_kg, (int, float, np.integer, np.floating))
+            or not math.isfinite(self.target_initial_mass_kg)
+            or self.target_initial_mass_kg <= 0.0
+        ):
+            raise ValueError("seed target initial mass must be finite and positive")
         if (
             not isinstance(self.source_sha256, str)
             or len(self.source_sha256) != 64
@@ -100,9 +112,14 @@ class ZohTrajectorySeed:
             or self.node_epochs_mjd[-1] != boundary.arrival_epoch
         ):
             raise ValueError("seed node epochs must exactly match both leg boundary epochs")
+        selected_mass = (
+            self.initial_state[6]
+            if self.target_initial_mass_kg is None
+            else self.target_initial_mass_kg
+        )
         if (
             not math.isfinite(boundary.initial_mass)
-            or self.initial_state[6] != boundary.initial_mass
+            or selected_mass != boundary.initial_mass
         ):
             raise ValueError("seed initial mass must exactly match the leg boundary")
         if not np.array_equal(self.initial_state[:3], boundary.departure_position):

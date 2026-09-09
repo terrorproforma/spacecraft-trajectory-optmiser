@@ -285,6 +285,74 @@ def test_new_ctypes_entry_receives_exact_physical_arrays(monkeypatch, tmp_path):
     assert result.departure_vinf_km_s[0] == 0.125 * low_thrust.VU_KM_S
 
 
+@pytest.mark.parametrize("target", [0.0, -1.0, float("inf"), float("nan"), True, "1500"])
+def test_invalid_target_mass_rejected(target):
+    with pytest.raises(ValueError, match="target initial mass"):
+        ZohTrajectorySeed(**seed_values(), target_initial_mass_kg=target)
+
+
+def test_scaled_seed_preserves_archive_and_requires_exact_target_boundary(monkeypatch):
+    values = seed_values()
+    seed = ZohTrajectorySeed(**values, target_initial_mass_kg=1500.0)
+    bnd = dataclasses.replace(boundary(), initial_mass=1500.0)
+    for name in ("initial_state", "thrust_n", "node_epochs_mjd"):
+        assert getattr(seed, name).tobytes() == values[name].tobytes()
+    seed.validate_for(bnd, settings(), seed.node_epochs_mjd)
+    with pytest.raises(ValueError, match="initial mass must exactly"):
+        seed.validate_for(boundary(), settings(), seed.node_epochs_mjd)
+    called = []
+
+    def native(*args, **kwargs):
+        assert args[0].initial_mass == 1500.0
+        assert args[7] is args[8] is None
+        assert kwargs["seed"].initial_state[6] == 3000.0
+        called.append(kwargs["seed"])
+        return "scaled-native-sentinel"
+
+    monkeypatch.setattr(gpu_scvx, "solve_native", native)
+    assert low_thrust.solve_leg(bnd, settings(), seed=seed) == "scaled-native-sentinel"
+    assert called == [seed]
+
+
+def test_scaled_ctypes_entry_transmits_unmodified_archive_and_target(monkeypatch, tmp_path):
+    class Scaled(StubSolve):
+        def __call__(self, *args):
+            self.scaled_args = args
+            assert args[11] == 1500.0
+            return super().__call__(*args[:11], *args[12:])
+
+    scaled, ordinary = Scaled(), StubSolve()
+    library_environment(monkeypatch, tmp_path, SimpleNamespace(
+        spacepdhcg_gtoc12_scvx_solve_scaled_zoh_seed_host=scaled,
+        spacepdhcg_gtoc12_scvx_solve_zoh_seed_host=ordinary,
+        spacepdhcg_gtoc12_scvx_solve_host=ordinary,
+    ))
+    seed = ZohTrajectorySeed(**seed_values(), target_initial_mass_kg=1500.0)
+    bnd = dataclasses.replace(boundary(), initial_mass=1500.0)
+    result = gpu_scvx.solve_native(*native_args(bnd, settings()), seed=seed)
+    assert len(scaled.scaled_args) == len(scaled.argtypes) == 19
+    assert scaled.argtypes[11] is ct.c_double
+    assert len(scaled.calls) == 1 and not ordinary.calls
+    assert scaled.calls[0][1].tobytes() == seed.initial_state.tobytes()
+    assert scaled.calls[0][2].tobytes() == seed.thrust_n.tobytes()
+    assert result.seed_backend == "cuda_zoh_mass_scaled_replay"
+
+
+def test_scaled_seed_never_falls_back_to_unscaled_entry(monkeypatch, tmp_path):
+    ordinary = StubSolve()
+    library_environment(monkeypatch, tmp_path, SimpleNamespace(
+        spacepdhcg_gtoc12_scvx_solve_zoh_seed_host=ordinary,
+        spacepdhcg_gtoc12_scvx_solve_host=ordinary,
+    ))
+    seed = ZohTrajectorySeed(**seed_values(), target_initial_mass_kg=1500.0)
+    with pytest.raises(RuntimeError, match="mass-scaled ZOH replay seed extension; no fallback"):
+        gpu_scvx.solve_native(
+            *native_args(dataclasses.replace(boundary(), initial_mass=1500.0), settings()),
+            seed=seed,
+        )
+    assert not ordinary.calls
+
+
 @pytest.mark.parametrize("internal", [False, True])
 def test_existing_native_seed_selection_unchanged(monkeypatch, tmp_path, internal):
     old, new = StubSolve(), StubSolve()
