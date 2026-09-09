@@ -1,6 +1,12 @@
 # GTOC12 score progress — 9 September 2026
 
-The newest checkpoint moves insertion layout construction onto CUDA and retains
+The latest verified checkpoint is **12,992.035662 weighted kg / 14,271.047228
+raw kg**, with 23 ships and 200 asteroids. Nine GPU-refined route replacements
+gain **148.479966 weighted kg / 226.694045 raw kg**. Both GPUs pass both full-fleet
+checkers. The downloaded H100 fleet is displayed in the existing visualiser.
+[Fleet regeneration, actual throughput, remaining GPU work and loading instructions](GPU_FLEET_REGENERATION.md).
+
+The earlier layout checkpoint moves insertion layout construction onto CUDA and retains
 shared edge inputs on device. The 12,992-schedule screen takes **60 / 56 ms** on
 RTX 5090 / H100, with matching decisions. Both GPUs pass 124 joint-search tests,
 CUDA safety checks and fresh full-fleet physics checks. The score is unchanged.
@@ -12,7 +18,7 @@ is **10.67× / 5.32× faster** on RTX 5090 / H100 for 12,992 identical schedules
 Both GPUs pass 116 tests, CUDA safety checks and fresh full-fleet physics checks.
 [Batched insertion results and downloaded mission replay](GPU_INSERTION_BATCHES.md).
 
-The latest verified checkpoint is **12,843.555696 weighted kg / 14,044.353183 raw
+The preceding timing checkpoint is **12,843.555696 weighted kg / 14,044.353183 raw
 kg**, across 23 ships and 195 asteroids. GPU timing searches around two routes
 gain **0.585023 weighted kg / 0.602327 raw kg**. Both full-fleet physics checkers
 pass on both GPUs. The H100 result is downloaded and displayed in the visualiser.

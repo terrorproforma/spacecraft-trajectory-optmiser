@@ -1,0 +1,153 @@
+{
+  "pid": 386,
+  "complete": true,
+  "success": true,
+  "attempts": [
+    {
+      "ship": 8,
+      "rank": 0,
+      "certified": true,
+      "surrogate_kg": 531.5928088144392,
+      "actual_weighted_kg": 531.5928088144392,
+      "incumbent_kg": 522.6358885648599,
+      "seconds": 4.2017025299999995,
+      "failures": []
+    },
+    {
+      "ship": 8,
+      "rank": 1,
+      "certified": true,
+      "surrogate_kg": 525.3565169169092,
+      "actual_weighted_kg": 525.3565169169092,
+      "incumbent_kg": 522.6358885648599,
+      "seconds": 3.0410940140000005,
+      "failures": []
+    },
+    {
+      "ship": 23,
+      "rank": 0,
+      "certified": false,
+      "surrogate_kg": 554.4319809356209,
+      "actual_weighted_kg": 0.0,
+      "incumbent_kg": 542.1211869124701,
+      "seconds": 14.647058683000001,
+      "failures": [
+        {
+          "pass": 1,
+          "leg": 16,
+          "from": 15833,
+          "to": 0,
+          "status": "infeasible",
+          "diagnostic": "virtual control remains 1.814e-04",
+          "certification": "optimizer status is not certification"
+        }
+      ]
+    },
+    {
+      "ship": 23,
+      "rank": 1,
+      "certified": true,
+      "surrogate_kg": 553.7324545505842,
+      "actual_weighted_kg": 553.7324545505842,
+      "incumbent_kg": 542.1211869124701,
+      "seconds": 3.187347184,
+      "failures": []
+    }
+  ],
+  "native_solves": 72,
+  "source_solution_sha256": "566badda74eaf8ae790877a6c372a10beaad0261d463864fe7f6b74f9a343e67",
+  "core_sha256": "f8275f151608dca3de83fb0245e384117a223ae7884f7e1f25fdd075747bc66c",
+  "qoco_sha256": "5b1b1a047f9d5041f821b64490562a3d598f51b47fedb08d89cdae211728940a",
+  "scvx": {
+    "node_days": 2.0,
+    "hold": "zoh",
+    "substeps": 8,
+    "polish_substeps": 16,
+    "polish_iterations": 4,
+    "max_iterations": 40,
+    "virtual_weight": 10000.0,
+    "smoothness_weight": 0.0,
+    "initial_trust_state": 0.2,
+    "initial_trust_control": 1.0,
+    "minimum_trust": 1e-06,
+    "maximum_trust": 2.0,
+    "ratio_reject": 0.0,
+    "ratio_shrink": 0.25,
+    "ratio_grow": 0.7,
+    "shrink_factor": 0.5,
+    "grow_factor": 1.6,
+    "defect_tolerance": 5e-09,
+    "step_tolerance": 1e-07,
+    "objective_tolerance": 1e-06,
+    "clarabel_tolerance": 1e-09,
+    "time_limit_s": 900.0,
+    "discretisation_backend": "cuda",
+    "assembly_backend": "cuda",
+    "convex_solver_backend": "qoco",
+    "qoco_ruiz_iterations": 0,
+    "outer_loop_backend": "cuda",
+    "seed_backend": "cuda",
+    "certification_backend": "cuda"
+  },
+  "jobs": [
+    {
+      "ship": 8,
+      "rank": 0,
+      "surrogate_kg": 531.5928088144392,
+      "incumbent_kg": 522.6358885648599
+    },
+    {
+      "ship": 8,
+      "rank": 1,
+      "surrogate_kg": 525.3565169169092,
+      "incumbent_kg": 522.6358885648599
+    },
+    {
+      "ship": 23,
+      "rank": 0,
+      "surrogate_kg": 554.4319809356209,
+      "incumbent_kg": 542.1211869124701
+    },
+    {
+      "ship": 23,
+      "rank": 1,
+      "surrogate_kg": 553.7324545505842,
+      "incumbent_kg": 542.1211869124701
+    }
+  ],
+  "stage": "refine",
+  "ship": 23,
+  "rank": 1,
+  "replacements": [
+    8,
+    23
+  ],
+  "independent": {
+    "ok": false,
+    "ships": 23,
+    "mined_asteroids": 195,
+    "total_mass_kg": 13928.596851472097,
+    "weighted_score_fixed_bonus_kg": 12864.123883473121,
+    "weighted_score_dynamic_kg": null,
+    "ship_limit": 22.54496705068992,
+    "max_position_error_km": 22.744178853908508,
+    "max_velocity_error_km_s": 1.0832291386111238e-06,
+    "max_mass_error_kg": 9.208633855450898e-11,
+    "violations": [
+      "Error301: 23 ships exceed the allowable maximum 22.544967"
+    ]
+  },
+  "official": {
+    "ok": false,
+    "ships": null,
+    "mined_asteroids": null,
+    "total_mass_kg": null,
+    "return_code": 3,
+    "wall_seconds": 0.1915609209999971,
+    "message": "Error301. Mining Ship Number Error: The number of Mining Ships is 23, greater than the appropriable maximum number 22."
+  },
+  "score_kg": 12864.123883473121,
+  "qualified": false,
+  "solution_sha256": "a199f52c9d7edf9a15343fe0190f334a55dbed1e59ad47b2e253d274c6b66e86",
+  "seconds": 46.818742037999996
+}

@@ -14,6 +14,16 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
+The latest verified fleet reaches **12,992.036 weighted kg / 14,271.047 raw kg**:
+**148.480 weighted kg gained**, 23 ships, 200 asteroids and **620.480 raw kg per
+ship**. A wider raw-mass search generates 10,971 candidate routes; 373 native
+leg attempts produce 18 certified routes, and CUDA selects nine replacements.
+Both full-fleet checkers pass on RTX 5090 and Lambda H100. The H100 result is
+downloaded and displayed in the web visualiser. An exhaustive 44-column fleet
+search confirms the selection in 1.884 seconds on H100; broader mission search
+and complete GPU control remain open work.
+[Results, measured throughput, remaining GPU work and loading instructions](docs/GPU_FLEET_REGENERATION.md).
+
 CUDA insertion search can now vary deployment and collection flight splits
 independently. A five-point grid screened **12.48 million schedules per GPU** on
 the two-route probe, with no feasible insertion or score gain. Full mission
@@ -41,7 +51,7 @@ same score and passing both full-fleet physics checks. These schedule evaluation
 are search surrogates; native refinement and independent checks still qualify
 accepted trajectories. [Measurements, remaining GPU work and latest replay](docs/GPU_INSERTION_BATCHES.md).
 
-The latest verified fleet returns **14,044.353 raw kg / 12,843.556 weighted kg**,
+The preceding timing-search fleet returns **14,044.353 raw kg / 12,843.556 weighted kg**,
 with **610.624 raw kg per ship** across 23 ships. GPU-controlled timing searches
 around the two recently replaced routes gained another **0.585 weighted kg**.
 Both full-fleet physics checkers pass on RTX 5090 and Lambda H100. The new H100

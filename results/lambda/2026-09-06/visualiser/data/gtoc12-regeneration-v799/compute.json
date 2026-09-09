@@ -1,0 +1,24 @@
+{
+  "run_id": "gpu_regeneration_v799_h100",
+  "fleet_run_id": "gpu_regeneration_v798",
+  "commit": "ccf5de37",
+  "source_revision_note": "Frozen v788 source and CUDA core, retained QOCO v686. Raw-mass beam search, native route refinement, CUDA fleet selection; exact full-fleet checks pass.",
+  "weighted_score_fixed_bonus_kg": 12992.035662031367,
+  "raw_kg_per_ship": 620.4803142576826,
+  "hardware": {
+    "gpu": "Lambda NVIDIA H100 80 GB HBM3",
+    "upstream_search": "23 ships; 10,971 surrogate route candidates; 454,203,618 logical Lambert branch requests"
+  },
+  "timing": {
+    "wall_seconds_total": 689.9105711141019,
+    "wall_human": "486.0 s search + 157.4 s refinement/fleet checks + 46.5 s deeper selection/recheck/export; earlier pilot excluded"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 dynamics; both full-fleet checkers pass at unchanged tolerances",
+    "local_refine": "373 native QOCO/SCvx leg attempts; 365 converge. 18 of 26 routes certify; nine replacements selected. Fourteen incumbent routes retained."
+  },
+  "optimisation": {
+    "strategy": "Gain: 148.480 weighted kg and 226.694 raw kg. Wider beam with raw-mass objective restores the 23-ship margin. CUDA fleet search exhausts the 44-column certified pool; global mission optimality is not claimed. Python orchestration and CPU independent audits remain.",
+    "proven_optimal": false
+  }
+}
