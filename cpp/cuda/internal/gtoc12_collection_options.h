@@ -11,3 +11,7 @@ spacepdhcg_cuda_status gtoc12_collection_options_copy_device(
 spacepdhcg_cuda_status gtoc12_collection_options_view(
     spacepdhcg_gtoc12_collection_options*,
     const spacepdhcg_gtoc12_collection_option**, int*);
+// Create an independent handle sharing immutable rows. Both handles remain
+// thread/device owned; the last owner releases the device allocation.
+spacepdhcg_cuda_status gtoc12_collection_options_share(
+    spacepdhcg_gtoc12_collection_options*, spacepdhcg_gtoc12_collection_options**);

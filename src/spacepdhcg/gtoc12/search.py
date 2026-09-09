@@ -1888,7 +1888,7 @@ class RouteSearch:
             self.catalogue, asteroid, EARTH_ID, departures, tofs[t_idx], sort_returns=True
         )
         if options is not None:
-            self.lambert_evaluations += 2 * departures.shape[0]
+            self.lambert_evaluations += 2 * getattr(options, "computed_hops", departures.shape[0])
             return options
 
         hop = cuda_paired_hops(self.catalogue, asteroid, EARTH_ID, departures, tofs[t_idx])

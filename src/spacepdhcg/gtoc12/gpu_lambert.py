@@ -374,6 +374,13 @@ class GpuLambert:
             if resident
             else self.library.spacepdhcg_orbitweaver_hop_options_host
         )
+        retain_returns = (
+            resident
+            and sort_returns
+            and os.environ.get("SPACEPDHCG_TEST_GTOC12_RETAIN_RETURN_OPTIONS", "1") != "0"
+        )
+        if retain_returns:
+            native = self.library.spacepdhcg_orbitweaver_hop_options_cached_resident
         native.argtypes = [
             ct.c_void_p,
             ct.POINTER(HopElements),
@@ -385,11 +392,12 @@ class GpuLambert:
                 if resident
                 else [ct.c_void_p, ct.c_size_t, ct.POINTER(ct.c_size_t)]
             ),
-        ]
+        ] + ([ct.POINTER(ct.c_int32)] if retain_returns else [])
         native.restype = ct.c_int
         self._prepare(256)
         times = np.column_stack((departures, tofs))
         selected = ct.c_size_t()
+        cache_hit = ct.c_int32()
         if resident:
             from .gpu_options import GpuResidentOptions
 
@@ -403,9 +411,30 @@ class GpuLambert:
                     int(sort_returns),
                     ct.byref(output.handle),
                     ct.byref(selected),
+                    *([ct.byref(cache_hit)] if retain_returns else []),
                 )
             )
             output.count = selected.value
+            output.computed_hops = 0 if cache_hit.value else count
+            if sort_returns:
+                self.telemetry["resident_return_queries"] = (
+                    self.telemetry.get("resident_return_queries", 0) + 1
+                )
+            if retain_returns:
+                name = (
+                    "resident_return_cache_hits"
+                    if cache_hit.value
+                    else "resident_return_cache_misses"
+                )
+                self.telemetry[name] = self.telemetry.get(name, 0) + 1
+            if cache_hit.value:
+                self.telemetry["cached_return_branches"] = (
+                    self.telemetry.get("cached_return_branches", 0) + 2 * count
+                )
+                self.telemetry["resident_option_shared_handles"] = (
+                    self.telemetry.get("resident_option_shared_handles", 0) + 1
+                )
+                return output
         else:
             output = np.empty((count, 3), dtype=np.float64)
             self._check(

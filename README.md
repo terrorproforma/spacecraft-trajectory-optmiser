@@ -59,6 +59,14 @@ tests per GPU and CUDA safety checks. Its downloaded dense verifier replay is
 displayed in the web visualiser, including the coast intervals.
 [Measurements, source ownership, remaining CPU work and loading instructions](docs/GPU_CATALOGUE_OWNERSHIP.md).
 
+Shared native Earth-return rows now improve whole-search throughput by
+**15.5–17.0% on H100** and **29.6–30.5% on RTX 5090** across the same two route
+probes, with byte-identical candidates. They avoid **12.99 million repeated
+Lambert branch requests**; counters distinguish those hits from fresh GPU work.
+All 205 tests per GPU and CUDA safety/leak checks pass. Collection-DP preparation
+and control remain the dominant target; this change adds no fleet-score gain.
+[Exact measurements, native ownership and downloaded evidence](docs/GPU_SHARED_RETURN_OPTIONS.md).
+
 CUDA beam admission now removes another host stage: candidate construction
 falls from **105,755 to 1,092** and ranked-result downloads fall by about **99%**
 across the two route probes, with byte-identical candidates. Whole-search

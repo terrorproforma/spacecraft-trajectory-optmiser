@@ -84,8 +84,10 @@ struct spacepdhcg_gtoc12_collection {
     std::mutex mutex;
 };
 
+struct SharedOptionRows { Option* rows{}; size_t references{1}; };
 struct spacepdhcg_gtoc12_collection_options {
     Option* rows{};
+    SharedOptionRows* storage{};
     int count{},device{};
     std::thread::id owner{std::this_thread::get_id()};
 };
@@ -106,13 +108,16 @@ spacepdhcg_cuda_status gtoc12_collection_options_copy_device(
     if(!rows || count<0 || !output || *output)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     auto* table=new(std::nothrow) spacepdhcg_gtoc12_collection_options;
     if(!table)return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
+    table->storage=new(std::nothrow) SharedOptionRows;
+    if(!table->storage){delete table;return SPACEPDHCG_CUDA_OUT_OF_MEMORY;}
     table->count=count;
     auto status=cudaGetDevice(&table->device);
     if(status==cudaSuccess)status=cudaMalloc(&table->rows,size_t(count?count:1)*sizeof(Option));
+    table->storage->rows=table->rows;
     if(status==cudaSuccess && count)status=cudaMemcpyAsync(table->rows,rows,size_t(count)*sizeof(Option),cudaMemcpyDeviceToDevice,stream);
     const auto done=cudaStreamSynchronize(stream);
     if(status==cudaSuccess)status=done;
-    if(status!=cudaSuccess){cudaFree(table->rows);delete table;return mapped(status);}
+    if(status!=cudaSuccess){cudaFree(table->rows);delete table->storage;delete table;return mapped(status);}
     *output=table;return SPACEPDHCG_CUDA_SUCCESS;
 }
 
@@ -125,7 +130,8 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_options_read(
 extern "C" spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_options_destroy(
     spacepdhcg_gtoc12_collection_options** output) {
     if(!output||!owned(*output))return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
-    auto* table=*output;const auto status=cudaFree(table->rows);
+    auto* table=*output;auto status=cudaSuccess;
+    if(--table->storage->references==0){status=cudaFree(table->storage->rows);delete table->storage;}
     delete table;*output=nullptr;return mapped(status);
 }
 
@@ -133,6 +139,14 @@ spacepdhcg_cuda_status gtoc12_collection_options_view(
     spacepdhcg_gtoc12_collection_options* table,const Option** rows,int* count) {
     if(!owned(table)||!rows||!count)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     *rows=table->rows;*count=table->count;return SPACEPDHCG_CUDA_SUCCESS;
+}
+
+spacepdhcg_cuda_status gtoc12_collection_options_share(
+    spacepdhcg_gtoc12_collection_options* table,spacepdhcg_gtoc12_collection_options** output) {
+    if(!owned(table)||!output||*output||table->storage->references==SIZE_MAX)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    auto* shared=new(std::nothrow) spacepdhcg_gtoc12_collection_options(*table);
+    if(!shared)return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
+    ++table->storage->references;*output=shared;return SPACEPDHCG_CUDA_SUCCESS;
 }
 
 extern "C" spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_launch_device(

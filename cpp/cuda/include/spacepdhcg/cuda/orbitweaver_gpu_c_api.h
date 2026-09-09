@@ -133,6 +133,23 @@ typedef struct spacepdhcg_orbitweaver_hop_elements {
     double gravitational_parameter, departure_allowance, arrival_allowance;
 } spacepdhcg_orbitweaver_hop_elements;
 
+/* Bounded cache of immutable resident option rows, keyed by exact orbital
+ * elements, allowances, times and sort mode. cache_hit=1 skips screening and
+ * device copies. Every output is an independently owned table handle; eviction
+ * or producer-workspace destruction cannot invalidate outstanding handles.
+ * Cached calls and destruction of a workspace containing cached options require
+ * its creating thread/device. Numerical validation/operator match the ordinary
+ * hop_options_resident path. At most 256 entries / 64 MiB of retained payload;
+ * outstanding caller handles may retain evicted storage until they close. */
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_options_cached_resident(
+    spacepdhcg_orbitweaver_lambert_workspace* workspace,
+    const spacepdhcg_orbitweaver_hop_elements* elements,
+    const double* times,size_t count,int32_t sort_returns,
+    spacepdhcg_gtoc12_collection_options** table,size_t* selected,int32_t* cache_hit);
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_option_cache_stats(
+    spacepdhcg_orbitweaver_lambert_workspace* workspace,
+    uint64_t* hits,uint64_t* misses,uint64_t* evictions,uint64_t* retained_bytes);
+
 /* Builds endpoint states and rendezvous requests on CUDA, then uses the same
  * Lambert operator as hop_screening_host. times contains count interleaved
  * (departure MJD, flight duration days) pairs. All host accesses finish before

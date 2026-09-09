@@ -19,6 +19,7 @@
 #include <list>
 #include <memory>
 #include <vector>
+#include <thread>
 #include "gtoc12_fleet.cuh"
 
 namespace {
@@ -833,6 +834,14 @@ struct RankedHopOption {
     spacepdhcg_orbitweaver_hop_option value;
     size_t index;
 };
+struct HopOptionCacheEntry {
+    spacepdhcg_orbitweaver_hop_elements elements{};
+    std::vector<double> times;
+    int32_t sort_returns{};
+    size_t selected{},bytes{};
+    spacepdhcg_gtoc12_collection_options* table{};
+    ~HopOptionCacheEntry(){if(table)spacepdhcg_gtoc12_collection_options_destroy(&table);}
+};
 struct HopOptionLess {
     __host__ __device__ bool operator()(const RankedHopOption& a,const RankedHopOption& b) const {
         if(a.value.delta_v!=b.value.delta_v)return a.value.delta_v<b.value.delta_v;
@@ -905,6 +914,10 @@ struct spacepdhcg_orbitweaver_lambert_workspace {
     size_t grid_cache_bytes{};
     uint64_t grid_cache_hits{}, grid_cache_misses{}, grid_cache_evictions{};
     std::unique_ptr<HopOptionScratch> option_scratch;
+    std::list<std::unique_ptr<HopOptionCacheEntry>> option_cache;
+    size_t option_cache_bytes{};
+    uint64_t option_cache_hits{},option_cache_misses{},option_cache_evictions{};
+    std::thread::id option_cache_owner{std::this_thread::get_id()};
     std::unique_ptr<BeamScratch> beam_scratch;
     std::unique_ptr<GridAxesScratch> collection_axes;
 };
@@ -1201,6 +1214,8 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_telemetry(
     telemetry->workspace_bytes += workspace->config.maximum_batch_size
         * (sizeof(*workspace->hops) + sizeof(*workspace->hop_results));
     telemetry->workspace_bytes += workspace->grid_cache_bytes;
+    for(const auto& entry:workspace->option_cache)
+        telemetry->workspace_bytes+=std::max(size_t(1),entry->selected)*sizeof(spacepdhcg_orbitweaver_hop_option);
     if(workspace->option_scratch)telemetry->workspace_bytes+=workspace->option_scratch->bytes();
     if(workspace->beam_scratch)telemetry->workspace_bytes+=workspace->beam_scratch->bytes();
     if(workspace->collection_axes)telemetry->workspace_bytes+=workspace->collection_axes->capacity*sizeof(double);
@@ -1368,7 +1383,7 @@ static spacepdhcg_cuda_status hop_options_impl(
     const spacepdhcg_orbitweaver_hop_elements* elements,
     const double* times,size_t count,int32_t sort_returns,
     spacepdhcg_orbitweaver_hop_option* options,size_t capacity,size_t* selected,
-    spacepdhcg_gtoc12_collection_options** resident
+    spacepdhcg_gtoc12_collection_options** resident,int32_t* cache_hit=nullptr
 ) {
     if(!w||!elements||!selected||!times||(!options&&!resident)||(resident&&*resident)||!count||count>capacity
         ||count>INT_MAX||count>SIZE_MAX/(2*sizeof(RankedHopOption)+sizeof(*options))
@@ -1378,11 +1393,27 @@ static spacepdhcg_cuda_status hop_options_impl(
         ||elements->departure_allowance<0||!std::isfinite(elements->arrival_allowance)
         ||elements->arrival_allowance<0)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     *selected=0;
+    if(cache_hit)*cache_hit=0;
     std::unique_lock<std::mutex> lock(w->api_mutex,std::try_to_lock);
     if(!lock.owns_lock()||w->busy.load())return SPACEPDHCG_CUDA_BUSY;
     int device=-1;auto status=cudaGetDevice(&device);
     if(status!=cudaSuccess)return mapped(status);
     if(device!=static_cast<int>(w->config.device_id))return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    if(cache_hit) {
+        if(w->option_cache_owner!=std::this_thread::get_id())return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+        static_assert(sizeof(*elements)==17*sizeof(double));
+        for(auto it=w->option_cache.begin();it!=w->option_cache.end();++it) {
+            const auto& e=**it;
+            if(e.sort_returns==sort_returns && e.times.size()==2*count &&
+                std::memcmp(&e.elements,elements,sizeof(*elements))==0 &&
+                std::memcmp(e.times.data(),times,2*count*sizeof(double))==0) {
+                const auto code=gtoc12_collection_options_share(e.table,resident);
+                if(code==SPACEPDHCG_CUDA_SUCCESS){*selected=e.selected;*cache_hit=1;++w->option_cache_hits;w->option_cache.splice(w->option_cache.begin(),w->option_cache,it);}
+                return code;
+            }
+        }
+        ++w->option_cache_misses;
+    }
     if(!w->option_scratch||w->option_scratch->capacity<count) {
         std::unique_ptr<HopOptionScratch> scratch(new(std::nothrow) HopOptionScratch);
         if(!scratch)return SPACEPDHCG_CUDA_OUT_OF_MEMORY;
@@ -1435,6 +1466,25 @@ static spacepdhcg_cuda_status hop_options_impl(
         w->feasible+=valid_count;w->failed+=count-size_t(valid_count);
         w->input_bytes+=count*2*sizeof(double)+batches*sizeof(*elements);
         w->output_bytes+=(resident?0:size_t(valid_count)*sizeof(*options))+sizeof(int);
+        if(cache_hit) {
+            constexpr size_t limit=64ULL*1024*1024;
+            const size_t bytes=2*count*sizeof(double)+size_t(valid_count?valid_count:1)*sizeof(*options)+sizeof(HopOptionCacheEntry);
+            if(bytes<=limit)try {
+                auto entry=std::make_unique<HopOptionCacheEntry>();
+                entry->elements=*elements;entry->times.assign(times,times+2*count);
+                entry->sort_returns=sort_returns;entry->selected=size_t(valid_count);entry->bytes=bytes;
+                const auto shared=gtoc12_collection_options_share(*resident,&entry->table);
+                if(shared==SPACEPDHCG_CUDA_SUCCESS) {
+                    while(w->option_cache_bytes+bytes>limit||w->option_cache.size()>=256) {
+                        w->option_cache_bytes-=w->option_cache.back()->bytes;
+                        w->option_cache.pop_back();++w->option_cache_evictions;
+                    }
+                    w->option_cache.push_front(std::move(entry));w->option_cache_bytes+=bytes;
+                }
+            }catch(const std::bad_alloc&) {
+                // Retention is optional; the successfully computed output stays owned.
+            }
+        }
     }
     return mapped(status);
 }
@@ -1452,6 +1502,25 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_options_resident(
     size_t* selected) {
     if(!table)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
     return hop_options_impl(w,elements,times,count,sort_returns,nullptr,count,selected,table);
+}
+
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_options_cached_resident(
+    spacepdhcg_orbitweaver_lambert_workspace* w,const spacepdhcg_orbitweaver_hop_elements* elements,
+    const double* times,size_t count,int32_t sort_returns,spacepdhcg_gtoc12_collection_options** table,
+    size_t* selected,int32_t* cache_hit) {
+    if(!table||!cache_hit)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    return hop_options_impl(w,elements,times,count,sort_returns,nullptr,count,selected,table,cache_hit);
+}
+
+spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_option_cache_stats(
+    spacepdhcg_orbitweaver_lambert_workspace* w,uint64_t* hits,uint64_t* misses,uint64_t* evictions,uint64_t* bytes) {
+    if(!w||!hits||!misses||!evictions||!bytes)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    std::unique_lock<std::mutex> lock(w->api_mutex,std::try_to_lock);
+    if(!lock.owns_lock())return SPACEPDHCG_CUDA_BUSY;
+    int device=-1;const auto status=cudaGetDevice(&device);if(status!=cudaSuccess)return mapped(status);
+    if(device!=static_cast<int>(w->config.device_id))return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    *hits=w->option_cache_hits;*misses=w->option_cache_misses;*evictions=w->option_cache_evictions;*bytes=w->option_cache_bytes;
+    return SPACEPDHCG_CUDA_SUCCESS;
 }
 
 spacepdhcg_cuda_status spacepdhcg_orbitweaver_hop_grid_device(
@@ -1620,6 +1689,11 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_destroy(
     auto* owned = *workspace;
     std::unique_lock<std::mutex> api_lock(owned->api_mutex, std::try_to_lock);
     if (!api_lock.owns_lock()) return SPACEPDHCG_CUDA_BUSY;
+    if(!owned->option_cache.empty()) {
+        int device=-1;
+        if(owned->option_cache_owner!=std::this_thread::get_id() || cudaGetDevice(&device)!=cudaSuccess ||
+            device!=static_cast<int>(owned->config.device_id))return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    }
     if (owned->busy.load()) {
         const auto status = cudaEventSynchronize(owned->completion);
         if (status != cudaSuccess) {
@@ -1635,6 +1709,7 @@ spacepdhcg_cuda_status spacepdhcg_orbitweaver_lambert_workspace_destroy(
     cudaFree(owned->hops);
     cudaFree(owned->hop_results);
     owned->grid_cache.clear();
+    owned->option_cache.clear();
     owned->option_scratch.reset();
     owned->beam_scratch.reset();
     owned->collection_axes.reset();
