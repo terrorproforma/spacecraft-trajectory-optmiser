@@ -5,6 +5,125 @@ and deploy its advantage. The current obstacle is reliable convergence to the
 required accuracy. Separately, better GTOC12 scores require better discrete
 mission choices. Neither obstacle is resolved by faster individual kernels.
 
+## Current decision and next experiments
+
+Retain the PDHCG-inspired research core, qualify its numerical method, and
+deploy it where complete time to the required accuracy wins. The current
+GTOC12 refinement path uses GPU QOCO inside SCvx; search throughput improvements
+are not evidence of a PDHCG convergence advantage. Large coupled trajectory or
+scenario problems are the strongest prospective fit when factorization cost or
+memory dominates. Small individual legs and tight final accuracy need a measured
+comparison with a structure-exploiting interior-point solver. Diagonal-Q cases
+also require the available closed-form proximal update as a credible baseline.
+
+The next core work separates two questions. The completed saved-data diagnostic
+shows that equality projection preserves about 99.853% of the original
+objective-gradient energy and almost all remaining stationarity-error energy.
+It does not support blaming equality bookkeeping or directly blaming the L1
+penalty for small physical steps. The cone projection responds weakly along
+the remaining error directions at the inspected point. This narrows the outer
+convergence investigation; it supplies no safe larger step size or proof that
+a new metric will help. [Full diagnostic and its limitations](../results/local/2026-09-09/core-conditioning-v637/README.md).
+Separately, the unchanged displaced HCW N20 problem has now been
+assembled and exported: 186 positive quadratic coefficients, 132 equalities and
+20 SOC4 blocks. Its native and standard-conic representations preserve the
+original objective and coefficients. No optimizer has run on that capture yet;
+it supplies an actual matched quadratic correctness input, not a CG speed claim.
+[Exact capture](../results/local/2026-09-09/nonzero-q-capture-v637/README.md).
+
+Source inspection also distinguishes algorithm completeness from CUDA execution.
+The custom cooperative path computes Q*x and takes one explicit projected
+gradient step. The pinned PDHCG-CQP implementation uses an exact diagonal-Q
+proximal update, or projected Barzilai-Borwein inner iterations for general Q;
+the latter is not conjugate gradient. It also has different outer ordering,
+reflection, restarts and weight policies. Its existing upstream snapshot replay
+frontend can establish a same-input numerical baseline before those operations
+are retained in a new persistent path. The original QP paper's CG algorithm must
+be identified and measured separately if making a specifically CG-based claim.
+Zero-Q inputs cannot test that distinction, and the new diagonal-Q input does
+not require an iterative quadratic inner solve. Count actual work: upstream's
+inner counter advances even in a diagonal-Q outer iteration.
+[Custom update](../cpp/cuda/src/cooperative_pdhg.cuh),
+[upstream replay frontend](../cpp/cuda/tests/upstream_snapshot_replay.cu),
+[original QP paper](https://arxiv.org/abs/2405.16160),
+[conic extension](https://arxiv.org/abs/2608.09159).
+Earlier upstream tests on different conditioning/difficult inputs also failed
+their cold starts. The bounded evidence search found no upstream run on these
+two exact newer captures or the new HCW input. That matched comparison is useful
+new work; upstream is not presumed to solve the observed conic tail.
+
+The new bounded search has now screened eight unused asteroid families and
+searched four with new Earth departure geometry. It produced 923 distinct
+prescriptions in 33.865 seconds of worker time (32.142 seconds in route searches),
+with 43,515,180 fresh Lambert branch requests including the initial screens.
+These are surrogate candidates and geometry evaluations, not certified solutions
+or a same-workload speed comparison. No candidate or cross-family pair satisfies
+the shared raw-mass rule for a profitable replacement or fleet growth.
+
+All 121 attempted completions at depth nine or ten fail; successful closed
+routes reach at most eight deployments. No timeout or incumbent-asteroid
+conflict explains this. The surfaced completion records include mass shortfall,
+missing return/collection choices and authority failures, with overlapping
+categories. The native expansion stage admits 1,241 of 1,259,796 valid children,
+but discarded-child reasons are not saved. We cannot attribute all missing
+routes to a specific gate. Better calibrated whole-route admission, bounded
+refinement of uncertain rejections, and coordinated route/fleet changes now
+have priority over another unchanged beam-width or unused-family sweep.
+[Complete campaign and fleet-selection audit](../results/local/2026-09-09/route-family-v637/README.md).
+
+Joint schedule/control refinement is a separate priority: newly retrieved Lambda
+reports show a retimed ship-18 candidate reaching 16 certified flights before
+its seventeenth flight, the Earth return, fails. Three later-arrival attempts
+also fail, and no full-fleet check runs. Process completion is not trajectory
+certification or an infeasibility proof. The verified fleet remains
+13,526.961241 weighted kg and 14,915.044490 raw kg, with only 5.604591 kg of
+headroom under the 24-ship raw-mass rule. Route ranking must respect that shared
+constraint, asteroid conflicts and the actual weighted objective.
+[Retrieved reports and exact timing scopes](../results/local/2026-09-09/lambda-run-status-v637/README.md).
+
+For GPU engineering, the existing collection DP is already multi-block, but
+its transition kernel launches the full subset/location/time grid for every
+cardinality. At ten asteroids that schedules 102,400 coordinates per time
+sample across all layers; only 5,119 pass the structural state filters. Exactly
+half the dense state storage represents invalid subset/location combinations.
+Compact layer scheduling and state storage are therefore concrete candidates
+for the next native experiment. Those integer work counts are not speedup
+measurements: preserve predecessor order and epsilon tie handling, then test
+exact outcomes and complete route-search time. Python call-profile time inside
+the native solve includes synchronized GPU work and must not be attributed
+entirely to CPU arithmetic.
+[Pinned source and integer work counts](../results/local/2026-09-09/collect-dp-work-v637/README.md).
+
+The acceptance targets remain explicit: qualified original-equation solver
+results; complete certified trajectories per second including failed attempts;
+and the best independently checked weighted fleet score at a fixed compute
+budget. A hybrid must include the PDHCG work, handoff and final polish in its
+comparison with the complete baseline. A targeted numerical/literature review
+supports each identified bottleneck; the current evidence does not justify
+another unchanged iteration or beam-width sweep.
+
+The next implementation sequence is:
+
+1. Run the actual pinned upstream method on the two exact zero-Q captures and
+   the newly exported HCW capture, beside the existing qualified reference.
+   Retain complete primal/dual vectors and measure setup, convergence and final
+   checking separately. The HCW case tests diagonal quadratic correctness; a
+   legitimate coupled-quadratic physical workload is still needed for a CG claim.
+2. Capture a bounded set of the deeper route-completion rejections, including
+   original requests and rejection causes, and test uncertain cases against
+   actual low-thrust refinement. Use this to calibrate admission before widening
+   the same beam again.
+3. Optimize the itinerary's event times, controls and mass evolution together
+   on the stalled return cases. Require an independent whole-route certificate
+   before offering a route to the fleet selector.
+4. Add diverse large-neighborhood route moves and coordinated fleet selection
+   using asteroid conflicts, raw-mass feasibility and weighted-score opportunity
+   prices. Compare verified score reached at the same complete compute budget.
+5. In parallel with numerical and search work, test compact collection-DP
+   scheduling/storage and retained native preparation using matched output,
+   sanitizer and end-to-end timing checks. Promote each change only on measured
+   complete-workload benefit; static work counts do not establish that benefit.
+
 ## What is established
 
 - The tested PDHCG path has progressed beyond the original one-block solve:

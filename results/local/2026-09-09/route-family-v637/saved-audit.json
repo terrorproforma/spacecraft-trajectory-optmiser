@@ -1,0 +1,1192 @@
+{
+  "complete": true,
+  "status": "saved_only_audit_passed",
+  "current_Result_sha256": "1f420928bbef8da91e3a6f8b74d3bf00039c78d4257215c103a484bc55bb22da",
+  "ready_sha256": "121220c6a5a4b0d57be7fe0819a452cc52efc7c1912148713af3e65e7f7df33b",
+  "report_sha256": "706fdfb0d472e7bc56f26fb0d3c2a019e1d277582655ca49bbf6c12c0087d672",
+  "launch_report_sha256": "92f515ffcd76c263b573139b5d4a525a9f129d84ac016d8f4b9283eddf5d4f51",
+  "GPU_search_refinement_propagation_or_checker_calls_in_audit": 0,
+  "fleet": {
+    "current_Result_path": "results/local/2026-09-09/fleet-addition-v633/Result.txt",
+    "current_Result_sha256": "1f420928bbef8da91e3a6f8b74d3bf00039c78d4257215c103a484bc55bb22da",
+    "catalogue_sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675",
+    "bonus_sha256": "e8a3795e599556ed5b66713ab1fa176de93ef37f93cb2a4a87d561539b1caa21",
+    "current_raw_kg": "14915.0444900762",
+    "current_weighted_kg": "13526.961241173071481030315330392",
+    "minimum_raw_24_kg": "14909.439898728001861378256879033273044790944959259559759856326116",
+    "raw_margin_kg": "5.604591348198138621743120966726955209055040740440240143673884",
+    "minimum_raw_25_kg": "15785.804026926596498651790906213741943598141088604876185653848584",
+    "additional_raw_for_ship25_kg": "870.759536850396498651790906213741943598141088604876185653848584"
+  },
+  "screening": [
+    {
+      "family": 0,
+      "returned_options": 345,
+      "eligible_options": 76,
+      "selected_seeds": 1,
+      "recorded_family_score": 30.234540335361906,
+      "exact_mean_from_saved_scores": "30.2345403353619076369795948266983032226562500000"
+    },
+    {
+      "family": 2,
+      "returned_options": 274,
+      "eligible_options": 54,
+      "selected_seeds": 1,
+      "recorded_family_score": 39.908010706413805,
+      "exact_mean_from_saved_scores": "39.9080107064138076111703412607312202453613281250"
+    },
+    {
+      "family": 4,
+      "returned_options": 185,
+      "eligible_options": 17,
+      "selected_seeds": 2,
+      "recorded_family_score": 29.749924455984633,
+      "exact_mean_from_saved_scores": "29.7499244559846317770279711112380027770996093750"
+    },
+    {
+      "family": 6,
+      "returned_options": 300,
+      "eligible_options": 46,
+      "selected_seeds": 1,
+      "recorded_family_score": 38.21239943940728,
+      "exact_mean_from_saved_scores": "38.21239943940727954441172187216579914093017578125"
+    },
+    {
+      "family": 7,
+      "returned_options": 278,
+      "eligible_options": 18,
+      "selected_seeds": 2,
+      "recorded_family_score": 29.929882808355398,
+      "exact_mean_from_saved_scores": "29.9298828083553985379694495350122451782226562500"
+    },
+    {
+      "family": 1,
+      "returned_options": 220,
+      "eligible_options": 28,
+      "selected_seeds": 1,
+      "recorded_family_score": 25.812872643711557,
+      "exact_mean_from_saved_scores": "25.81287264371155885100961313582956790924072265625"
+    },
+    {
+      "family": 8,
+      "returned_options": 362,
+      "eligible_options": 31,
+      "selected_seeds": 3,
+      "recorded_family_score": 35.60353326297225,
+      "exact_mean_from_saved_scores": "35.6035332629722489627965842373669147491455078125"
+    },
+    {
+      "family": 3,
+      "returned_options": 249,
+      "eligible_options": 19,
+      "selected_seeds": 2,
+      "recorded_family_score": 38.424040640279465,
+      "exact_mean_from_saved_scores": "38.4240406402794661744337645359337329864501953125"
+    }
+  ],
+  "selected_families": [
+    2,
+    3,
+    6,
+    8
+  ],
+  "searches": [
+    {
+      "family": 2,
+      "plans": 147,
+      "unique_physical_requests": 147,
+      "best_raw": {
+        "family": 2,
+        "index": 0,
+        "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be",
+        "raw_kg": "522.38193018480492",
+        "weighted_kg": "522.38193018480492",
+        "deployments": 8,
+        "asteroids": [
+          21665,
+          23151,
+          53000,
+          18410,
+          31297,
+          26862,
+          39446,
+          32210
+        ],
+        "launch_mjd": 64523.0,
+        "return_mjd": 69608.0,
+        "proxy_propellant_kg": 2130.1129203200717,
+        "proxy_final_mass_kg": 1072.2690098647333,
+        "certified": false
+      },
+      "best_weighted": {
+        "family": 2,
+        "index": 0,
+        "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be",
+        "raw_kg": "522.38193018480492",
+        "weighted_kg": "522.38193018480492",
+        "deployments": 8,
+        "asteroids": [
+          21665,
+          23151,
+          53000,
+          18410,
+          31297,
+          26862,
+          39446,
+          32210
+        ],
+        "launch_mjd": 64523.0,
+        "return_mjd": 69608.0,
+        "proxy_propellant_kg": 2130.1129203200717,
+        "proxy_final_mass_kg": 1072.2690098647333,
+        "certified": false
+      },
+      "closed_deployment_histogram": {
+        "2": 24,
+        "3": 24,
+        "4": 24,
+        "5": 24,
+        "6": 24,
+        "7": 15,
+        "8": 12
+      },
+      "search_depth_reached": 10,
+      "failure_records": 49,
+      "failure_deployment_histogram": {
+        "7": 9,
+        "8": 12,
+        "9": 24,
+        "10": 4
+      },
+      "failure_token_record_counts_nonexclusive": {
+        "camp_negative": 1,
+        "leg_authority": 15,
+        "mass_below_dry_plus_collected": 45,
+        "no_collect_hop": 20,
+        "no_reposition_hop": 4,
+        "no_return": 48,
+        "no_tour": 4
+      },
+      "exact_failure_reasons": {
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 1,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 1,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_reposition_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 2,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:leg_authority,w0.15:mass_below_dry_plus_collected)": 1,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 4,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 7,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_return,reversex4:no_return,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_return,reversex16:no_return,forwardx16:no_collect_hop,forward_revisitx16:no_reposition_hop,dp:w1:leg_authority,w0.15:mass_below_dry_plus_collected)": 1,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_return,reversex4:no_return,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_return,reversex16:no_return,forwardx16:no_collect_hop,forward_revisitx16:no_reposition_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 1,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_return,reversex4:no_return,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_return,reversex16:no_return,forwardx16:camp_negative,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 1,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_return,reversex4:no_return,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_return,reversex16:no_return,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 1,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_return,reversex4:no_return,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_return,reversex16:no_return,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:leg_authority,w0.15:mass_below_dry_plus_collected)": 2,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_return,reversex4:no_return,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_return,reversex16:no_return,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 7,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_return,reversex4:no_return,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_return,reversex16:no_return,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 16,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_return,reversex4:no_return,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_return,reversex16:no_return,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:no_tour,w0.15:no_tour)": 4
+      },
+      "first_level_failures_not_recorded": 1,
+      "time_budget_exhausted": false,
+      "native_valid_expansion_children": 183567,
+      "native_admission_selected": 196,
+      "pareto_front": [
+        {
+          "family": 2,
+          "index": 0,
+          "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be",
+          "raw_kg": "522.38193018480492",
+          "weighted_kg": "522.38193018480492",
+          "deployments": 8,
+          "asteroids": [
+            21665,
+            23151,
+            53000,
+            18410,
+            31297,
+            26862,
+            39446,
+            32210
+          ],
+          "launch_mjd": 64523.0,
+          "return_mjd": 69608.0,
+          "proxy_propellant_kg": 2130.1129203200717,
+          "proxy_final_mass_kg": 1072.2690098647333,
+          "certified": false
+        }
+      ],
+      "search_seconds": 4.220096449000266,
+      "fresh_lambert_branch_requests": 7529886
+    },
+    {
+      "family": 3,
+      "plans": 282,
+      "unique_physical_requests": 282,
+      "best_raw": {
+        "family": 3,
+        "index": 2,
+        "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152",
+        "raw_kg": "483.778234086242296",
+        "weighted_kg": "483.778234086242296",
+        "deployments": 7,
+        "asteroids": [
+          1457,
+          22482,
+          57193,
+          5350,
+          14570,
+          17770,
+          23733
+        ],
+        "launch_mjd": 64523.0,
+        "return_mjd": 69683.0,
+        "proxy_propellant_kg": 2209.577581031944,
+        "proxy_final_mass_kg": 994.2006530542981,
+        "certified": false
+      },
+      "best_weighted": {
+        "family": 3,
+        "index": 2,
+        "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152",
+        "raw_kg": "483.778234086242296",
+        "weighted_kg": "483.778234086242296",
+        "deployments": 7,
+        "asteroids": [
+          1457,
+          22482,
+          57193,
+          5350,
+          14570,
+          17770,
+          23733
+        ],
+        "launch_mjd": 64523.0,
+        "return_mjd": 69683.0,
+        "proxy_propellant_kg": 2209.577581031944,
+        "proxy_final_mass_kg": 994.2006530542981,
+        "certified": false
+      },
+      "closed_deployment_histogram": {
+        "1": 1,
+        "2": 48,
+        "3": 48,
+        "4": 48,
+        "5": 48,
+        "6": 48,
+        "7": 37,
+        "8": 4
+      },
+      "search_depth_reached": 9,
+      "failure_records": 86,
+      "failure_deployment_histogram": {
+        "7": 11,
+        "8": 44,
+        "9": 31
+      },
+      "failure_token_record_counts_nonexclusive": {
+        "leg_authority": 10,
+        "mass_below_dry_plus_collected": 54,
+        "no_collect_hop": 86,
+        "no_return": 17,
+        "no_tour": 32
+      },
+      "exact_failure_reasons": {
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:leg_authority,w0.15:mass_below_dry_plus_collected)": 2,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 6,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 33,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:no_tour,w0.15:no_tour)": 28,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 2,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 11,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:no_tour,w0.15:no_tour)": 4
+      },
+      "first_level_failures_not_recorded": 1,
+      "time_budget_exhausted": false,
+      "native_valid_expansion_children": 416591,
+      "native_admission_selected": 367,
+      "pareto_front": [
+        {
+          "family": 3,
+          "index": 2,
+          "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152",
+          "raw_kg": "483.778234086242296",
+          "weighted_kg": "483.778234086242296",
+          "deployments": 7,
+          "asteroids": [
+            1457,
+            22482,
+            57193,
+            5350,
+            14570,
+            17770,
+            23733
+          ],
+          "launch_mjd": 64523.0,
+          "return_mjd": 69683.0,
+          "proxy_propellant_kg": 2209.577581031944,
+          "proxy_final_mass_kg": 994.2006530542981,
+          "certified": false
+        }
+      ],
+      "search_seconds": 10.18231353200008,
+      "fresh_lambert_branch_requests": 12726390
+    },
+    {
+      "family": 6,
+      "plans": 122,
+      "unique_physical_requests": 122,
+      "best_raw": {
+        "family": 6,
+        "index": 2,
+        "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310",
+        "raw_kg": "422.176591375770033",
+        "weighted_kg": "422.176591375770033",
+        "deployments": 7,
+        "asteroids": [
+          59895,
+          11252,
+          35576,
+          2187,
+          39657,
+          53895,
+          52607
+        ],
+        "launch_mjd": 64703.0,
+        "return_mjd": 69803.0,
+        "proxy_propellant_kg": 2201.3138748828055,
+        "proxy_final_mass_kg": 940.8627164929644,
+        "certified": false
+      },
+      "best_weighted": {
+        "family": 6,
+        "index": 2,
+        "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310",
+        "raw_kg": "422.176591375770033",
+        "weighted_kg": "422.176591375770033",
+        "deployments": 7,
+        "asteroids": [
+          59895,
+          11252,
+          35576,
+          2187,
+          39657,
+          53895,
+          52607
+        ],
+        "launch_mjd": 64703.0,
+        "return_mjd": 69803.0,
+        "proxy_propellant_kg": 2201.3138748828055,
+        "proxy_final_mass_kg": 940.8627164929644,
+        "certified": false
+      },
+      "closed_deployment_histogram": {
+        "2": 24,
+        "3": 24,
+        "4": 24,
+        "5": 24,
+        "6": 24,
+        "7": 2
+      },
+      "search_depth_reached": 8,
+      "failure_records": 46,
+      "failure_deployment_histogram": {
+        "7": 22,
+        "8": 24
+      },
+      "failure_token_record_counts_nonexclusive": {
+        "leg_authority": 8,
+        "mass_below_dry_plus_collected": 28,
+        "no_collect_hop": 46,
+        "no_reposition_hop": 1,
+        "no_return": 11,
+        "no_tour": 18
+      },
+      "exact_failure_reasons": {
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 7,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 12,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:no_tour,w0.15:no_tour)": 15,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_reposition_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 1,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 1,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 7,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:no_tour,w0.15:no_tour)": 3
+      },
+      "first_level_failures_not_recorded": 1,
+      "time_budget_exhausted": false,
+      "native_valid_expansion_children": 145784,
+      "native_admission_selected": 168,
+      "pareto_front": [
+        {
+          "family": 6,
+          "index": 2,
+          "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310",
+          "raw_kg": "422.176591375770033",
+          "weighted_kg": "422.176591375770033",
+          "deployments": 7,
+          "asteroids": [
+            59895,
+            11252,
+            35576,
+            2187,
+            39657,
+            53895,
+            52607
+          ],
+          "launch_mjd": 64703.0,
+          "return_mjd": 69803.0,
+          "proxy_propellant_kg": 2201.3138748828055,
+          "proxy_final_mass_kg": 940.8627164929644,
+          "certified": false
+        }
+      ],
+      "search_seconds": 4.700351785000748,
+      "fresh_lambert_branch_requests": 6531072
+    },
+    {
+      "family": 8,
+      "plans": 372,
+      "unique_physical_requests": 372,
+      "best_raw": {
+        "family": 8,
+        "index": 0,
+        "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf",
+        "raw_kg": "452.566735112936358",
+        "weighted_kg": "452.566735112936358",
+        "deployments": 7,
+        "asteroids": [
+          23773,
+          10359,
+          11481,
+          8604,
+          5982,
+          28023,
+          49269
+        ],
+        "launch_mjd": 64343.0,
+        "return_mjd": 69803.0,
+        "proxy_propellant_kg": 2153.8438458307487,
+        "proxy_final_mass_kg": 1018.7228892821882,
+        "certified": false
+      },
+      "best_weighted": {
+        "family": 8,
+        "index": 0,
+        "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf",
+        "raw_kg": "452.566735112936358",
+        "weighted_kg": "452.566735112936358",
+        "deployments": 7,
+        "asteroids": [
+          23773,
+          10359,
+          11481,
+          8604,
+          5982,
+          28023,
+          49269
+        ],
+        "launch_mjd": 64343.0,
+        "return_mjd": 69803.0,
+        "proxy_propellant_kg": 2153.8438458307487,
+        "proxy_final_mass_kg": 1018.7228892821882,
+        "certified": false
+      },
+      "closed_deployment_histogram": {
+        "1": 2,
+        "2": 64,
+        "3": 64,
+        "4": 64,
+        "5": 64,
+        "6": 64,
+        "7": 46,
+        "8": 4
+      },
+      "search_depth_reached": 10,
+      "failure_records": 140,
+      "failure_deployment_histogram": {
+        "7": 18,
+        "8": 60,
+        "9": 38,
+        "10": 24
+      },
+      "failure_token_record_counts_nonexclusive": {
+        "camp_negative": 6,
+        "leg_authority": 7,
+        "mass_below_dry_plus_collected": 57,
+        "no_collect_hop": 140,
+        "no_return": 74,
+        "no_tour": 83
+      },
+      "exact_failure_reasons": {
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 2,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 20,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:no_tour,w0.15:no_tour)": 44,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 1,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 3,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_collect_hop,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_collect_hop,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_collect_hop,forward_revisitx16:no_return,dp:w1:no_tour,w0.15:no_tour)": 28,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_collect_hop,greedyx16:camp_negative,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 2,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 1,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_collect_hop,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_collect_hop,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_collect_hop,dp:w1:no_tour,w0.15:no_tour)": 5,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:camp_negative,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 2,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 1,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 12,
+        "no feasible collection tour (greedyx1:no_collect_hop,reversex1:no_collect_hop,forwardx1:no_return,forward_revisitx1:no_return,greedyx4:no_collect_hop,reversex4:no_collect_hop,forwardx4:no_return,forward_revisitx4:no_return,greedyx16:no_collect_hop,reversex16:no_collect_hop,forwardx16:no_return,forward_revisitx16:no_return,dp:w1:no_tour,w0.15:no_tour)": 2,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_return,reversex4:no_return,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_return,reversex16:no_return,forwardx16:camp_negative,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 2,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_return,reversex4:no_return,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_return,reversex16:no_return,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:leg_authority)": 2,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_return,reversex4:no_return,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_return,reversex16:no_return,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:mass_below_dry_plus_collected,w0.15:mass_below_dry_plus_collected)": 9,
+        "no feasible collection tour (greedyx1:no_return,reversex1:no_return,forwardx1:no_collect_hop,forward_revisitx1:no_collect_hop,greedyx4:no_return,reversex4:no_return,forwardx4:no_collect_hop,forward_revisitx4:no_collect_hop,greedyx16:no_return,reversex16:no_return,forwardx16:no_collect_hop,forward_revisitx16:no_collect_hop,dp:w1:no_tour,w0.15:no_tour)": 4
+      },
+      "first_level_failures_not_recorded": 1,
+      "time_budget_exhausted": false,
+      "native_valid_expansion_children": 513854,
+      "native_admission_selected": 510,
+      "pareto_front": [
+        {
+          "family": 8,
+          "index": 0,
+          "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf",
+          "raw_kg": "452.566735112936358",
+          "weighted_kg": "452.566735112936358",
+          "deployments": 7,
+          "asteroids": [
+            23773,
+            10359,
+            11481,
+            8604,
+            5982,
+            28023,
+            49269
+          ],
+          "launch_mjd": 64343.0,
+          "return_mjd": 69803.0,
+          "proxy_propellant_kg": 2153.8438458307487,
+          "proxy_final_mass_kg": 1018.7228892821882,
+          "certified": false
+        }
+      ],
+      "search_seconds": 13.038882850999471,
+      "fresh_lambert_branch_requests": 16635672
+    }
+  ],
+  "totals": {
+    "completed_batches": 13024,
+    "completed_branch_requests": 43423020,
+    "resident_return_queries": 13057,
+    "resident_return_cache_misses": 289,
+    "completed_element_hops": 18792150,
+    "completed_compact_options": 2771852,
+    "compact_option_download_bytes": 24680,
+    "resident_option_builds": 6170,
+    "resident_option_selection_download_bytes": 2323000,
+    "completed_return_feasibility_queries": 7,
+    "resident_return_cache_hits": 12768,
+    "cached_return_branches": 13610688,
+    "resident_option_shared_handles": 12768,
+    "collection_option_upload_bytes": 0,
+    "completed_collection_queries": 58068,
+    "completed_collection_options": 26936265,
+    "completed_neighbour_queries": 3041,
+    "expansion_depths": 35,
+    "expansion_input_slots": 4684800,
+    "expansion_valid_children": 1259796,
+    "expansion_upload_bytes": 337575408,
+    "admission_depths": 35,
+    "admission_input_children": 1259796,
+    "admission_selected": 1241,
+    "expansion_download_bytes": 109208,
+    "expansion_materialized_children": 1241,
+    "collect_resident_builds": 3813,
+    "collect_resident_dp_builds": 75,
+    "collect_dp_allocations": 75,
+    "completed_collection_dp_passes": 3860,
+    "collect_dp_rebinds": 2407,
+    "completion_catalogue_hashes": 8,
+    "completion_catalogue_hash_reuses": 1753,
+    "completion_model_rebuilds": 1120,
+    "completion_catalogue_uploads": 4,
+    "completion_resident_catalogue_reuses": 1116,
+    "completion_catalogue_upload_bytes": 9600000,
+    "completion_batches": 1761,
+    "completion_candidates": 3633,
+    "completion_leg_slots": 22423,
+    "plans": 923,
+    "recorded_completion_failures": 321,
+    "first_level_failures_not_recorded": 4,
+    "partial_expansions": 1220
+  },
+  "worker_seconds": 33.86466332800046,
+  "supervisor_seconds": 35.88930872600031,
+  "screen_rows": 46080,
+  "screen_fresh_branch_requests": 92160,
+  "selection": {
+    "method": "Within-family raw/weighted Pareto fronts; raw-sorted incumbent removal sums with minimum-weight prefix lookup. Different families and incumbent are pairwise disjoint.",
+    "unpruned_cross_family_plan_pairs": 298764,
+    "pareto_retained": 4,
+    "binary_search_queries": 20,
+    "removal_tables": {
+      "0": 1,
+      "1": 24,
+      "2": 276
+    },
+    "queries": [
+      {
+        "new": [
+          {
+            "family": 2,
+            "index": 0,
+            "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be"
+          }
+        ],
+        "new_raw_kg": "522.38193018480492",
+        "new_weighted_kg": "522.38193018480492",
+        "remove_count": 1,
+        "resultant_ships": 24,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-42.773232060296941378256879033273044790944959259559759856326116",
+        "best_raw_removed_ships": [
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "19.125589989737946386850005853",
+        "best_unconstrained_weighted_removed_ships": [
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 2,
+            "index": 0,
+            "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be"
+          }
+        ],
+        "new_raw_kg": "522.38193018480492",
+        "new_weighted_kg": "522.38193018480492",
+        "remove_count": 0,
+        "resultant_ships": 25,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-348.377606665591578651790906213741943598141088604876185653848584",
+        "best_raw_removed_ships": [],
+        "best_unconstrained_weighted_gain_kg": "522.38193018480492",
+        "best_unconstrained_weighted_removed_ships": [],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 3,
+            "index": 2,
+            "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152"
+          }
+        ],
+        "new_raw_kg": "483.778234086242296",
+        "new_weighted_kg": "483.778234086242296",
+        "remove_count": 1,
+        "resultant_ships": 24,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-81.376928158859565378256879033273044790944959259559759856326116",
+        "best_raw_removed_ships": [
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "-19.478106108824677613149994147",
+        "best_unconstrained_weighted_removed_ships": [
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 3,
+            "index": 2,
+            "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152"
+          }
+        ],
+        "new_raw_kg": "483.778234086242296",
+        "new_weighted_kg": "483.778234086242296",
+        "remove_count": 0,
+        "resultant_ships": 25,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-386.981302764154202651790906213741943598141088604876185653848584",
+        "best_raw_removed_ships": [],
+        "best_unconstrained_weighted_gain_kg": "483.778234086242296",
+        "best_unconstrained_weighted_removed_ships": [],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 6,
+            "index": 2,
+            "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310"
+          }
+        ],
+        "new_raw_kg": "422.176591375770033",
+        "new_weighted_kg": "422.176591375770033",
+        "remove_count": 1,
+        "resultant_ships": 24,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-142.978570869331828378256879033273044790944959259559759856326116",
+        "best_raw_removed_ships": [
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "-81.079748819296940613149994147",
+        "best_unconstrained_weighted_removed_ships": [
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 6,
+            "index": 2,
+            "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310"
+          }
+        ],
+        "new_raw_kg": "422.176591375770033",
+        "new_weighted_kg": "422.176591375770033",
+        "remove_count": 0,
+        "resultant_ships": 25,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-448.582945474626465651790906213741943598141088604876185653848584",
+        "best_raw_removed_ships": [],
+        "best_unconstrained_weighted_gain_kg": "422.176591375770033",
+        "best_unconstrained_weighted_removed_ships": [],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 8,
+            "index": 0,
+            "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf"
+          }
+        ],
+        "new_raw_kg": "452.566735112936358",
+        "new_weighted_kg": "452.566735112936358",
+        "remove_count": 1,
+        "resultant_ships": 24,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-112.588427132165503378256879033273044790944959259559759856326116",
+        "best_raw_removed_ships": [
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "-50.689605082130615613149994147",
+        "best_unconstrained_weighted_removed_ships": [
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 8,
+            "index": 0,
+            "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf"
+          }
+        ],
+        "new_raw_kg": "452.566735112936358",
+        "new_weighted_kg": "452.566735112936358",
+        "remove_count": 0,
+        "resultant_ships": 25,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-418.192801737460140651790906213741943598141088604876185653848584",
+        "best_raw_removed_ships": [],
+        "best_unconstrained_weighted_gain_kg": "452.566735112936358",
+        "best_unconstrained_weighted_removed_ships": [],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 2,
+            "index": 0,
+            "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be"
+          },
+          {
+            "family": 3,
+            "index": 2,
+            "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152"
+          }
+        ],
+        "new_raw_kg": "1006.160164271047216",
+        "new_weighted_kg": "1006.160164271047216",
+        "remove_count": 2,
+        "resultant_ships": 24,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-145.853314195854645378256879033273044790944959259559759856326116",
+        "best_raw_removed_ships": [
+          5,
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "-23.216430544727772175480434160",
+        "best_unconstrained_weighted_removed_ships": [
+          22,
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 2,
+            "index": 0,
+            "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be"
+          },
+          {
+            "family": 3,
+            "index": 2,
+            "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152"
+          }
+        ],
+        "new_raw_kg": "1006.160164271047216",
+        "new_weighted_kg": "1006.160164271047216",
+        "remove_count": 1,
+        "resultant_ships": 25,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-435.359126172649282651790906213741943598141088604876185653848584",
+        "best_raw_removed_ships": [
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "502.903824075980242386850005853",
+        "best_unconstrained_weighted_removed_ships": [
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 2,
+            "index": 0,
+            "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be"
+          },
+          {
+            "family": 6,
+            "index": 2,
+            "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310"
+          }
+        ],
+        "new_raw_kg": "944.558521560574953",
+        "new_weighted_kg": "944.558521560574953",
+        "remove_count": 2,
+        "resultant_ships": 24,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-207.454956906326908378256879033273044790944959259559759856326116",
+        "best_raw_removed_ships": [
+          5,
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "-84.818073255200035175480434160",
+        "best_unconstrained_weighted_removed_ships": [
+          22,
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 2,
+            "index": 0,
+            "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be"
+          },
+          {
+            "family": 6,
+            "index": 2,
+            "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310"
+          }
+        ],
+        "new_raw_kg": "944.558521560574953",
+        "new_weighted_kg": "944.558521560574953",
+        "remove_count": 1,
+        "resultant_ships": 25,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-496.960768883121545651790906213741943598141088604876185653848584",
+        "best_raw_removed_ships": [
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "441.302181365507979386850005853",
+        "best_unconstrained_weighted_removed_ships": [
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 2,
+            "index": 0,
+            "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be"
+          },
+          {
+            "family": 8,
+            "index": 0,
+            "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf"
+          }
+        ],
+        "new_raw_kg": "974.948665297741278",
+        "new_weighted_kg": "974.948665297741278",
+        "remove_count": 2,
+        "resultant_ships": 24,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-177.064813169160583378256879033273044790944959259559759856326116",
+        "best_raw_removed_ships": [
+          5,
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "-54.427929518033710175480434160",
+        "best_unconstrained_weighted_removed_ships": [
+          22,
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 2,
+            "index": 0,
+            "request_sha256": "e0e3805d9746869f0e29b6edc697f7172cb419108d90e21e9c83db6e2a08d3be"
+          },
+          {
+            "family": 8,
+            "index": 0,
+            "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf"
+          }
+        ],
+        "new_raw_kg": "974.948665297741278",
+        "new_weighted_kg": "974.948665297741278",
+        "remove_count": 1,
+        "resultant_ships": 25,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-466.570625145955220651790906213741943598141088604876185653848584",
+        "best_raw_removed_ships": [
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "471.692325102674304386850005853",
+        "best_unconstrained_weighted_removed_ships": [
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 3,
+            "index": 2,
+            "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152"
+          },
+          {
+            "family": 6,
+            "index": 2,
+            "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310"
+          }
+        ],
+        "new_raw_kg": "905.954825462012329",
+        "new_weighted_kg": "905.954825462012329",
+        "remove_count": 2,
+        "resultant_ships": 24,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-246.058653004889532378256879033273044790944959259559759856326116",
+        "best_raw_removed_ships": [
+          5,
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "-123.421769353762659175480434160",
+        "best_unconstrained_weighted_removed_ships": [
+          22,
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 3,
+            "index": 2,
+            "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152"
+          },
+          {
+            "family": 6,
+            "index": 2,
+            "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310"
+          }
+        ],
+        "new_raw_kg": "905.954825462012329",
+        "new_weighted_kg": "905.954825462012329",
+        "remove_count": 1,
+        "resultant_ships": 25,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-535.564464981684169651790906213741943598141088604876185653848584",
+        "best_raw_removed_ships": [
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "402.698485266945355386850005853",
+        "best_unconstrained_weighted_removed_ships": [
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 3,
+            "index": 2,
+            "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152"
+          },
+          {
+            "family": 8,
+            "index": 0,
+            "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf"
+          }
+        ],
+        "new_raw_kg": "936.344969199178654",
+        "new_weighted_kg": "936.344969199178654",
+        "remove_count": 2,
+        "resultant_ships": 24,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-215.668509267723207378256879033273044790944959259559759856326116",
+        "best_raw_removed_ships": [
+          5,
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "-93.031625616596334175480434160",
+        "best_unconstrained_weighted_removed_ships": [
+          22,
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 3,
+            "index": 2,
+            "request_sha256": "1a2875d016c8e16f42098458c920ae5dba9fa78eef199cd0b9bc25e02eb88152"
+          },
+          {
+            "family": 8,
+            "index": 0,
+            "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf"
+          }
+        ],
+        "new_raw_kg": "936.344969199178654",
+        "new_weighted_kg": "936.344969199178654",
+        "remove_count": 1,
+        "resultant_ships": 25,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-505.174321244517844651790906213741943598141088604876185653848584",
+        "best_raw_removed_ships": [
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "433.088629004111680386850005853",
+        "best_unconstrained_weighted_removed_ships": [
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 6,
+            "index": 2,
+            "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310"
+          },
+          {
+            "family": 8,
+            "index": 0,
+            "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf"
+          }
+        ],
+        "new_raw_kg": "874.743326488706391",
+        "new_weighted_kg": "874.743326488706391",
+        "remove_count": 2,
+        "resultant_ships": 24,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-277.270151978195470378256879033273044790944959259559759856326116",
+        "best_raw_removed_ships": [
+          5,
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "-154.633268327068597175480434160",
+        "best_unconstrained_weighted_removed_ships": [
+          22,
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      },
+      {
+        "new": [
+          {
+            "family": 6,
+            "index": 2,
+            "request_sha256": "c7c8e74d64a92ec1331a928e63880bb4f70c67223354929e42d0801839211310"
+          },
+          {
+            "family": 8,
+            "index": 0,
+            "request_sha256": "e606f4bd198589b89bc06d8738738a54ad3ae8c0839b35965eaa033c310806cf"
+          }
+        ],
+        "new_raw_kg": "874.743326488706391",
+        "new_weighted_kg": "874.743326488706391",
+        "remove_count": 1,
+        "resultant_ships": 25,
+        "raw_eligible_removal_count": 0,
+        "positive_weighted_raw_eligible": false,
+        "best_raw_margin_kg": "-566.775963954990107651790906213741943598141088604876185653848584",
+        "best_raw_removed_ships": [
+          12
+        ],
+        "best_unconstrained_weighted_gain_kg": "371.486986293639417386850005853",
+        "best_unconstrained_weighted_removed_ships": [
+          24
+        ],
+        "best_eligible_weighted_gain_kg": null,
+        "certified": false
+      }
+    ],
+    "positive_raw_eligible_queries": 0
+  },
+  "limits": [
+    "All generated plans are proxy estimates, not trajectory certificates.",
+    "Failure tokens count recorded completion attempts, not mutually exclusive physical causes.",
+    "Four failed first-level completions have no stored reason. Earlier native pruning does not retain per-child rejection reasons.",
+    "No claim of global infeasibility or that a discarded prefix would have produced a useful route.",
+    "The workload changes family/seed geometry; its timing is not a paired speedup benchmark."
+  ]
+}

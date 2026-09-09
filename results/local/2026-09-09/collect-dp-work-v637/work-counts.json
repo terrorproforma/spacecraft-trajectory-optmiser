@@ -1,0 +1,391 @@
+{
+  "passed": true,
+  "source_sha256": "e0122e96b3a39c0e48bdc49c377ed01fae1848dbe745096b1aeb51647ad5a3bc",
+  "audit_source_sha256": "fba0f72f9a516a6c2a2f8fb1878ffcfc26deb1448dfe2f0ac33bd33ff63e2766",
+  "scope": "Static scheduling/storage arithmetic and previously recorded Python call profile",
+  "solver_calls": 0,
+  "gpu_calls": 0,
+  "model_evaluations": 0,
+  "rows": [
+    {
+      "k": 1,
+      "dense_states": 2,
+      "usable_states": 1,
+      "dense_transition_coordinates_per_epoch": 2,
+      "active_transition_coordinates_per_epoch": 0,
+      "active_layer_coordinates_including_skipped_camp": [
+        1
+      ],
+      "nominal_transition_coordinate_reduction": 2,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": true
+    },
+    {
+      "k": 2,
+      "dense_states": 8,
+      "usable_states": 4,
+      "dense_transition_coordinates_per_epoch": 16,
+      "active_transition_coordinates_per_epoch": 3,
+      "active_layer_coordinates_including_skipped_camp": [
+        2,
+        2
+      ],
+      "nominal_transition_coordinate_reduction": 4,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": true
+    },
+    {
+      "k": 3,
+      "dense_states": 24,
+      "usable_states": 12,
+      "dense_transition_coordinates_per_epoch": 72,
+      "active_transition_coordinates_per_epoch": 11,
+      "active_layer_coordinates_including_skipped_camp": [
+        3,
+        6,
+        3
+      ],
+      "nominal_transition_coordinate_reduction": 6,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": true
+    },
+    {
+      "k": 4,
+      "dense_states": 64,
+      "usable_states": 32,
+      "dense_transition_coordinates_per_epoch": 256,
+      "active_transition_coordinates_per_epoch": 31,
+      "active_layer_coordinates_including_skipped_camp": [
+        4,
+        12,
+        12,
+        4
+      ],
+      "nominal_transition_coordinate_reduction": 8,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": true
+    },
+    {
+      "k": 5,
+      "dense_states": 160,
+      "usable_states": 80,
+      "dense_transition_coordinates_per_epoch": 800,
+      "active_transition_coordinates_per_epoch": 79,
+      "active_layer_coordinates_including_skipped_camp": [
+        5,
+        20,
+        30,
+        20,
+        5
+      ],
+      "nominal_transition_coordinate_reduction": 10,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": true
+    },
+    {
+      "k": 6,
+      "dense_states": 384,
+      "usable_states": 192,
+      "dense_transition_coordinates_per_epoch": 2304,
+      "active_transition_coordinates_per_epoch": 191,
+      "active_layer_coordinates_including_skipped_camp": [
+        6,
+        30,
+        60,
+        60,
+        30,
+        6
+      ],
+      "nominal_transition_coordinate_reduction": 12,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": true
+    },
+    {
+      "k": 7,
+      "dense_states": 896,
+      "usable_states": 448,
+      "dense_transition_coordinates_per_epoch": 6272,
+      "active_transition_coordinates_per_epoch": 447,
+      "active_layer_coordinates_including_skipped_camp": [
+        7,
+        42,
+        105,
+        140,
+        105,
+        42,
+        7
+      ],
+      "nominal_transition_coordinate_reduction": 14,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": true
+    },
+    {
+      "k": 8,
+      "dense_states": 2048,
+      "usable_states": 1024,
+      "dense_transition_coordinates_per_epoch": 16384,
+      "active_transition_coordinates_per_epoch": 1023,
+      "active_layer_coordinates_including_skipped_camp": [
+        8,
+        56,
+        168,
+        280,
+        280,
+        168,
+        56,
+        8
+      ],
+      "nominal_transition_coordinate_reduction": 16,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": true
+    },
+    {
+      "k": 9,
+      "dense_states": 4608,
+      "usable_states": 2304,
+      "dense_transition_coordinates_per_epoch": 41472,
+      "active_transition_coordinates_per_epoch": 2303,
+      "active_layer_coordinates_including_skipped_camp": [
+        9,
+        72,
+        252,
+        504,
+        630,
+        504,
+        252,
+        72,
+        9
+      ],
+      "nominal_transition_coordinate_reduction": 18,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": true
+    },
+    {
+      "k": 10,
+      "dense_states": 10240,
+      "usable_states": 5120,
+      "dense_transition_coordinates_per_epoch": 102400,
+      "active_transition_coordinates_per_epoch": 5119,
+      "active_layer_coordinates_including_skipped_camp": [
+        10,
+        90,
+        360,
+        840,
+        1260,
+        1260,
+        840,
+        360,
+        90,
+        10
+      ],
+      "nominal_transition_coordinate_reduction": 20,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": true
+    },
+    {
+      "k": 11,
+      "dense_states": 22528,
+      "usable_states": 11264,
+      "dense_transition_coordinates_per_epoch": 247808,
+      "active_transition_coordinates_per_epoch": 11263,
+      "active_layer_coordinates_including_skipped_camp": [
+        11,
+        110,
+        495,
+        1320,
+        2310,
+        2772,
+        2310,
+        1320,
+        495,
+        110,
+        11
+      ],
+      "nominal_transition_coordinate_reduction": 22,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": false
+    },
+    {
+      "k": 12,
+      "dense_states": 49152,
+      "usable_states": 24576,
+      "dense_transition_coordinates_per_epoch": 589824,
+      "active_transition_coordinates_per_epoch": 24575,
+      "active_layer_coordinates_including_skipped_camp": [
+        12,
+        132,
+        660,
+        1980,
+        3960,
+        5544,
+        5544,
+        3960,
+        1980,
+        660,
+        132,
+        12
+      ],
+      "nominal_transition_coordinate_reduction": 24,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": false
+    },
+    {
+      "k": 13,
+      "dense_states": 106496,
+      "usable_states": 53248,
+      "dense_transition_coordinates_per_epoch": 1384448,
+      "active_transition_coordinates_per_epoch": 53247,
+      "active_layer_coordinates_including_skipped_camp": [
+        13,
+        156,
+        858,
+        2860,
+        6435,
+        10296,
+        12012,
+        10296,
+        6435,
+        2860,
+        858,
+        156,
+        13
+      ],
+      "nominal_transition_coordinate_reduction": 26,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": false
+    },
+    {
+      "k": 14,
+      "dense_states": 229376,
+      "usable_states": 114688,
+      "dense_transition_coordinates_per_epoch": 3211264,
+      "active_transition_coordinates_per_epoch": 114687,
+      "active_layer_coordinates_including_skipped_camp": [
+        14,
+        182,
+        1092,
+        4004,
+        10010,
+        18018,
+        24024,
+        24024,
+        18018,
+        10010,
+        4004,
+        1092,
+        182,
+        14
+      ],
+      "nominal_transition_coordinate_reduction": 28,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": false
+    },
+    {
+      "k": 15,
+      "dense_states": 491520,
+      "usable_states": 245760,
+      "dense_transition_coordinates_per_epoch": 7372800,
+      "active_transition_coordinates_per_epoch": 245759,
+      "active_layer_coordinates_including_skipped_camp": [
+        15,
+        210,
+        1365,
+        5460,
+        15015,
+        30030,
+        45045,
+        51480,
+        45045,
+        30030,
+        15015,
+        5460,
+        1365,
+        210,
+        15
+      ],
+      "nominal_transition_coordinate_reduction": 30,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": false
+    },
+    {
+      "k": 16,
+      "dense_states": 1048576,
+      "usable_states": 524288,
+      "dense_transition_coordinates_per_epoch": 16777216,
+      "active_transition_coordinates_per_epoch": 524287,
+      "active_layer_coordinates_including_skipped_camp": [
+        16,
+        240,
+        1680,
+        7280,
+        21840,
+        48048,
+        80080,
+        102960,
+        102960,
+        80080,
+        48048,
+        21840,
+        7280,
+        1680,
+        240,
+        16
+      ],
+      "nominal_transition_coordinate_reduction": 32,
+      "storage_reduction_for_state_arrays": 2,
+      "compact_bijection_exhaustively_checked": false
+    }
+  ],
+  "profile_sha256": "ddecc9f13d0ab89c15f26a840d59f04cf24f013c17f9d3f1bbf2f64f46bd844a",
+  "saved_profile_hotspots": {
+    "10": [
+      {
+        "file": "/home/angus/spacepdhcg-return-cache-v844/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+        "line": 243,
+        "function": "solve",
+        "primitive_calls": 1731,
+        "total_calls": 1731,
+        "self_seconds": 3.168149183,
+        "cumulative_seconds": 3.203278231
+      },
+      {
+        "file": "/home/angus/spacepdhcg-return-cache-v844/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+        "line": 79,
+        "function": "__init__",
+        "primitive_calls": 1152,
+        "total_calls": 1152,
+        "self_seconds": 0.44790916700000005,
+        "cumulative_seconds": 2.279294022
+      }
+    ],
+    "21": [
+      {
+        "file": "/home/angus/spacepdhcg-return-cache-v844/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+        "line": 243,
+        "function": "solve",
+        "primitive_calls": 1548,
+        "total_calls": 1548,
+        "self_seconds": 2.066726079,
+        "cumulative_seconds": 2.09424474
+      },
+      {
+        "file": "/home/angus/spacepdhcg-return-cache-v844/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+        "line": 79,
+        "function": "__init__",
+        "primitive_calls": 1032,
+        "total_calls": 1032,
+        "self_seconds": 0.361611243,
+        "cumulative_seconds": 1.524494078
+      }
+    ]
+  },
+  "interpretation": [
+    "The dense transition grid is launched once for every cardinality; most coordinates immediately return.",
+    "Only states (subset,j) with j absent from subset are usable; all initial storage remains dense.",
+    "At cardinality zero the camp destination is additionally skipped, hence active-1.",
+    "Counts exclude CUDA block padding and do not measure instruction cost or time.",
+    "Python native-call timings include synchronized native execution and readback; they are not CPU arithmetic attribution.",
+    "Proposed compact scheduling preserves predecessor and epsilon tie order; numerical parity and end-to-end speed must be tested.",
+    "No production source changed and no speedup is claimed."
+  ]
+}

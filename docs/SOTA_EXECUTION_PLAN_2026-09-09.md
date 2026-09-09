@@ -14,6 +14,40 @@ establish a competitive PDHCG mission backend.
 
 ## Current checkpoint and next work
 
+The v637 unused-family experiment has completed: eight Earth screens and four
+route searches produced 923 distinct prescriptions in 33.865 seconds of worker
+time. No single or paired composition improves the current fleet while meeting
+the shared raw-mass rule. All 121 retained nine-/ten-deployment completion attempts
+failed; earlier native pruning does not retain per-child reasons. The next
+search experiment captures deeper rejected completions and tests the uncertain
+ones against actual low-thrust refinement before another width/family sweep.
+[Full requests, failure pool and fleet-selection audit](../results/local/2026-09-09/route-family-v637/README.md).
+
+The saved-data conditioning diagnostic also completed. Equality projection
+retains approximately 99.853% of the original objective-gradient energy and
+almost all remaining stationarity-error energy. A weak local cone response
+narrows the convergence investigation but supplies neither a global condition
+number nor a justified larger step size. The actual displaced HCW quadratic
+fixture is now exported without changing its coefficients or objective. The
+next core comparison uses these exact inputs with the pinned upstream solver:
+the custom explicit-gradient update differs from upstream's quadratic prox and
+outer policies, and previous upstream cold failures used different captures.
+[Diagnostic](../results/local/2026-09-09/core-conditioning-v637/README.md),
+[matched quadratic input](../results/local/2026-09-09/nonzero-q-capture-v637/README.md).
+
+Retrieved Lambda reports show a new candidate reaching 16 certified flights
+before its seventeenth, the Earth return, fails. Three later arrival attempts
+also fail. Those outcomes support joint itinerary timing/control/mass refinement;
+they do not establish infeasibility or change the verified fleet score.
+[Exact report scopes](../results/local/2026-09-09/lambda-run-status-v637/README.md).
+
+Collection-DP preparation remains an active C++/CUDA migration target. A static
+audit also identifies compact layer scheduling and state storage as candidates:
+at ten asteroids, 102,400 coordinates are scheduled across transition layers
+per time sample, with only 5,119 passing structural filters. This work-count
+reduction is not a measured speedup and must preserve predecessor/tie ordering.
+[Pinned-source work audit](../results/local/2026-09-09/collect-dp-work-v637/README.md).
+
 The verified fleet now has **24 ships and 208 asteroids**, returning
 **14,915.044490 raw kg** for **13,526.961241 weighted kg**. A compatible archived
 route was recovered and added to the exact prior 23-ship Result. Both original
@@ -90,8 +124,8 @@ accuracy. This remains a CPU numerical reference, awaiting qualification.
 The next crossover controls are now identified from existing source: displaced
 HCW box/SOC recipes and the existing powered-descent reference. Their quadratic
 values are positive but diagonal, so they test quadratic correctness without
-inherently requiring CG. Exact matched coefficient/vector captures still need
-to be exported; the current inventory runs no model or solver. A CG-specific
+inherently requiring CG. The displaced HCW capture is now exported as noted
+above; the earlier inventory itself ran no model or solver. A CG-specific
 advantage needs an appropriate existing coupled workload, not artificial changes
 to zero-Q GTOC12. [Concrete recipes and unchanged gates](../results/local/2026-09-09/nonzero-q-inventory-v636/REPORT.md).
 
