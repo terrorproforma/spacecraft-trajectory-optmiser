@@ -10,6 +10,7 @@ import pytest
 
 from spacepdhcg.gtoc12 import constants as C
 from spacepdhcg.gtoc12.gpu_expansion import (
+    ADMISSION,
     DEPLOY,
     OPTION,
     PARENT,
@@ -25,6 +26,129 @@ from spacepdhcg.gtoc12.search import PlannedLeg, RouteSearch, SearchSettings, _P
 requires_gpu = pytest.mark.skipif(
     os.environ.get("SPACEPDHCG_GTOC12_GPU_TESTS") != "1", reason="explicit serialized GPU tests"
 )
+
+
+@requires_gpu
+@pytest.mark.parametrize(
+    "max_set,max_first,authority,reserve",
+    [
+        (1, 3, 100.0, 0.0),
+        (2, 8, 0.5, 0.0),
+        (3, 20, 0.0, 0.0),
+        (2, 8, 100.0, 1600.0),
+        (0, 8, 100.0, 0.0),
+        (2, 0, 100.0, 0.0),
+    ],
+)
+def test_device_admission_matches_ordered_reference(
+    monkeypatch, max_set, max_first, authority, reserve
+):
+    from copy import deepcopy
+
+    from spacepdhcg.gtoc12.data import load_catalogue
+    from spacepdhcg.gtoc12.lambert import using_lambert_backend
+
+    search, parents = fixture(tie=True)
+    search.settings = replace(
+        search.settings,
+        max_per_deployed_set=max_set,
+        max_per_first=max_first,
+        earth_return_authority_ratio=authority,
+        return_reserve_kg=reserve,
+    )
+    del search._return_feasible
+    search._return_cache = {}
+    parents += deepcopy(parents)
+    for i, parent in enumerate(parents):
+        parent.deployed[0] = (45738 if i < 2 else 25792, 59500.0)
+    cat = load_catalogue()
+    monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_GPU_EXPANSION", "1")
+    with using_lambert_backend("cuda") as gpu:
+        real = RouteSearch(cat, [45738, 25792], search.settings)
+        for first in (45738, 25792):
+            table = real._return_options(first, C.MISSION_END_MJD - search.settings.end_margin_days)
+            assert len(table) > 0
+            search._return_cache[first] = table
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_GPU_ADMISSION", "0")
+        expected = expand_and_select(search, parents)
+        before = gpu.telemetry.get("expansion_materialized_children", 0)
+        monkeypatch.setenv("SPACEPDHCG_TEST_GTOC12_GPU_ADMISSION", "1")
+        actual = expand_and_select(search, parents)
+        assert [p.deployed for p in actual] == [p.deployed for p in expected]
+        assert [p.score for p in actual] == [p.score for p in expected]
+        assert gpu.telemetry["expansion_materialized_children"] - before == len(actual)
+        assert gpu.telemetry["admission_depths"] == 1
+        assert all(t._host is None for t in search._return_cache.values())
+
+
+@requires_gpu
+def test_admission_boundaries_invalidation_and_retained_return_ownership():
+    from concurrent.futures import ThreadPoolExecutor
+
+    from spacepdhcg.gtoc12.data import load_catalogue
+    from spacepdhcg.gtoc12.lambert import using_lambert_backend
+
+    assert ADMISSION.itemsize == 48
+    search, parents = fixture(tie=True)
+    with using_lambert_backend("cuda") as gpu:
+        real = RouteSearch(load_catalogue(), [45738], search.settings)
+        table = real._return_options(45738, C.MISSION_END_MJD - search.settings.end_margin_days)
+        assert len(table) > 0
+        workspace = GpuExpansion(gpu)
+        inputs = pack(search, parents)
+        handles = (ct.c_void_p * len(parents))(*([table.handle.value] * len(parents)))
+        count = ct.c_int32(-9)
+        out = np.full(1, 0, RESULT)
+        base_mass = parents[0].mass - C.MINER_MASS_KG
+        policy = np.array([(1, 1, 1, 1, base_mass, 0.0, 0.0, 100.0)], ADMISSION)
+        try:
+            for dry, expected in (
+                (base_mass, 1),
+                (np.nextafter(base_mass, np.inf), 0),
+                (np.nextafter(base_mass, -np.inf), 1),
+            ):
+                workspace.evaluate(*inputs)
+                policy["dry_mass"] = dry
+                workspace.check(
+                    workspace.admit(
+                        workspace.handle, policy.ctypes.data, len(parents), handles, ct.byref(count)
+                    )
+                )
+                assert count.value == expected
+                assert len(list(workspace.rows(count.value))) == expected
+            workspace.evaluate(*inputs)
+            policy["authority"] = np.nan
+            assert (
+                workspace.admit(
+                    workspace.handle, policy.ctypes.data, len(parents), handles, ct.byref(count)
+                )
+                == 1
+            )
+            assert workspace.read(workspace.handle, 0, 1, out.ctypes.data) == 1
+            assert out.tobytes() == bytes(RESULT.itemsize)
+            policy["authority"] = 100.0
+            workspace.evaluate(*inputs)
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                status = pool.submit(
+                    workspace.admit,
+                    workspace.handle,
+                    policy.ctypes.data,
+                    len(parents),
+                    handles,
+                    ct.byref(count),
+                ).result()
+            assert status == 1
+            workspace.evaluate(*inputs)
+            table.close()
+            handles[0] = None
+            assert (
+                workspace.admit(
+                    workspace.handle, policy.ctypes.data, len(parents), handles, ct.byref(count)
+                )
+                == 1
+            )
+        finally:
+            workspace.close()
 
 
 def fixture(*, ratio=False, tie=False, weighted=False):

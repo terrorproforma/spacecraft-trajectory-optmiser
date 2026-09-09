@@ -12,6 +12,12 @@ import numpy as np
 from . import constants as C
 
 ENVIRONMENT = "SPACEPDHCG_TEST_GTOC12_GPU_EXPANSION"
+ADMISSION_ENVIRONMENT = "SPACEPDHCG_TEST_GTOC12_GPU_ADMISSION"
+ADMISSION = np.dtype(
+    [(x, "i4") for x in ("abi", "limit", "max_set", "max_first")]
+    + [(x, "f8") for x in ("dry_mass", "reserve_fraction", "return_reserve", "authority")],
+    align=True,
+)
 POLICY = np.dtype(
     [(x, "i4") for x in ("abi", "ratio", "compensated", "reserved")]
     + [
@@ -84,7 +90,9 @@ class GpuExpansion:
         )
         self.read = lib.spacepdhcg_gtoc12_expansion_read
         self.read.argtypes = [ct.c_void_p, ct.c_int32, ct.c_int32, ct.c_void_p]
-        for function in (self.create, self.destroy, self.rank, self.read):
+        self.admit = lib.spacepdhcg_gtoc12_expansion_admit
+        self.admit.argtypes = [ct.c_void_p, ct.c_void_p, ct.c_int32, ct.c_void_p, ct.c_void_p]
+        for function in (self.create, self.destroy, self.rank, self.read, self.admit):
             function.restype = ct.c_int
 
     @staticmethod
@@ -142,6 +150,90 @@ class GpuExpansion:
                 stats.get("expansion_download_bytes", 0) + n * RESULT.itemsize
             )
             yield from output[:n].tolist()
+
+    def admission(self, search, current, count):
+        from .gpu_options import GpuResidentOptions
+        from .search import RouteSearch
+
+        if os.environ.get(ADMISSION_ENVIRONMENT, "1") == "0":
+            return None
+        for name in (
+            "_filter",
+            "_reserve",
+            "_return_feasible",
+            "_return_options",
+            "limits",
+            "_select_ranked",
+        ):
+            actual = getattr(search, name)
+            if getattr(actual, "__func__", actual) is not getattr(RouteSearch, name):
+                return None
+        s = search.settings
+        # Nonstandard negative policy settings retain their established Python behavior.
+        if (
+            min(
+                s.max_per_first,
+                s.max_per_deployed_set,
+                s.beam_width,
+                s.chain_tour_candidates,
+                s.reserve_fraction,
+                s.return_reserve_kg,
+                s.earth_return_authority_ratio,
+            )
+            < 0
+        ):
+            return None
+        if not count:
+            return 0
+        tables = []
+        for parent in current:
+            first = parent.deployed[0][0]
+            if first not in search._return_cache:
+                search._return_cache[first] = search._return_options(
+                    first, C.MISSION_END_MJD - s.end_margin_days
+                )
+            table = search._return_cache[first]
+            if not isinstance(table, GpuResidentOptions) or table.gpu is not self.gpu:
+                return None
+            table.owned()
+            tables.append(table)
+        limit = s.beam_width
+        if (
+            s.chain_tour_scoring
+            and s.collect_dp
+            and len(current[0].deployed) + 1 >= s.chain_tour_min_deploys
+        ):
+            limit = max(limit, s.chain_tour_candidates)
+        policy = np.array(
+            [
+                (
+                    1,
+                    limit,
+                    s.max_per_deployed_set,
+                    s.max_per_first,
+                    C.DRY_MASS_KG,
+                    s.reserve_fraction,
+                    s.return_reserve_kg,
+                    s.earth_return_authority_ratio,
+                )
+            ],
+            ADMISSION,
+        )
+        handles = (ct.c_void_p * len(tables))(*(t.handle.value for t in tables))
+        selected = ct.c_int32()
+        start = time.perf_counter()
+        self.check(
+            self.admit(self.handle, policy.ctypes.data, len(tables), handles, ct.byref(selected))
+        )
+        stats = self.gpu.telemetry
+        for name, value in (
+            ("admission_depths", 1),
+            ("admission_input_children", count),
+            ("admission_selected", selected.value),
+            ("admission_seconds", time.perf_counter() - start),
+        ):
+            stats[name] = stats.get(name, 0) + value
+        return selected.value
 
 
 def pack(search, current):
@@ -283,6 +375,9 @@ def expand_and_select(search, current):
         ("expansion_pack_rank_seconds", time.perf_counter() - start),
     ):
         stats[key] = stats.get(key, 0) + n
+    selected = workspace.admission(search, current, count)
+    if selected is not None:
+        count = selected
 
     def candidates():
         for row in workspace.rows(count):
@@ -326,4 +421,6 @@ def expand_and_select(search, current):
                 chain_burn=parent.chain_burn,
             )
 
+    if selected is not None:
+        return search._select_ranked(candidates(), len(current[0].deployed) + 1, admitted=True)
     return search._select_ranked(candidates(), len(current[0].deployed) + 1)

@@ -1,0 +1,1408 @@
+{
+  "local": {
+    "verified_members": 989,
+    "core_sha256": "9d748596d83ee11d012d7f59e989154a82e271a6646a585a88fabe83e589b381",
+    "source_manifest_sha256": "4f1471ee1b0c6d94cec062b33eaaaa512fd4a97f5ccd3445e6f3f6510daa3c8e",
+    "comparison": {
+      "10": {
+        "host": {
+          "seconds": 12.793307397000035,
+          "range": [
+            12.557842064999932,
+            13.037651636999954
+          ],
+          "candidates_per_second": 40.41175467426303,
+          "materialized": 10123,
+          "download_bytes": 957440,
+          "admission_seconds": 0
+        },
+        "cuda": {
+          "seconds": 13.074034609000137,
+          "range": [
+            12.550581325999929,
+            13.212715654000021
+          ],
+          "candidates_per_second": 39.54402871506079,
+          "materialized": 576,
+          "download_bytes": 50688,
+          "admission_seconds": 0.008740385999772116
+        },
+        "speedup": 0.9785278821422998,
+        "plans_sha256": "3568175931f3b7e08d5a994ab6fa3d6a12b26a968c9ae85c2d0c623d08711da5"
+      },
+      "21": {
+        "host": {
+          "seconds": 11.220681115999923,
+          "range": [
+            10.730284237000205,
+            11.47876512899984
+          ],
+          "candidates_per_second": 42.065182596354184,
+          "materialized": 95632,
+          "download_bytes": 8451256,
+          "admission_seconds": 0
+        },
+        "cuda": {
+          "seconds": 11.041604998999901,
+          "range": [
+            10.615918190000002,
+            11.637800979000076
+          ],
+          "candidates_per_second": 42.74740855543661,
+          "materialized": 516,
+          "download_bytes": 45408,
+          "admission_seconds": 0.006647423999993407
+        },
+        "speedup": 1.0162183049489855,
+        "plans_sha256": "26541eca159974041f36bc2d1f39220929ea21e5461c1e2329f2cbffa6c682c8"
+      }
+    },
+    "profile": {
+      "10": {
+        "total_calls": 7767071,
+        "total_seconds": 14.797252117000005,
+        "top_cumulative": [
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1193,
+            "function": "run",
+            "primitive_calls": 1,
+            "total_calls": 1,
+            "self_seconds": 0.004268995,
+            "cumulative_seconds": 14.801741532000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2010,
+            "function": "_complete",
+            "primitive_calls": 577,
+            "total_calls": 577,
+            "self_seconds": 0.044090624,
+            "cumulative_seconds": 12.933186982
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2093,
+            "function": "_schedule_dp",
+            "primitive_calls": 576,
+            "total_calls": 576,
+            "self_seconds": 0.018405092,
+            "cumulative_seconds": 6.649475525000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 573,
+            "function": "plan_collect_tour",
+            "primitive_calls": 1152,
+            "total_calls": 1152,
+            "self_seconds": 0.16438160200000002,
+            "cumulative_seconds": 6.148084028
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2259,
+            "function": "_schedule_forward",
+            "primitive_calls": 6448,
+            "total_calls": 6448,
+            "self_seconds": 0.057979742,
+            "cumulative_seconds": 6.068679976
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 680,
+            "function": "solve",
+            "primitive_calls": 1731,
+            "total_calls": 1731,
+            "self_seconds": 0.0046609550000000005,
+            "cumulative_seconds": 5.658910465
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 726,
+            "function": "_solve_collect_dp",
+            "primitive_calls": 1731,
+            "total_calls": 1731,
+            "self_seconds": 0.029989295000000003,
+            "cumulative_seconds": 5.6542495100000005
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 313,
+            "function": "cuda_collect_dp",
+            "primitive_calls": 1731,
+            "total_calls": 1731,
+            "self_seconds": 0.021529747000000002,
+            "cumulative_seconds": 5.621637914000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1874,
+            "function": "_return_options",
+            "primitive_calls": 6443,
+            "total_calls": 6443,
+            "self_seconds": 0.07303805000000001,
+            "cumulative_seconds": 3.7686501870000004
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 86,
+            "function": "cuda_paired_options",
+            "primitive_calls": 7117,
+            "total_calls": 7117,
+            "self_seconds": 0.028612560000000002,
+            "cumulative_seconds": 3.76064129
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 348,
+            "function": "paired_options",
+            "primitive_calls": 7117,
+            "total_calls": 7117,
+            "self_seconds": 3.210984443,
+            "cumulative_seconds": 3.6978804700000003
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 243,
+            "function": "solve",
+            "primitive_calls": 1731,
+            "total_calls": 1731,
+            "self_seconds": 3.196768016,
+            "cumulative_seconds": 3.2373212980000003
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 79,
+            "function": "__init__",
+            "primitive_calls": 1152,
+            "total_calls": 1152,
+            "self_seconds": 0.47476248200000004,
+            "cumulative_seconds": 2.359114785
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 332,
+            "function": "expand_and_select",
+            "primitive_calls": 9,
+            "total_calls": 9,
+            "self_seconds": 0.0019465040000000002,
+            "cumulative_seconds": 1.8562361200000002
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 70,
+            "function": "cuda_select_collection",
+            "primitive_calls": 8552,
+            "total_calls": 8552,
+            "self_seconds": 0.012909298000000001,
+            "cumulative_seconds": 1.8315674890000002
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 280,
+            "function": "select_collection",
+            "primitive_calls": 8552,
+            "total_calls": 8552,
+            "self_seconds": 0.053660686000000006,
+            "cumulative_seconds": 1.817587354
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 239,
+            "function": "pack",
+            "primitive_calls": 9,
+            "total_calls": 9,
+            "self_seconds": 0.145431002,
+            "cumulative_seconds": 1.7439018290000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collection.py",
+            "line": 70,
+            "function": "select",
+            "primitive_calls": 8552,
+            "total_calls": 8552,
+            "self_seconds": 1.685245388,
+            "cumulative_seconds": 1.7345513950000002
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 831,
+            "function": "hops_from",
+            "primitive_calls": 2052,
+            "total_calls": 2052,
+            "self_seconds": 0.007670784000000001,
+            "cumulative_seconds": 1.51756609
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 275,
+            "function": "_resident_table",
+            "primitive_calls": 49152,
+            "total_calls": 49152,
+            "self_seconds": 0.036384722,
+            "cumulative_seconds": 1.5121323770000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 554,
+            "function": "collect_table",
+            "primitive_calls": 49152,
+            "total_calls": 49152,
+            "self_seconds": 0.053987992000000005,
+            "cumulative_seconds": 1.456358714
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_tables.py",
+            "line": 12,
+            "function": "__init__",
+            "primitive_calls": 1283,
+            "total_calls": 1283,
+            "self_seconds": 1.250218904,
+            "cumulative_seconds": 1.337133292
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/screening.py",
+            "line": 298,
+            "function": "screen_asteroid_hops",
+            "primitive_calls": 964,
+            "total_calls": 964,
+            "self_seconds": 0.015260283000000001,
+            "cumulative_seconds": 1.083248896
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1969,
+            "function": "_best_collect_hop",
+            "primitive_calls": 2109,
+            "total_calls": 2109,
+            "self_seconds": 0.006460933,
+            "cumulative_seconds": 0.835294328
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2431,
+            "function": "_finish_many",
+            "primitive_calls": 2188,
+            "total_calls": 2188,
+            "self_seconds": 0.007701291000000001,
+            "cumulative_seconds": 0.518652144
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/screening.py",
+            "line": 204,
+            "function": "lambert_hops",
+            "primitive_calls": 964,
+            "total_calls": 964,
+            "self_seconds": 0.0008399420000000001,
+            "cumulative_seconds": 0.516612951
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 59,
+            "function": "cuda_screen_hops",
+            "primitive_calls": 964,
+            "total_calls": 964,
+            "self_seconds": 0.0026716120000000003,
+            "cumulative_seconds": 0.515773009
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 574,
+            "function": "screen_hops",
+            "primitive_calls": 964,
+            "total_calls": 964,
+            "self_seconds": 0.46990445000000003,
+            "cumulative_seconds": 0.512910513
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_completion.py",
+            "line": 387,
+            "function": "finish_many",
+            "primitive_calls": 2188,
+            "total_calls": 2188,
+            "self_seconds": 0.007966817000000001,
+            "cumulative_seconds": 0.509016213
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+            "line": 129,
+            "function": "asteroid_state",
+            "primitive_calls": 1928,
+            "total_calls": 1928,
+            "self_seconds": 0.035592043000000004,
+            "cumulative_seconds": 0.5026808420000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_completion.py",
+            "line": 300,
+            "function": "run",
+            "primitive_calls": 650,
+            "total_calls": 650,
+            "self_seconds": 0.032564594,
+            "cumulative_seconds": 0.47556260100000003
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2178,
+            "function": "_plans_from_tours",
+            "primitive_calls": 576,
+            "total_calls": 576,
+            "self_seconds": 0.005432317000000001,
+            "cumulative_seconds": 0.46502184900000004
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 802,
+            "function": "candidates",
+            "primitive_calls": 964,
+            "total_calls": 964,
+            "self_seconds": 0.036193393000000004,
+            "cumulative_seconds": 0.42306706000000005
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+            "line": 43,
+            "function": "elements_to_state",
+            "primitive_calls": 1928,
+            "total_calls": 1928,
+            "self_seconds": 0.205011158,
+            "cumulative_seconds": 0.395091214
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 65,
+            "function": "cuda_neighbour_candidates",
+            "primitive_calls": 964,
+            "total_calls": 964,
+            "self_seconds": 0.0017349820000000001,
+            "cumulative_seconds": 0.368621538
+          }
+        ]
+      },
+      "21": {
+        "total_calls": 6182544,
+        "total_seconds": 13.00539309300001,
+        "top_cumulative": [
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1193,
+            "function": "run",
+            "primitive_calls": 1,
+            "total_calls": 1,
+            "self_seconds": 0.004445541,
+            "cumulative_seconds": 13.009752619
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2010,
+            "function": "_complete",
+            "primitive_calls": 517,
+            "total_calls": 517,
+            "self_seconds": 0.044821204,
+            "cumulative_seconds": 11.254293168
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2259,
+            "function": "_schedule_forward",
+            "primitive_calls": 5908,
+            "total_calls": 5908,
+            "self_seconds": 0.062845547,
+            "cumulative_seconds": 6.3104569
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2093,
+            "function": "_schedule_dp",
+            "primitive_calls": 516,
+            "total_calls": 516,
+            "self_seconds": 0.017531053,
+            "cumulative_seconds": 4.679900335
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 573,
+            "function": "plan_collect_tour",
+            "primitive_calls": 1032,
+            "total_calls": 1032,
+            "self_seconds": 0.12005338600000001,
+            "cumulative_seconds": 4.204461380000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 680,
+            "function": "solve",
+            "primitive_calls": 1548,
+            "total_calls": 1548,
+            "self_seconds": 0.004324924,
+            "cumulative_seconds": 3.8966997940000003
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 726,
+            "function": "_solve_collect_dp",
+            "primitive_calls": 1548,
+            "total_calls": 1548,
+            "self_seconds": 0.026905019000000002,
+            "cumulative_seconds": 3.8923748700000003
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 313,
+            "function": "cuda_collect_dp",
+            "primitive_calls": 1548,
+            "total_calls": 1548,
+            "self_seconds": 0.020968474,
+            "cumulative_seconds": 3.8634586680000003
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 86,
+            "function": "cuda_paired_options",
+            "primitive_calls": 6789,
+            "total_calls": 6789,
+            "self_seconds": 0.028652171,
+            "cumulative_seconds": 3.583670322
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 348,
+            "function": "paired_options",
+            "primitive_calls": 6789,
+            "total_calls": 6789,
+            "self_seconds": 3.029522323,
+            "cumulative_seconds": 3.5213528820000004
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1874,
+            "function": "_return_options",
+            "primitive_calls": 5903,
+            "total_calls": 5903,
+            "self_seconds": 0.073216705,
+            "cumulative_seconds": 3.4767529840000004
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 70,
+            "function": "cuda_select_collection",
+            "primitive_calls": 9966,
+            "total_calls": 9966,
+            "self_seconds": 0.015406351,
+            "cumulative_seconds": 2.2189289850000002
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 280,
+            "function": "select_collection",
+            "primitive_calls": 9966,
+            "total_calls": 9966,
+            "self_seconds": 0.061416964000000004,
+            "cumulative_seconds": 2.202126014
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 243,
+            "function": "solve",
+            "primitive_calls": 1548,
+            "total_calls": 1548,
+            "self_seconds": 2.119079215,
+            "cumulative_seconds": 2.1551408640000003
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collection.py",
+            "line": 70,
+            "function": "select",
+            "primitive_calls": 9966,
+            "total_calls": 9966,
+            "self_seconds": 2.04785231,
+            "cumulative_seconds": 2.112592845
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 332,
+            "function": "expand_and_select",
+            "primitive_calls": 9,
+            "total_calls": 9,
+            "self_seconds": 0.001709234,
+            "cumulative_seconds": 1.746899098
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 79,
+            "function": "__init__",
+            "primitive_calls": 1032,
+            "total_calls": 1032,
+            "self_seconds": 0.43139216900000005,
+            "cumulative_seconds": 1.683983873
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 239,
+            "function": "pack",
+            "primitive_calls": 9,
+            "total_calls": 9,
+            "self_seconds": 0.13907708300000002,
+            "cumulative_seconds": 1.639894819
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1969,
+            "function": "_best_collect_hop",
+            "primitive_calls": 4063,
+            "total_calls": 4063,
+            "self_seconds": 0.012421613000000001,
+            "cumulative_seconds": 1.4268691230000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 831,
+            "function": "hops_from",
+            "primitive_calls": 2052,
+            "total_calls": 2052,
+            "self_seconds": 0.007672059,
+            "cumulative_seconds": 1.4128275650000002
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/screening.py",
+            "line": 298,
+            "function": "screen_asteroid_hops",
+            "primitive_calls": 847,
+            "total_calls": 847,
+            "self_seconds": 0.016127417,
+            "cumulative_seconds": 1.002612493
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 275,
+            "function": "_resident_table",
+            "primitive_calls": 37152,
+            "total_calls": 37152,
+            "self_seconds": 0.029631286000000003,
+            "cumulative_seconds": 0.9480944590000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 554,
+            "function": "collect_table",
+            "primitive_calls": 37152,
+            "total_calls": 37152,
+            "self_seconds": 0.041840382,
+            "cumulative_seconds": 0.903181389
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_tables.py",
+            "line": 12,
+            "function": "__init__",
+            "primitive_calls": 781,
+            "total_calls": 781,
+            "self_seconds": 0.754169716,
+            "cumulative_seconds": 0.8082941210000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2431,
+            "function": "_finish_many",
+            "primitive_calls": 1993,
+            "total_calls": 1993,
+            "self_seconds": 0.007798649,
+            "cumulative_seconds": 0.544657143
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_completion.py",
+            "line": 387,
+            "function": "finish_many",
+            "primitive_calls": 1993,
+            "total_calls": 1993,
+            "self_seconds": 0.008753625000000001,
+            "cumulative_seconds": 0.5352202930000001
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_completion.py",
+            "line": 300,
+            "function": "run",
+            "primitive_calls": 652,
+            "total_calls": 652,
+            "self_seconds": 0.033564423,
+            "cumulative_seconds": 0.500809654
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1919,
+            "function": "_collect_hop_options",
+            "primitive_calls": 4063,
+            "total_calls": 4063,
+            "self_seconds": 0.017009146000000003,
+            "cumulative_seconds": 0.486211408
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+            "line": 129,
+            "function": "asteroid_state",
+            "primitive_calls": 1694,
+            "total_calls": 1694,
+            "self_seconds": 0.036625398,
+            "cumulative_seconds": 0.47315413300000003
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/screening.py",
+            "line": 204,
+            "function": "lambert_hops",
+            "primitive_calls": 847,
+            "total_calls": 847,
+            "self_seconds": 0.000924105,
+            "cumulative_seconds": 0.465676658
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 59,
+            "function": "cuda_screen_hops",
+            "primitive_calls": 847,
+            "total_calls": 847,
+            "self_seconds": 0.002628467,
+            "cumulative_seconds": 0.464752553
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 574,
+            "function": "screen_hops",
+            "primitive_calls": 847,
+            "total_calls": 847,
+            "self_seconds": 0.42040668600000003,
+            "cumulative_seconds": 0.46192332700000005
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2178,
+            "function": "_plans_from_tours",
+            "primitive_calls": 516,
+            "total_calls": 516,
+            "self_seconds": 0.004915301,
+            "cumulative_seconds": 0.44150691000000003
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 802,
+            "function": "candidates",
+            "primitive_calls": 847,
+            "total_calls": 847,
+            "self_seconds": 0.03397995,
+            "cumulative_seconds": 0.398822424
+          },
+          {
+            "file": "/home/angus/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+            "line": 43,
+            "function": "elements_to_state",
+            "primitive_calls": 1694,
+            "total_calls": 1694,
+            "self_seconds": 0.185589039,
+            "cumulative_seconds": 0.36788176
+          }
+        ]
+      }
+    }
+  },
+  "h100": {
+    "verified_members": 989,
+    "core_sha256": "3ef295ca5b01a53ed579daae58ae1cb66cb1eeddf32a96a27d79758d9a0e253b",
+    "source_manifest_sha256": "4f1471ee1b0c6d94cec062b33eaaaa512fd4a97f5ccd3445e6f3f6510daa3c8e",
+    "comparison": {
+      "10": {
+        "host": {
+          "seconds": 6.998448311001994,
+          "range": [
+            6.986317654955201,
+            6.9984798730001785
+          ],
+          "candidates_per_second": 73.87351838938983,
+          "materialized": 10123,
+          "download_bytes": 957440,
+          "admission_seconds": 0
+        },
+        "cuda": {
+          "seconds": 6.957585744035896,
+          "range": [
+            6.918901617988013,
+            6.972370436007623
+          ],
+          "candidates_per_second": 74.30738463312177,
+          "materialized": 576,
+          "download_bytes": 50688,
+          "admission_seconds": 0.007775812002364546
+        },
+        "speedup": 1.0058730957072466,
+        "plans_sha256": "3e39083ba3327289c3c7adeec78a16176f6ced90fd77eb270e8537caeeffdf20"
+      },
+      "21": {
+        "host": {
+          "seconds": 6.316786659997888,
+          "range": [
+            6.305581060994882,
+            6.34904208604712
+          ],
+          "candidates_per_second": 74.72153571198142,
+          "materialized": 95632,
+          "download_bytes": 8451256,
+          "admission_seconds": 0
+        },
+        "cuda": {
+          "seconds": 6.082526537007652,
+          "range": [
+            6.054797243035864,
+            6.090113637037575
+          ],
+          "candidates_per_second": 77.59933263393606,
+          "materialized": 516,
+          "download_bytes": 45408,
+          "admission_seconds": 0.005493695905897766
+        },
+        "speedup": 1.038513621200818,
+        "plans_sha256": "cd3bbc486fb2bd03ca58ca8e970237cf1eef3dcd0501c55ee214833e037d8c2e"
+      }
+    },
+    "profile": {
+      "10": {
+        "total_calls": 7748725,
+        "total_seconds": 9.595849702999999,
+        "top_cumulative": [
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1193,
+            "function": "run",
+            "primitive_calls": 1,
+            "total_calls": 1,
+            "self_seconds": 0.004009311000000001,
+            "cumulative_seconds": 9.625199738000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2010,
+            "function": "_complete",
+            "primitive_calls": 577,
+            "total_calls": 577,
+            "self_seconds": 0.047107315000000004,
+            "cumulative_seconds": 7.653120784
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2093,
+            "function": "_schedule_dp",
+            "primitive_calls": 576,
+            "total_calls": 576,
+            "self_seconds": 0.015039778,
+            "cumulative_seconds": 4.088208943000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 573,
+            "function": "plan_collect_tour",
+            "primitive_calls": 1152,
+            "total_calls": 1152,
+            "self_seconds": 0.279998717,
+            "cumulative_seconds": 3.6520973050000003
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2259,
+            "function": "_schedule_forward",
+            "primitive_calls": 6448,
+            "total_calls": 6448,
+            "self_seconds": 0.061905111000000006,
+            "cumulative_seconds": 3.347006141
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 680,
+            "function": "solve",
+            "primitive_calls": 1731,
+            "total_calls": 1731,
+            "self_seconds": 0.0035339570000000003,
+            "cumulative_seconds": 2.749792149
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 726,
+            "function": "_solve_collect_dp",
+            "primitive_calls": 1731,
+            "total_calls": 1731,
+            "self_seconds": 0.026522822,
+            "cumulative_seconds": 2.746258192
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 313,
+            "function": "cuda_collect_dp",
+            "primitive_calls": 1731,
+            "total_calls": 1731,
+            "self_seconds": 0.017288824,
+            "cumulative_seconds": 2.71691481
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1874,
+            "function": "_return_options",
+            "primitive_calls": 6443,
+            "total_calls": 6443,
+            "self_seconds": 0.080171251,
+            "cumulative_seconds": 2.060027106
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 332,
+            "function": "expand_and_select",
+            "primitive_calls": 9,
+            "total_calls": 9,
+            "self_seconds": 0.0010273370000000001,
+            "cumulative_seconds": 1.9602719940000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 239,
+            "function": "pack",
+            "primitive_calls": 9,
+            "total_calls": 9,
+            "self_seconds": 0.23762359900000002,
+            "cumulative_seconds": 1.8169174350000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 86,
+            "function": "cuda_paired_options",
+            "primitive_calls": 7117,
+            "total_calls": 7117,
+            "self_seconds": 0.029195079000000002,
+            "cumulative_seconds": 1.814645682
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 348,
+            "function": "paired_options",
+            "primitive_calls": 7117,
+            "total_calls": 7117,
+            "self_seconds": 1.1369721860000002,
+            "cumulative_seconds": 1.7372398610000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 79,
+            "function": "__init__",
+            "primitive_calls": 1152,
+            "total_calls": 1152,
+            "self_seconds": 0.259146566,
+            "cumulative_seconds": 1.4800155160000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 831,
+            "function": "hops_from",
+            "primitive_calls": 2052,
+            "total_calls": 2052,
+            "self_seconds": 0.010379964,
+            "cumulative_seconds": 1.454127943
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 243,
+            "function": "solve",
+            "primitive_calls": 1731,
+            "total_calls": 1731,
+            "self_seconds": 1.171916447,
+            "cumulative_seconds": 1.215895454
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/screening.py",
+            "line": 298,
+            "function": "screen_asteroid_hops",
+            "primitive_calls": 964,
+            "total_calls": 964,
+            "self_seconds": 0.019325217000000002,
+            "cumulative_seconds": 1.151853225
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 70,
+            "function": "cuda_select_collection",
+            "primitive_calls": 8552,
+            "total_calls": 8552,
+            "self_seconds": 0.015132907000000001,
+            "cumulative_seconds": 0.932383539
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 280,
+            "function": "select_collection",
+            "primitive_calls": 8552,
+            "total_calls": 8552,
+            "self_seconds": 0.055717814000000004,
+            "cumulative_seconds": 0.915349284
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collection.py",
+            "line": 70,
+            "function": "select",
+            "primitive_calls": 8552,
+            "total_calls": 8552,
+            "self_seconds": 0.7761747210000001,
+            "cumulative_seconds": 0.828564878
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+            "line": 129,
+            "function": "asteroid_state",
+            "primitive_calls": 1928,
+            "total_calls": 1928,
+            "self_seconds": 0.041052255,
+            "cumulative_seconds": 0.825289511
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 275,
+            "function": "_resident_table",
+            "primitive_calls": 49152,
+            "total_calls": 49152,
+            "self_seconds": 0.063716559,
+            "cumulative_seconds": 0.706351472
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+            "line": 43,
+            "function": "elements_to_state",
+            "primitive_calls": 1928,
+            "total_calls": 1928,
+            "self_seconds": 0.353980234,
+            "cumulative_seconds": 0.6890288830000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 554,
+            "function": "collect_table",
+            "primitive_calls": 49152,
+            "total_calls": 49152,
+            "self_seconds": 0.095509304,
+            "cumulative_seconds": 0.604887579
+          },
+          {
+            "file": "~",
+            "line": 0,
+            "function": "<built-in method builtins.sum>",
+            "primitive_calls": 278382,
+            "total_calls": 278382,
+            "self_seconds": 0.253052082,
+            "cumulative_seconds": 0.591897517
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 48,
+            "function": "body_elements",
+            "primitive_calls": 16800,
+            "total_calls": 16800,
+            "self_seconds": 0.10244832400000001,
+            "cumulative_seconds": 0.46101589400000004
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1969,
+            "function": "_best_collect_hop",
+            "primitive_calls": 2109,
+            "total_calls": 2109,
+            "self_seconds": 0.005571646,
+            "cumulative_seconds": 0.44580276700000004
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2431,
+            "function": "_finish_many",
+            "primitive_calls": 2188,
+            "total_calls": 2188,
+            "self_seconds": 0.004893896,
+            "cumulative_seconds": 0.442343121
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_completion.py",
+            "line": 387,
+            "function": "finish_many",
+            "primitive_calls": 2188,
+            "total_calls": 2188,
+            "self_seconds": 0.008366848000000001,
+            "cumulative_seconds": 0.435575388
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 354,
+            "function": "pair_geometry",
+            "primitive_calls": 42240,
+            "total_calls": 42240,
+            "self_seconds": 0.18822554000000002,
+            "cumulative_seconds": 0.421986786
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_tables.py",
+            "line": 12,
+            "function": "__init__",
+            "primitive_calls": 1283,
+            "total_calls": 1283,
+            "self_seconds": 0.305423335,
+            "cumulative_seconds": 0.409984236
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2178,
+            "function": "_plans_from_tours",
+            "primitive_calls": 576,
+            "total_calls": 576,
+            "self_seconds": 0.005759416000000001,
+            "cumulative_seconds": 0.40643575800000004
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_completion.py",
+            "line": 300,
+            "function": "run",
+            "primitive_calls": 650,
+            "total_calls": 650,
+            "self_seconds": 0.041011176,
+            "cumulative_seconds": 0.399064075
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/data.py",
+            "line": 138,
+            "function": "index_of",
+            "primitive_calls": 13159,
+            "total_calls": 13159,
+            "self_seconds": 0.111264574,
+            "cumulative_seconds": 0.36664108300000003
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py",
+            "line": 5062,
+            "function": "meshgrid",
+            "primitive_calls": 8081,
+            "total_calls": 8081,
+            "self_seconds": 0.06436973700000001,
+            "cumulative_seconds": 0.352971136
+          }
+        ]
+      },
+      "21": {
+        "total_calls": 6164158,
+        "total_seconds": 8.32723450300001,
+        "top_cumulative": [
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1193,
+            "function": "run",
+            "primitive_calls": 1,
+            "total_calls": 1,
+            "self_seconds": 0.0037740670000000003,
+            "cumulative_seconds": 8.356348837
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2010,
+            "function": "_complete",
+            "primitive_calls": 517,
+            "total_calls": 517,
+            "self_seconds": 0.043649258,
+            "cumulative_seconds": 6.552976157000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2259,
+            "function": "_schedule_forward",
+            "primitive_calls": 5908,
+            "total_calls": 5908,
+            "self_seconds": 0.06355110700000001,
+            "cumulative_seconds": 3.390046175
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2093,
+            "function": "_schedule_dp",
+            "primitive_calls": 516,
+            "total_calls": 516,
+            "self_seconds": 0.013271383000000001,
+            "cumulative_seconds": 2.9273991390000003
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 573,
+            "function": "plan_collect_tour",
+            "primitive_calls": 1032,
+            "total_calls": 1032,
+            "self_seconds": 0.181955962,
+            "cumulative_seconds": 2.5355802940000003
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 680,
+            "function": "solve",
+            "primitive_calls": 1548,
+            "total_calls": 1548,
+            "self_seconds": 0.0031880980000000003,
+            "cumulative_seconds": 2.024084884
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 726,
+            "function": "_solve_collect_dp",
+            "primitive_calls": 1548,
+            "total_calls": 1548,
+            "self_seconds": 0.022745576,
+            "cumulative_seconds": 2.0208967860000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 313,
+            "function": "cuda_collect_dp",
+            "primitive_calls": 1548,
+            "total_calls": 1548,
+            "self_seconds": 0.015409656,
+            "cumulative_seconds": 1.9962018220000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1874,
+            "function": "_return_options",
+            "primitive_calls": 5903,
+            "total_calls": 5903,
+            "self_seconds": 0.075492262,
+            "cumulative_seconds": 1.8994719150000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 332,
+            "function": "expand_and_select",
+            "primitive_calls": 9,
+            "total_calls": 9,
+            "self_seconds": 0.001029,
+            "cumulative_seconds": 1.794412389
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 86,
+            "function": "cuda_paired_options",
+            "primitive_calls": 6789,
+            "total_calls": 6789,
+            "self_seconds": 0.027922243000000003,
+            "cumulative_seconds": 1.735409486
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 348,
+            "function": "paired_options",
+            "primitive_calls": 6789,
+            "total_calls": 6789,
+            "self_seconds": 1.08155098,
+            "cumulative_seconds": 1.661239149
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_expansion.py",
+            "line": 239,
+            "function": "pack",
+            "primitive_calls": 9,
+            "total_calls": 9,
+            "self_seconds": 0.228784644,
+            "cumulative_seconds": 1.652137476
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 831,
+            "function": "hops_from",
+            "primitive_calls": 2052,
+            "total_calls": 2052,
+            "self_seconds": 0.009274663,
+            "cumulative_seconds": 1.298314755
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/lambert.py",
+            "line": 70,
+            "function": "cuda_select_collection",
+            "primitive_calls": 9966,
+            "total_calls": 9966,
+            "self_seconds": 0.016463646000000002,
+            "cumulative_seconds": 1.063774022
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 79,
+            "function": "__init__",
+            "primitive_calls": 1032,
+            "total_calls": 1032,
+            "self_seconds": 0.213838365,
+            "cumulative_seconds": 1.0589387380000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 280,
+            "function": "select_collection",
+            "primitive_calls": 9966,
+            "total_calls": 9966,
+            "self_seconds": 0.06192563,
+            "cumulative_seconds": 1.04518616
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/screening.py",
+            "line": 298,
+            "function": "screen_asteroid_hops",
+            "primitive_calls": 847,
+            "total_calls": 847,
+            "self_seconds": 0.018156966,
+            "cumulative_seconds": 1.0328215550000002
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collection.py",
+            "line": 70,
+            "function": "select",
+            "primitive_calls": 9966,
+            "total_calls": 9966,
+            "self_seconds": 0.88556667,
+            "cumulative_seconds": 0.9483631570000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_collect_dp.py",
+            "line": 243,
+            "function": "solve",
+            "primitive_calls": 1548,
+            "total_calls": 1548,
+            "self_seconds": 0.8815113440000001,
+            "cumulative_seconds": 0.9185841490000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+            "line": 129,
+            "function": "asteroid_state",
+            "primitive_calls": 1694,
+            "total_calls": 1694,
+            "self_seconds": 0.036795072000000005,
+            "cumulative_seconds": 0.74269653
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1969,
+            "function": "_best_collect_hop",
+            "primitive_calls": 4063,
+            "total_calls": 4063,
+            "self_seconds": 0.009742691000000001,
+            "cumulative_seconds": 0.7216853400000001
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/ephemeris.py",
+            "line": 43,
+            "function": "elements_to_state",
+            "primitive_calls": 1694,
+            "total_calls": 1694,
+            "self_seconds": 0.31926337600000004,
+            "cumulative_seconds": 0.621200202
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 275,
+            "function": "_resident_table",
+            "primitive_calls": 37152,
+            "total_calls": 37152,
+            "self_seconds": 0.04930376,
+            "cumulative_seconds": 0.45755748100000004
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2431,
+            "function": "_finish_many",
+            "primitive_calls": 1993,
+            "total_calls": 1993,
+            "self_seconds": 0.004524831,
+            "cumulative_seconds": 0.43535262900000005
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_completion.py",
+            "line": 387,
+            "function": "finish_many",
+            "primitive_calls": 1993,
+            "total_calls": 1993,
+            "self_seconds": 0.0079257,
+            "cumulative_seconds": 0.42914941500000003
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 48,
+            "function": "body_elements",
+            "primitive_calls": 15140,
+            "total_calls": 15140,
+            "self_seconds": 0.092408692,
+            "cumulative_seconds": 0.41631675300000004
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_completion.py",
+            "line": 300,
+            "function": "run",
+            "primitive_calls": 652,
+            "total_calls": 652,
+            "self_seconds": 0.038830689,
+            "cumulative_seconds": 0.39463572300000005
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/gpu_lambert.py",
+            "line": 554,
+            "function": "collect_table",
+            "primitive_calls": 37152,
+            "total_calls": 37152,
+            "self_seconds": 0.073507424,
+            "cumulative_seconds": 0.379741814
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 2178,
+            "function": "_plans_from_tours",
+            "primitive_calls": 516,
+            "total_calls": 516,
+            "self_seconds": 0.004933467,
+            "cumulative_seconds": 0.36519932800000005
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg/v1/.venv/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py",
+            "line": 5062,
+            "function": "meshgrid",
+            "primitive_calls": 7636,
+            "total_calls": 7636,
+            "self_seconds": 0.060752117,
+            "cumulative_seconds": 0.336496146
+          },
+          {
+            "file": "~",
+            "line": 0,
+            "function": "<built-in method builtins.sum>",
+            "primitive_calls": 154410,
+            "total_calls": 154410,
+            "self_seconds": 0.137698228,
+            "cumulative_seconds": 0.335775292
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/data.py",
+            "line": 138,
+            "function": "index_of",
+            "primitive_calls": 11712,
+            "total_calls": 11712,
+            "self_seconds": 0.10059673100000001,
+            "cumulative_seconds": 0.330038162
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/collectdp.py",
+            "line": 354,
+            "function": "pair_geometry",
+            "primitive_calls": 31440,
+            "total_calls": 31440,
+            "self_seconds": 0.13871560000000002,
+            "cumulative_seconds": 0.306918487
+          },
+          {
+            "file": "/home/ubuntu/spacepdhcg-admission-v839/repo/src/spacepdhcg/gtoc12/search.py",
+            "line": 1919,
+            "function": "_collect_hop_options",
+            "primitive_calls": 4063,
+            "total_calls": 4063,
+            "self_seconds": 0.015698934,
+            "cumulative_seconds": 0.27765225800000004
+          }
+        ]
+      }
+    }
+  }
+}

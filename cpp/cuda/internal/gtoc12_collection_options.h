@@ -6,3 +6,8 @@
 spacepdhcg_cuda_status gtoc12_collection_options_copy_device(
     const spacepdhcg_gtoc12_collection_option*, int, cudaStream_t,
     spacepdhcg_gtoc12_collection_options**);
+// Borrow immutable rows on the owning thread/device. Retain the table until
+// the consuming stream completes; no host row download.
+spacepdhcg_cuda_status gtoc12_collection_options_view(
+    spacepdhcg_gtoc12_collection_options*,
+    const spacepdhcg_gtoc12_collection_option**, int*);

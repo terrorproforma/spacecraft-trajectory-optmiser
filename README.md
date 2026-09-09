@@ -48,6 +48,14 @@ tests per GPU and CUDA safety checks. Its downloaded dense verifier replay is
 displayed in the web visualiser, including the coast intervals.
 [Measurements, source ownership, remaining CPU work and loading instructions](docs/GPU_CATALOGUE_OWNERSHIP.md).
 
+CUDA beam admission now removes another host stage: candidate construction
+falls from **105,755 to 1,092** and ranked-result downloads fall by about **99%**
+across the two route probes, with byte-identical candidates. Whole-search
+throughput changes by **+0.6–3.9% on H100** and **-2.1% to +1.6% on RTX 5090**;
+the RTX sample ranges overlap. All 190 tests per GPU and device safety/leak
+checks pass. Collection scheduling remains the main profiled bottleneck.
+[Exact measurements, source and next GPU work](docs/GPU_BEAM_ADMISSION.md).
+
 CUDA beam expansion and ranking now improve paired whole-search throughput
 by **2.58–2.72x on H100** and **1.61–1.75x on RTX 5090**. Candidate ordering
 matches, with maximum numeric differences below 1e-12. Final validation passes

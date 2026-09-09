@@ -1,9 +1,12 @@
 #include "spacepdhcg/cuda/gtoc12_expansion_c_api.h"
 #include <cuda_runtime.h>
 #include <cub/device/device_merge_sort.cuh>
+#include <cub/block/block_reduce.cuh>
+#include "../internal/gtoc12_collection_options.h"
 #include <cmath>
 #include <mutex>
 #include <new>
+#include <vector>
 
 namespace {
 using Policy=spacepdhcg_gtoc12_expansion_policy;
@@ -80,8 +83,10 @@ __global__ void price(Policy p,int np,const Parent* parents,const Deploy* deploy
 __global__ void unpack(const Ranked* rows,int offset,int count,Result* out) {
     const int i=int(blockIdx.x*blockDim.x+threadIdx.x);if(i<count)out[i]=rows[offset+i].row;
 }
+#include "../internal/gtoc12_admission.cuh"
 struct Workspace {
-    int device=-1,np=0,nd=0,no=0,valid=-1;
+    int device=-1,np=0,nd=0,no=0,valid=-1,active_np=0,admitted=-1;Policy policy{};
+    ReturnView* returns{};int* eligible{};int* selected{};int* selected_count{};
     Parent* parents{};Deploy* deploys{};Option* options{};Ranked* rows{};Result* readback{};
     int* counts{};void* scratch{};size_t scratch_bytes=0;cudaStream_t stream{};std::mutex mutex;
 };
@@ -89,7 +94,8 @@ bool correct(Workspace* w) {int d=-1;return w&&cudaGetDevice(&d)==cudaSuccess&&d
 bool release(Workspace* w) {
     bool ok=true;
     for(void* p:{static_cast<void*>(w->parents),static_cast<void*>(w->deploys),static_cast<void*>(w->options),
-        static_cast<void*>(w->rows),static_cast<void*>(w->readback),static_cast<void*>(w->counts),w->scratch})
+        static_cast<void*>(w->rows),static_cast<void*>(w->readback),static_cast<void*>(w->counts),w->scratch,
+        static_cast<void*>(w->returns),static_cast<void*>(w->eligible),static_cast<void*>(w->selected),static_cast<void*>(w->selected_count)})
         if(p&&cudaFree(p)!=cudaSuccess)ok=false;
     if(w->stream&&cudaStreamDestroy(w->stream)!=cudaSuccess)ok=false;
     return ok;
@@ -103,7 +109,8 @@ extern "C" int spacepdhcg_gtoc12_expansion_create(int device,int np,int nd,int n
     w->device=device;w->np=np;w->nd=nd;w->no=no;
     bool ok=cudaStreamCreateWithFlags(&w->stream,cudaStreamNonBlocking)==cudaSuccess &&
         allocate(w->parents,np)&&allocate(w->deploys,nd)&&allocate(w->options,no)&&allocate(w->rows,no)&&
-        allocate(w->readback,no)&&allocate(w->counts,2);
+        allocate(w->readback,no)&&allocate(w->counts,2)&&allocate(w->returns,np)&&
+        allocate(w->eligible,no)&&allocate(w->selected,no)&&allocate(w->selected_count,1);
     if(ok)ok=cub::DeviceMergeSort::SortKeys(nullptr,w->scratch_bytes,w->rows,no,Less{w->parents,w->deploys},w->stream)==cudaSuccess;
     if(ok)ok=cudaMalloc(&w->scratch,w->scratch_bytes)==cudaSuccess;
     if(!ok){release(w);delete w;return 2;}*out=w;return 0;
@@ -117,7 +124,7 @@ extern "C" int spacepdhcg_gtoc12_expansion_destroy(void** handle) {
 extern "C" int spacepdhcg_gtoc12_expansion_rank(void* opaque,const Policy* p,
     int np,const Parent* parents,int nd,const Deploy* deploys,int no,const Option* options,int* valid) {
     auto* w=static_cast<Workspace*>(opaque);if(!correct(w))return 1;
-    std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;w->valid=-1;
+    std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;w->valid=-1;w->admitted=-1;
     if(!valid||!p||np<1||np>w->np||nd<1||nd>w->nd||no<0||no>w->no||!parents||!deploys||(no&&!options))return 1;
     if(p->abi_version!=1||p->reserved||(p->ratio_inflation!=0&&p->ratio_inflation!=1)||
        (p->compensated_sum!=0&&p->compensated_sum!=1))return 1;
@@ -136,6 +143,7 @@ extern "C" int spacepdhcg_gtoc12_expansion_rank(void* opaque,const Policy* p,
     if(end!=nd)return 1;
     for(int i=0;i<nd;++i)if(deploys[i].body<=0||!std::isfinite(deploys[i].epoch)||
         !std::isfinite(deploys[i].weight)||!std::isfinite(deploys[i].price))return 1;
+    w->policy=*p;w->active_np=np;
     if(!no){w->valid=0;*valid=0;return 0;}
     auto status=cudaMemcpyAsync(w->parents,parents,size_t(np)*sizeof(Parent),cudaMemcpyHostToDevice,w->stream);
     if(status==cudaSuccess)status=cudaMemcpyAsync(w->deploys,deploys,size_t(nd)*sizeof(Deploy),cudaMemcpyHostToDevice,w->stream);
@@ -152,7 +160,32 @@ extern "C" int spacepdhcg_gtoc12_expansion_read(void* opaque,int offset,int n,Re
     auto* w=static_cast<Workspace*>(opaque);if(!correct(w))return 1;
     std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
     if(w->valid<0||offset<0||n<0||int64_t(offset)+n>w->valid||(n&&!results))return 1;if(!n)return 0;
-    unpack<<<unsigned((int64_t(n)+127)/128),128,0,w->stream>>>(w->rows,offset,n,w->readback);
+    if(w->admitted<0)unpack<<<unsigned((int64_t(n)+127)/128),128,0,w->stream>>>(w->rows,offset,n,w->readback);
+    else unpack_admitted<<<unsigned((int64_t(n)+127)/128),128,0,w->stream>>>(w->rows,w->selected,offset,n,w->readback);
     auto status=cudaGetLastError();if(status==cudaSuccess)status=cudaMemcpyAsync(results,w->readback,size_t(n)*sizeof(Result),cudaMemcpyDeviceToHost,w->stream);
     const auto done=cudaStreamSynchronize(w->stream);return status==cudaSuccess&&done==cudaSuccess?0:2;
+}
+
+extern "C" int spacepdhcg_gtoc12_expansion_admit(void* opaque,const Admission* p,
+    int np,void* const* tables,int* selected_count) {
+    auto* w=static_cast<Workspace*>(opaque);if(!correct(w))return 1;
+    std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
+    const int n=w->valid;const bool ranked=w->admitted<0;w->valid=-1;w->admitted=-1;
+    if(n<0||!ranked||!p||!tables||!selected_count||np!=w->active_np||p->abi_version!=1||p->limit<0||
+        p->max_per_set<0||p->max_per_first<0||!std::isfinite(p->dry_mass)||p->dry_mass<=0||
+        !std::isfinite(p->reserve_fraction)||p->reserve_fraction<0||!std::isfinite(p->return_reserve)||p->return_reserve<0||
+        !std::isfinite(p->return_authority_ratio)||p->return_authority_ratio<0)return 1;
+    std::vector<ReturnView> views;
+    try {views.resize(np);}catch(const std::bad_alloc&){return 2;}
+    for(int i=0;i<np;++i) {
+        auto* table=static_cast<spacepdhcg_gtoc12_collection_options*>(tables[i]);
+        if(gtoc12_collection_options_view(table,&views[i].rows,&views[i].count)!=SPACEPDHCG_CUDA_SUCCESS)return 1;
+    }
+    if(!n||!p->limit){w->valid=0;w->admitted=0;*selected_count=0;return 0;}
+    auto status=cudaMemcpyAsync(w->returns,views.data(),size_t(np)*sizeof(ReturnView),cudaMemcpyHostToDevice,w->stream);
+    if(status==cudaSuccess){eligibility<<<unsigned((int64_t(n)+127)/128),128,0,w->stream>>>(w->policy,*p,w->parents,w->deploys,w->rows,n,w->returns,w->eligible);status=cudaGetLastError();}
+    if(status==cudaSuccess){admit_ordered<<<1,256,0,w->stream>>>(*p,w->parents,w->deploys,w->rows,n,w->eligible,w->selected,w->selected_count);status=cudaGetLastError();}
+    int count=0;if(status==cudaSuccess)status=cudaMemcpyAsync(&count,w->selected_count,sizeof(int),cudaMemcpyDeviceToHost,w->stream);
+    const auto done=cudaStreamSynchronize(w->stream);if(status!=cudaSuccess||done!=cudaSuccess)return 2;
+    w->valid=count;w->admitted=count;*selected_count=count;return 0;
 }

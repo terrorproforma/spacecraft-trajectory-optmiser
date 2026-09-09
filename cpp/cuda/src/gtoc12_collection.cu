@@ -129,6 +129,12 @@ extern "C" spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_options_destroy(
     delete table;*output=nullptr;return mapped(status);
 }
 
+spacepdhcg_cuda_status gtoc12_collection_options_view(
+    spacepdhcg_gtoc12_collection_options* table,const Option** rows,int* count) {
+    if(!owned(table)||!rows||!count)return SPACEPDHCG_CUDA_INVALID_ARGUMENT;
+    *rows=table->rows;*count=table->count;return SPACEPDHCG_CUDA_SUCCESS;
+}
+
 extern "C" spacepdhcg_cuda_status spacepdhcg_gtoc12_collection_launch_device(
     spacepdhcg_gtoc12_collection* w, const Option* options, int n, const Query* query,
     Result* result, spacepdhcg_accelerator_stream stream) {

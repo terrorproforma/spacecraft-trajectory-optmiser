@@ -1678,14 +1678,18 @@ class RouteSearch:
         depth = len(partials[0].deployed) if partials else 0
         return self._select_ranked(ordered, depth)
 
-    def _select_ranked(self, ordered, depth):
+    def _select_ranked(self, ordered, depth, *, admitted=False):
         """Admit a ranked stream; the CUDA pool materializes only its needed prefix."""
         s = self.settings
         if not (s.chain_tour_scoring and s.collect_dp and depth >= s.chain_tour_min_deploys):
-            return self._filter(ordered, s.beam_width)
+            return list(ordered) if admitted else self._filter(ordered, s.beam_width)
         # chain-level objective: the shortlist (heuristic order, same pruning and diversity
         # caps) is re-scored by its actual collect tour and the beam is the best of it
-        shortlist = self._filter(ordered, max(s.chain_tour_candidates, s.beam_width))
+        shortlist = (
+            list(ordered)
+            if admitted
+            else self._filter(ordered, max(s.chain_tour_candidates, s.beam_width))
+        )
         heuristic_order = [id(p) for p in shortlist[: s.beam_width]]
         started = time.perf_counter()
         from .gpu_completion import enabled as cuda_completion_enabled

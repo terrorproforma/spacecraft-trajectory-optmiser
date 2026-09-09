@@ -49,6 +49,18 @@ int spacepdhcg_gtoc12_expansion_rank(void* workspace,
     int32_t* valid_count);
 int spacepdhcg_gtoc12_expansion_read(void* workspace, int32_t offset,
     int32_t count, spacepdhcg_gtoc12_expansion_result* results);
+typedef struct {
+    int32_t abi_version, limit, max_per_set, max_per_first;
+    double dry_mass, reserve_fraction, return_reserve, return_authority_ratio;
+} spacepdhcg_gtoc12_admission_policy;
+/* Admit from the most recent rank, preserving its greedy order and exact set
+ * caps. return_tables has one owning-thread resident collection-options handle
+ * per parent; retain them until this blocking call completes. Subsequent reads
+ * expose only admitted rows. Rank restores the unfiltered result view; failed
+ * admission invalidates reads. No host candidate or return-option downloads. */
+int spacepdhcg_gtoc12_expansion_admit(void* workspace,
+    const spacepdhcg_gtoc12_admission_policy* policy, int32_t parent_count,
+    void* const* return_tables, int32_t* selected_count);
 #ifdef __cplusplus
 }
 #endif
