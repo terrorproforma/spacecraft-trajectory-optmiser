@@ -1,0 +1,210 @@
+{
+  "v800": {},
+  "v805": {},
+  "v801": {
+    "medians": {
+      "10": {
+        "fresh_seconds": 20.04993742197985,
+        "reuse_seconds": 19.390816078986973,
+        "speedup": 1.033991418427569
+      },
+      "21": {
+        "fresh_seconds": 19.253306063008495,
+        "reuse_seconds": 18.79015780199552,
+        "speedup": 1.024648449783843
+      }
+    }
+  },
+  "v802": {
+    "ships": 23,
+    "candidates": 11007,
+    "expansions": 11737,
+    "search_seconds": 480.68387706694193,
+    "lambert_evaluations": 454295808,
+    "telemetry_totals": {
+      "completed_batches": 221638,
+      "completed_branch_requests": 454295854,
+      "gpu_used": 23,
+      "completed_element_hops": 204981164,
+      "completed_compact_options": 87961320,
+      "compact_option_download_bytes": 681400,
+      "resident_option_builds": 170350,
+      "resident_option_selection_download_bytes": 16319160,
+      "completed_return_feasibility_queries": 12602,
+      "collection_option_upload_bytes": 0,
+      "completed_collection_queries": 395377,
+      "completed_collection_options": 188951634,
+      "completed_neighbour_queries": 23257,
+      "completion_batches": 17330,
+      "completion_candidates": 33207,
+      "completion_leg_slots": 253736,
+      "completion_pack_seconds": 48.35217331559397,
+      "completion_native_call_seconds": 2.009030063985847,
+      "completion_kernel_seconds": 0.5216301441900433,
+      "completion_total_seconds": 51.669850916194264,
+      "collect_resident_builds": 28008,
+      "collect_resident_dp_builds": 531,
+      "collect_dp_allocations": 531,
+      "completed_collection_dp_passes": 37856,
+      "collect_dp_rebinds": 24627
+    }
+  },
+  "v803": {
+    "seconds": 109.16501368698664,
+    "score_kg": 12999.452764189185,
+    "qualified": true,
+    "replacements": [
+      4
+    ],
+    "native_solves": 147,
+    "solution_sha256": "f2527a213ce191b94557a5a48e33938b82f95dff2f97594d31a63ff6622d2aca",
+    "native_status_counts": {
+      "converged": 138,
+      "infeasible": 5,
+      "failed": 4
+    },
+    "native_seconds": 67.10157433623681
+  },
+  "v804": {
+    "seconds": 52.90912871801993,
+    "score_kg": 12999.452764189185,
+    "qualified": true,
+    "replacements": [
+      11,
+      9,
+      1,
+      4
+    ],
+    "solution_sha256": "f2527a213ce191b94557a5a48e33938b82f95dff2f97594d31a63ff6622d2aca",
+    "budget_sweep": [
+      {
+        "cap": 2000000,
+        "objective": 12999.45276418938,
+        "seconds": 0.018345025018788874,
+        "nodes": 1000000,
+        "exhaustive": false,
+        "selected": [
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          1032,
+          1036,
+          1039,
+          1044
+        ]
+      },
+      {
+        "cap": 20000000,
+        "objective": 12999.45276418938,
+        "seconds": 0.17858339101076126,
+        "nodes": 10000000,
+        "exhaustive": false,
+        "selected": [
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          1032,
+          1036,
+          1039,
+          1044
+        ]
+      },
+      {
+        "cap": 200000000,
+        "objective": 12999.45276418938,
+        "seconds": 1.7857800420024432,
+        "nodes": 62672261,
+        "exhaustive": false,
+        "selected": [
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          1032,
+          1036,
+          1039,
+          1044
+        ]
+      },
+      {
+        "cap": 2000000000,
+        "objective": 12999.45276418938,
+        "seconds": 7.389900153037161,
+        "nodes": 84238236,
+        "exhaustive": true,
+        "selected": [
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          1032,
+          1036,
+          1039,
+          1044
+        ]
+      }
+    ]
+  }
+}

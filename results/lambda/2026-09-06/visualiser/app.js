@@ -55,6 +55,7 @@ const canvas = $("trajectory-canvas");
 const ARCHIVE_CAMERA = { yaw: -0.72, pitch: 0.48, distance: 3.25, target: [0, 0, 0] };
 const ARCHIVE_ZOOM = { minimum: 1.35, maximum: 12 };
 const FLEET_DATASETS = {
+  "gtoc12-collect-composition-v807": { directory: "./data/gtoc12-collect-composition-v807", label: "H100 fleet plus local ship 8 (23 ships, 12,999.825 weighted kg; both hosts verified)" },
   gtoc12: { directory: "./data/gtoc12", label: "Historical baseline v11" },
   "gtoc12-v200": { directory: "./data/gtoc12-v200", label: "GPU campaign v200 (before fix)" },
   "gtoc12-v209": { directory: "./data/gtoc12-v209", label: "GPU campaign v209 (corrected solver)" },
@@ -887,7 +888,12 @@ async function probeFleetDataset() {
     } catch { /* Optional dataset remains unavailable. */ }
     const available = manifest?.dataset_kind === "gtoc12-fleet";
     if (available) availableFleets.add(dataset);
-    const option = $("dataset-select").querySelector(`option[value="${dataset}"]`);
+    let option = $("dataset-select").querySelector(`option[value="${dataset}"]`);
+    if (!option) {
+      option = document.createElement("option");
+      option.value = dataset;
+      $("dataset-select").append(option);
+    }
     option.disabled = !available;
     const summary = manifest?.summary;
     option.textContent = available

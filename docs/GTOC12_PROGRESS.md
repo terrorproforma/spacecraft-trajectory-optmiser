@@ -1,6 +1,15 @@
 # GTOC12 score progress — 9 September 2026
 
-The latest locally verified checkpoint is **12,992.407741 weighted kg /
+The latest combined checkpoint is **12,999.824843 weighted kg / 14,279.288159
+raw kg**, with 23 ships and 199 asteroids. Both full-fleet checkers pass locally
+and on Lambda. Retained CUDA collection workspaces reduce allocations and
+improve paired whole-search throughput by 2.46–5.78%; a new GPU-refined ship-4
+route gains 7.417102 weighted kg, then the certified ship-8 endpoint correction
+is retained in the combined fleet. The composition has mixed GPU provenance;
+it is not a fresh H100 run of the corrected endpoint controller.
+[Measurements, archived runtime, checks and displayed H100 composition](GPU_COLLECTION_WORKSPACE.md).
+
+The preceding locally verified checkpoint is **12,992.407741 weighted kg /
 14,271.485284 raw kg**, with 23 ships, 200 asteroids and 620.499360 raw kg per
 ship. The endpoint-merit fix enables a new certified ship-8 correction; applying
 it to the v799 fleet gains 0.372079 weighted kg and 0.438056 raw kg. Fresh

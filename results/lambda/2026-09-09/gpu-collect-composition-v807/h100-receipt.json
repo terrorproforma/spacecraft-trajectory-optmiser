@@ -1,0 +1,52 @@
+{
+  "sha256": "2de133ff1f7474cfdde5b7e90cd121b56a2e04332308f6832bfe61c5cb1572c1",
+  "report": {
+    "complete": true,
+    "pid": 256517,
+    "gpu_solves": 0,
+    "success": true,
+    "independent": {
+      "ok": true,
+      "ships": 23,
+      "mined_asteroids": 199,
+      "total_mass_kg": 14279.2881587958,
+      "weighted_score_fixed_bonus_kg": 12999.824843382517,
+      "weighted_score_dynamic_kg": null,
+      "ship_limit": 23.962776399145895,
+      "max_position_error_km": 22.744178353432023,
+      "max_velocity_error_km_s": 1.0832291104201891e-06,
+      "max_mass_error_kg": 1.0049916454590857e-10,
+      "violations": []
+    },
+    "independent_seconds": 38.59952249802882,
+    "official": {
+      "ok": true,
+      "ships": 23,
+      "mined_asteroids": 199,
+      "total_mass_kg": 14279.3,
+      "return_code": 0,
+      "wall_seconds": 0.35480993398232386,
+      "message": "Check successfully!"
+    },
+    "qualified": true,
+    "score_kg": 12999.824843382517,
+    "total_mass_kg": 14279.2881587958,
+    "solution_sha256": "4ae67c220ab7d50f3dad0f3899bd27a3a161a524ecd8323df8d8f33c86a32b5c",
+    "viewer_manifest": {
+      "schema_version": "1.0.0",
+      "files": {
+        "trajectories.json": {
+          "bytes": 10691606,
+          "sha256": "2a0c5a60e2f2676c569b9affe69859ab939adc53834b77370b2d0738f040038b"
+        }
+      },
+      "source": {
+        "path_basename": "Result.txt",
+        "sha256": "4ae67c220ab7d50f3dad0f3899bd27a3a161a524ecd8323df8d8f33c86a32b5c",
+        "bytes": 10009219
+      },
+      "transform": "Verifier-model propagation of the emitted GTOC12 solution; stable-key JSON; deterministic decimation."
+    },
+    "seconds": 40.5326088439906
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "local": {
+    "verified_members": 1138,
+    "results": {
+      "v803": {
+        "weighted_kg": 12999.452764189184,
+        "raw_kg": 14278.8501026699,
+        "ships": 23,
+        "asteroids": 199,
+        "ship_limit": 23.960950896336538
+      },
+      "v804": {
+        "weighted_kg": 12999.452764189187,
+        "raw_kg": 14278.8501026699,
+        "ships": 23,
+        "asteroids": 199,
+        "ship_limit": 23.960950896336538
+      }
+    },
+    "native_status_counts": {
+      "converged": 138,
+      "infeasible": 5,
+      "failed": 4
+    },
+    "medians": {
+      "10": {
+        "fresh_seconds": 22.16018275799979,
+        "reuse_seconds": 20.948857531999693,
+        "speedup": 1.0578229731215547
+      },
+      "21": {
+        "fresh_seconds": 20.12133364700003,
+        "reuse_seconds": 19.2756167499997,
+        "speedup": 1.043874959124218
+      }
+    }
+  },
+  "h100": {
+    "verified_members": 1138,
+    "results": {
+      "v803": {
+        "weighted_kg": 12999.452764189185,
+        "raw_kg": 14278.8501026699,
+        "ships": 23,
+        "asteroids": 199,
+        "ship_limit": 23.960950896336538
+      },
+      "v804": {
+        "weighted_kg": 12999.452764189185,
+        "raw_kg": 14278.8501026699,
+        "ships": 23,
+        "asteroids": 199,
+        "ship_limit": 23.960950896336538
+      }
+    },
+    "native_status_counts": {
+      "converged": 138,
+      "infeasible": 5,
+      "failed": 4
+    },
+    "medians": {
+      "10": {
+        "fresh_seconds": 20.04993742197985,
+        "reuse_seconds": 19.390816078986973,
+        "speedup": 1.033991418427569
+      },
+      "21": {
+        "fresh_seconds": 19.253306063008495,
+        "reuse_seconds": 18.79015780199552,
+        "speedup": 1.024648449783843
+      }
+    }
+  },
+  "candidate_comparison": {
+    "files": 23,
+    "exact_schedules_and_cargo": true,
+    "proxy_differences": 42077,
+    "maximum_proxy_absolute_difference": 2.2964741219766438e-11
+  }
+}

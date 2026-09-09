@@ -72,6 +72,7 @@ struct View {
 };
 struct Workspace {
     View v{};int device{};cudaStream_t stream{};std::mutex mutex;
+    Policy capacity{};bool valid{};const float** table_pointers{};
     ~Workspace() {
         cudaStreamSynchronize(stream);
         for(auto ptr:std::initializer_list<const double*>{v.in.dv,v.in.returns,v.in.tofs,v.in.return_tofs,v.in.mined,
@@ -79,7 +80,7 @@ struct Workspace {
             v.arrive,v.ready,v.mass,v.terminal})cudaFree(const_cast<double*>(ptr));
         for(auto ptr:std::initializer_list<const int32_t*>{v.in.steps,v.in.banned,v.prefix,v.previous,v.departure,v.tof,v.allocated})
             cudaFree(const_cast<int32_t*>(ptr));
-        cudaFree(v.result);if(stream)cudaStreamDestroy(stream);
+        cudaFree(v.result);cudaFree(table_pointers);if(stream)cudaStreamDestroy(stream);
     }
 };
 __device__ size_t state(const View& v,int subset,int j){return size_t(subset)*v.p.k+j;}
@@ -225,8 +226,8 @@ template<class T> bool copy(const T*& p,const T* src,size_t n,cudaStream_t strea
     return cudaMemcpyAsync(target,src,n*sizeof(T),cudaMemcpyHostToDevice,stream)==cudaSuccess;
 }
 }
-static int create_workspace(const Policy* p,const Inputs* in,void** out,bool resident) {
-    if(!p||!in||!out||*out||p->k<1||p->k>16||p->n<1||p->nt<1||p->nr<1||p->camp<0||p->camp>=p->k
+static int validate_inputs(const Policy* p,const Inputs* in,bool resident) {
+    if(!p||!in||p->k<1||p->k>16||p->n<1||p->nt<1||p->nr<1||p->camp<0||p->camp>=p->k
         ||p->hop_model<0||p->hop_model>2||p->return_model<0||p->return_model>1)return 1;
     const size_t states=size_t(1<<p->k)*p->k,cells=states*p->n,pairs=size_t(p->k)*p->k;
     if(cells>INT_MAX||size_t(p->k)*p->n*p->nr>INT_MAX||pairs*p->n*p->nt>INT_MAX)return 1;
@@ -237,8 +238,30 @@ static int create_workspace(const Policy* p,const Inputs* in,void** out,bool res
         ||!in->penalty||!in->override_inflation||!in->steps||!in->banned)return 1;
     for(int h=0;h<p->nt;++h)if(in->steps[h]<1||!std::isfinite(in->tofs[h])||in->tofs[h]<=0)return 1;
     for(int h=0;h<p->nr;++h)if(!std::isfinite(in->return_tofs[h])||in->return_tofs[h]<=0)return 1;
+    return 0;
+}
+static bool fits(const Workspace* w,const Policy* p) {
+    return p->k<=w->capacity.k&&p->n<=w->capacity.n&&p->nt<=w->capacity.nt&&p->nr<=w->capacity.nr;
+}
+static bool upload_inputs(Workspace* w,const Policy* p,const Inputs* in,bool resident) {
+    const size_t pairs=size_t(p->k)*p->k;const auto& dest=w->v.in;
+    auto put=[&](const void* target,const void* source,size_t bytes){
+        return cudaMemcpyAsync(const_cast<void*>(target),source,bytes,cudaMemcpyHostToDevice,w->stream)==cudaSuccess;
+    };
+    return (resident||(put(dest.dv,in->dv,pairs*p->n*p->nt*sizeof(double))
+        &&put(dest.returns,in->returns,size_t(p->k)*p->n*p->nr*sizeof(double))))
+        &&put(dest.tofs,in->tofs,p->nt*sizeof(double))&&put(dest.return_tofs,in->return_tofs,p->nr*sizeof(double))
+        &&put(dest.mined,in->mined,size_t(p->k)*p->n*sizeof(double))&&put(dest.geometry_a,in->geometry_a,pairs*sizeof(double))
+        &&put(dest.geometry_l,in->geometry_l,pairs*p->n*sizeof(double))&&put(dest.penalty,in->penalty,pairs*p->n*sizeof(double))
+        &&put(dest.override_inflation,in->override_inflation,size_t(p->k)*p->n*p->nr*sizeof(double))
+        &&put(dest.steps,in->steps,p->nt*sizeof(int32_t))&&put(dest.banned,in->banned,pairs*sizeof(int32_t));
+}
+static int create_workspace(const Policy* p,const Inputs* in,void** out,bool resident) {
+    if(!out||*out)return 1;
+    const int validation=validate_inputs(p,in,resident);if(validation)return validation;
+    const size_t states=size_t(1<<p->k)*p->k,cells=states*p->n,pairs=size_t(p->k)*p->k;
     auto* w=new(std::nothrow) Workspace;if(!w)return 2;
-    w->v.p=*p;auto& v=w->v;
+    w->v.p=*p;w->capacity=*p;auto& v=w->v;
     bool ok=cudaGetDevice(&w->device)==cudaSuccess&&cudaStreamCreateWithFlags(&w->stream,cudaStreamNonBlocking)==cudaSuccess;
     if(resident) {
         double* dv=nullptr;double* returns=nullptr;
@@ -254,17 +277,30 @@ static int create_workspace(const Policy* p,const Inputs* in,void** out,bool res
         &&copy(v.in.steps,in->steps,p->nt,w->stream)&&copy(v.in.banned,in->banned,pairs,w->stream)
         &&allocate(v.arrive,cells)&&allocate(v.ready,cells)&&allocate(v.prefix,cells)&&allocate(v.previous,cells)
         &&allocate(v.departure,cells)&&allocate(v.tof,cells)&&allocate(v.allocated,states)
-        &&allocate(v.mass,1<<p->k)&&allocate(v.terminal,size_t(p->k)*p->n*2)&&allocate(v.result,1);
+        &&allocate(v.mass,1<<p->k)&&allocate(v.terminal,size_t(p->k)*p->n*2)&&allocate(v.result,1)
+        &&allocate(w->table_pointers,pairs+p->k);
     ok=(cudaStreamSynchronize(w->stream)==cudaSuccess)&&ok;
-    if(!ok){delete w;return 2;}*out=w;return 0;
+    if(!ok){delete w;return 2;}w->valid=true;*out=w;return 0;
 }
 extern "C" int spacepdhcg_collect_create(const Policy* p,const Inputs* in,void** out) {
     return create_workspace(p,in,out,false);
+}
+extern "C" int spacepdhcg_collect_update(void* opaque,const Policy* p,const Inputs* in) {
+    auto* w=static_cast<Workspace*>(opaque);if(!w)return 1;
+    const int validation=validate_inputs(p,in,false);if(validation)return validation;
+    std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
+    int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;if(device!=w->device)return 1;
+    if(!fits(w,p))return 4;
+    w->valid=false;bool good=upload_inputs(w,p,in,false);
+    good=(cudaStreamSynchronize(w->stream)==cudaSuccess)&&good;
+    if(!good)return 2;
+    w->v.p=*p;w->valid=true;return 0;
 }
 extern "C" int spacepdhcg_collect_solve_v2(void* opaque,const double* masses,double camp_mass,double price,Result* result){
     auto* w=static_cast<Workspace*>(opaque);
     if(!w||!masses||!result||!std::isfinite(camp_mass)||camp_mass<=0||!std::isfinite(price)||price<=0)return 1;
     std::unique_lock<std::mutex> lock(w->mutex,std::try_to_lock);if(!lock.owns_lock())return 3;
+    if(!w->valid)return 1;
     int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;if(device!=w->device)return 1;
     auto v=w->v;const int states=(1<<v.p.k)*v.p.k;const size_t cells=size_t(states)*v.p.n;
     for(int i=0;i<(1<<v.p.k);++i)if(!std::isfinite(masses[i])||masses[i]<=0)return 1;
@@ -416,10 +452,18 @@ extern "C" int spacepdhcg_collect_table_destroy(void* opaque) {
     int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;if(device!=table->device)return 1;
     if(!table->mutex.try_lock())return 3;table->mutex.unlock();delete table;return 0;
 }
-extern "C" int spacepdhcg_collect_create_tables(const Policy* p,const Inputs* in,
-    void* const* pairs,void* const* returns,int32_t t0,void** output) {
-    if(!p||!in||!pairs||!returns||!output||*output||p->k<1||p->k>16||t0<0||p->n<1||p->nt<1||p->nr<1)return 1;
+static int tables_workspace(const Policy* p,const Inputs* in,
+    void* const* pairs,void* const* returns,int32_t t0,void** output,Workspace* existing) {
+    if(!pairs||!returns||t0<0||(!existing&&(!output||*output)))return 1;
+    const int validation=validate_inputs(p,in,true);if(validation)return validation;
     int device=-1;if(cudaGetDevice(&device)!=cudaSuccess)return 2;
+    std::unique_lock<std::mutex> workspace_lock;
+    if(existing){
+        workspace_lock=std::unique_lock<std::mutex>(existing->mutex,std::try_to_lock);
+        if(!workspace_lock.owns_lock())return 3;
+        if(existing->device!=device)return 1;
+        if(!fits(existing,p))return 4;
+    }
     std::vector<DeviceTable*> tables;
     for(int i=0;i<p->k*p->k+p->k;++i){
         const bool ret=i>=p->k*p->k;auto* table=static_cast<DeviceTable*>(ret?returns[i-p->k*p->k]:pairs[i]);
@@ -429,23 +473,32 @@ extern "C" int spacepdhcg_collect_create_tables(const Policy* p,const Inputs* in
     }
     std::vector<std::unique_lock<std::mutex>> locks;
     for(auto* table:tables){locks.emplace_back(table->mutex,std::try_to_lock);if(!locks.back().owns_lock())return 3;}
-    const int status=create_workspace(p,in,output,true);if(status)return status;
-    auto* w=static_cast<Workspace*>(*output);
+    if(!existing){const int status=create_workspace(p,in,output,true);if(status)return status;}
+    auto* w=existing?existing:static_cast<Workspace*>(*output);
     std::vector<const float*> pointers;
     for(int i=0;i<p->k*p->k+p->k;++i){
         const bool ret=i>=p->k*p->k;auto* table=static_cast<DeviceTable*>(ret?returns[i-p->k*p->k]:pairs[i]);
         pointers.push_back(table?table->values:nullptr);
     }
-    const float** device_pointers=nullptr;
-    bool good=allocate(device_pointers,pointers.size());
-    if(good)good=cudaMemcpyAsync(device_pointers,pointers.data(),pointers.size()*sizeof(float*),cudaMemcpyHostToDevice,w->stream)==cudaSuccess;
+    w->valid=false;
+    bool good=!existing||upload_inputs(w,p,in,true);
+    if(good)good=cudaMemcpyAsync(w->table_pointers,pointers.data(),pointers.size()*sizeof(float*),cudaMemcpyHostToDevice,w->stream)==cudaSuccess;
     if(good){
         const size_t count=size_t(p->k)*p->k*p->n*p->nt+size_t(p->k)*p->n*p->nr;
-        assemble_tables<<<(count+255)/256,256,0,w->stream>>>(device_pointers,p->k,p->n,p->nt,p->nr,t0,count,
+        assemble_tables<<<(count+255)/256,256,0,w->stream>>>(w->table_pointers,p->k,p->n,p->nt,p->nr,t0,count,
             const_cast<double*>(w->v.in.dv),const_cast<double*>(w->v.in.returns));
         good=cudaGetLastError()==cudaSuccess;
     }
     good=(cudaStreamSynchronize(w->stream)==cudaSuccess)&&good;
-    cudaFree(device_pointers);
-    if(!good){delete w;*output=nullptr;return 2;}return 0;
+    if(!good){if(!existing){delete w;*output=nullptr;}return 2;}
+    w->v.p=*p;w->valid=true;return 0;
+}
+extern "C" int spacepdhcg_collect_create_tables(const Policy* p,const Inputs* in,
+    void* const* pairs,void* const* returns,int32_t t0,void** output) {
+    return tables_workspace(p,in,pairs,returns,t0,output,nullptr);
+}
+extern "C" int spacepdhcg_collect_update_tables(void* workspace,const Policy* p,const Inputs* in,
+    void* const* pairs,void* const* returns,int32_t t0) {
+    if(!workspace)return 1;
+    return tables_workspace(p,in,pairs,returns,t0,nullptr,static_cast<Workspace*>(workspace));
 }

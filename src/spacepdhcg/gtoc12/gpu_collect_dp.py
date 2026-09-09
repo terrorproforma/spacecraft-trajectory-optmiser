@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes as ct
+import os
 
 import numpy as np
 
@@ -75,7 +76,9 @@ class Result(ct.Structure):
 
 
 class GpuCollectDP:
-    def __init__(self, gpu, key, table, ids, camp, t0, epochs, mined, banned, phase_penalty):
+    def __init__(
+        self, gpu, key, table, ids, camp, t0, epochs, mined, banned, phase_penalty, previous=None
+    ):
         self.gpu, self.key, self.table, self.ids = gpu, key, table, ids
         self.t0, self.epochs = t0, epochs
         self.handle = ct.c_void_p()
@@ -170,6 +173,35 @@ class GpuCollectDP:
                     data["penalty"][j, target_index] = phase_penalty(j, target_index)
         self.data = data
         packed = Inputs(*(data[name].ctypes.data for name, _ in Inputs._fields_))
+        self.policy = p
+        pair_array = (ct.c_void_p * (k * k))(*pair_handles)
+        return_array = (ct.c_void_p * k)(*return_handles)
+        update = getattr(
+            gpu.library,
+            "spacepdhcg_collect_update_tables" if resident else "spacepdhcg_collect_update",
+            None,
+        )
+        reuse = os.environ.get("SPACEPDHCG_TEST_GTOC12_REUSE_COLLECT_DP", "1") != "0"
+        if previous is not None and previous.handle.value and reuse and update is not None:
+            update.argtypes = [ct.c_void_p, ct.POINTER(Policy), ct.POINTER(Inputs)] + (
+                [ct.c_void_p, ct.c_void_p, ct.c_int32] if resident else []
+            )
+            update.restype = ct.c_int
+            args = [previous.handle, ct.byref(p), ct.byref(packed)]
+            if resident:
+                args += [pair_array, return_array, t0]
+            status = update(*args)
+            if status == 0:
+                self.handle = ct.c_void_p(previous.handle.value)
+                previous.handle = ct.c_void_p()
+                gpu.telemetry["collect_dp_rebinds"] = gpu.telemetry.get("collect_dp_rebinds", 0) + 1
+                return
+            if status != 4:
+                if status == 2:
+                    previous.close()
+                self.check(status)
+        if previous is not None:
+            previous.close()
         if resident:
             create_tables = gpu.library.spacepdhcg_collect_create_tables
             create_tables.argtypes = [
@@ -185,8 +217,8 @@ class GpuCollectDP:
                 create_tables(
                     ct.byref(p),
                     ct.byref(packed),
-                    (ct.c_void_p * (k * k))(*pair_handles),
-                    (ct.c_void_p * k)(*return_handles),
+                    pair_array,
+                    return_array,
                     t0,
                     ct.byref(self.handle),
                 )
@@ -196,6 +228,7 @@ class GpuCollectDP:
             )
         else:
             self.check(self.create(ct.byref(p), ct.byref(packed), ct.byref(self.handle)))
+        gpu.telemetry["collect_dp_allocations"] = gpu.telemetry.get("collect_dp_allocations", 0) + 1
 
     @staticmethod
     def check(code):
@@ -301,12 +334,23 @@ def cuda_collect_dp(
         return NotImplemented
     gpu._owned()
     key = (table, fraction)
-    if gpu.collect_dp_workspace is None or gpu.collect_dp_workspace.key != key:
-        if gpu.collect_dp_workspace is not None:
-            gpu.collect_dp_workspace.close()
-            gpu.collect_dp_workspace = None
+    if (
+        gpu.collect_dp_workspace is None
+        or not gpu.collect_dp_workspace.handle.value
+        or gpu.collect_dp_workspace.key != key
+    ):
         gpu.collect_dp_workspace = GpuCollectDP(
-            gpu, key, table, ids, camp, t0, epochs, mined, banned, phase_penalty
+            gpu,
+            key,
+            table,
+            ids,
+            camp,
+            t0,
+            epochs,
+            mined,
+            banned,
+            phase_penalty,
+            previous=gpu.collect_dp_workspace,
         )
     result = gpu.collect_dp_workspace.solve(
         mass_by_subset, camp_mass, price, weights, deployed, burn, phase_penalty

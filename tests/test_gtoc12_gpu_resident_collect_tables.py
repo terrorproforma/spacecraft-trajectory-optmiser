@@ -70,6 +70,8 @@ def test_resident_tour_never_downloads_tables(monkeypatch, capacity):
         )
         assert actual.objective_kg == pytest.approx(expected.objective_kg, abs=1e-9)
         assert gpu.telemetry.get("collect_table_download_bytes", 0) == 0
+        assert gpu.telemetry.get("collect_dp_rebinds", 0) >= 2
+        assert gpu.telemetry["collect_dp_allocations"] == 1
         assert len(gpu.collect_table_cache) <= capacity
         table.release_caches()
         assert not gpu.collect_table_cache

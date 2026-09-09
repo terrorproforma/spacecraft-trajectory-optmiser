@@ -35,6 +35,13 @@ typedef struct spacepdhcg_collect_result_v2 {
 /* Status: 0 success, 1 invalid input, 2 CUDA/allocation error, 3 busy. */
 int spacepdhcg_collect_create(const spacepdhcg_collect_policy*,
     const spacepdhcg_collect_inputs*,void** workspace);
+/* Replace all numerical inputs/topology while retaining allocations. Each new
+ * k/n/nt/nr must fit the creation dimensions; status 4 means capacity exceeded.
+ * Invalid/busy/capacity failures leave the previous problem unchanged. A CUDA
+ * failure disables solve until a successful update or destruction. Host inputs
+ * are copied before return and need not remain alive. No allocation on update. */
+int spacepdhcg_collect_update(void* workspace,const spacepdhcg_collect_policy*,
+    const spacepdhcg_collect_inputs*);
 int spacepdhcg_collect_solve(void* workspace,const double* mass_by_subset,
     double camp_mass,double price,spacepdhcg_collect_result* result);
 int spacepdhcg_collect_solve_v2(void* workspace,const double* mass_by_subset,
@@ -64,6 +71,10 @@ int spacepdhcg_route_recovery_order(int32_t device,const double* prefixes,
 int spacepdhcg_collect_create_tables(const spacepdhcg_collect_policy*,
     const spacepdhcg_collect_inputs*,void* const* pairs,void* const* returns,
     int32_t t0,void** workspace);
+/* Same retained-capacity/update contract, copying immutable device table slices.
+ * Validated table handles are held against eviction for the duration of copy. */
+int spacepdhcg_collect_update_tables(void* workspace,const spacepdhcg_collect_policy*,
+    const spacepdhcg_collect_inputs*,void* const* pairs,void* const* returns,int32_t t0);
 #ifdef __cplusplus
 }
 #endif

@@ -14,7 +14,16 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
-The latest locally verified fleet reaches **12,992.408 weighted kg / 14,271.485 raw
+The latest combined fleet reaches **12,999.825 weighted kg / 14,279.288 raw kg**,
+with 23 ships and 199 asteroids. Both full-fleet physics checkers pass locally
+and on Lambda. Retained CUDA collection buffers cut workspace creations by
+**97.7%**, with **2.46–5.78% higher whole-search throughput** in paired tests.
+The full search evaluates 11,007 candidate routes; GPU refinement improves
+ship 4, then the separately certified ship-8 correction is composed into the
+fleet. The downloaded H100-based composition is displayed in the web visualiser.
+[Measured performance, exact results, validation and remaining GPU work](docs/GPU_COLLECTION_WORKSPACE.md).
+
+The preceding locally verified fleet reaches **12,992.408 weighted kg / 14,271.485 raw
 kg**, with 23 ships, 200 asteroids and **620.499 raw kg per ship**. A GPU endpoint-merit
 fix lets a previously rejected route correction certify, adding 0.372079 weighted
 kg to the H100 v799 fleet. Both full-fleet checkers accept the combined Result;

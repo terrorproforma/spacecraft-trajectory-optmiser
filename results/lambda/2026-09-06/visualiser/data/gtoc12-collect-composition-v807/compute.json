@@ -1,0 +1,25 @@
+{
+  "run_id": "gpu_collect_composition_v807",
+  "fleet_run_id": "gpu_collect_composition_v807",
+  "commit": "7f07c6b6",
+  "result_sha256": "4ae67c220ab7d50f3dad0f3899bd27a3a161a524ecd8323df8d8f33c86a32b5c",
+  "source_revision_note": "Mixed provenance: H100 v804 fleet, locally GPU-refined endpoint-merit-corrected ship 8. Both full-fleet checkers rerun locally and on Lambda. No new GPU solve in composition.",
+  "weighted_score_fixed_bonus_kg": 12999.824843382517,
+  "raw_kg_per_ship": 620.8386155998174,
+  "hardware": {
+    "gpu": "Lambda H100 fleet + RTX 5090 ship-8 correction",
+    "upstream_search": "H100 v802: 11,007 candidate routes in 480.684 seconds; 454,295,808 logical Lambert branch requests"
+  },
+  "timing": {
+    "wall_seconds_total": 40.5326088439906,
+    "wall_human": "40.533 s full-fleet checks/export on Lambda; composition performs no new GPU solve"
+  },
+  "model": {
+    "dynamics": "Original GTOC12 physics and tolerances; both complete-fleet checkers pass on both hosts",
+    "local_refine": "Upstream v803: 147 native QOCO/SCvx attempts, 138 converge, five complete routes certify; new ship 4 improves the fleet. Ship 8 was separately GPU-refined locally."
+  },
+  "optimisation": {
+    "strategy": "12,999.825 fixed-bonus weighted kg. Ships 4 and 8 improve H100 v799; other 21 sections are byte-identical. Retained CUDA collection buffers reduce workspace creations 97.7% in paired route tests. Python orchestration and host packing remain.",
+    "proven_optimal": false
+  }
+}
