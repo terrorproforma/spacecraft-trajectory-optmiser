@@ -1,6 +1,15 @@
 # GTOC12 score progress — 9 September 2026
 
-The latest verified checkpoint is **12,992.035662 weighted kg / 14,271.047228
+The latest locally verified checkpoint is **12,992.407741 weighted kg /
+14,271.485284 raw kg**, with 23 ships, 200 asteroids and 620.499360 raw kg per
+ship. The endpoint-merit fix enables a new certified ship-8 correction; applying
+it to the v799 fleet gains 0.372079 weighted kg and 0.438056 raw kg. Fresh
+independent and official full-fleet checks pass on the exact composition, with
+the other 22 ship sections unchanged. The controller was tested on RTX 5090;
+this composition is not an H100 rerun or a PDHCG convergence result.
+[Current Result, evidence and visualiser loading instructions](../results/local/2026-09-09/current-fleet-composition-v628/README.md).
+
+The preceding v799 checkpoint is **12,992.035662 weighted kg / 14,271.047228
 raw kg**, with 23 ships and 200 asteroids. Nine GPU-refined route replacements
 gain **148.479966 weighted kg / 226.694045 raw kg**. Both GPUs pass both full-fleet
 checkers. The downloaded H100 fleet is displayed in the existing visualiser.

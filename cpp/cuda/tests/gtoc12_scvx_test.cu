@@ -291,9 +291,87 @@ void initial_velocity_outputs() {
     CUDA(cudaFree(state)); CUDA(cudaFree(states)); CUDA(cudaFree(parameters));
 }
 
+void boundary_merit() {
+    State* ds{};Metrics* dm{};double* dx{};Record* records{};
+    spacepdhcg_gtoc12_conic_parameters* parameters{};
+    CUDA(cudaMalloc(&ds,sizeof(State)));CUDA(cudaMalloc(&dm,sizeof(Metrics)));
+    CUDA(cudaMalloc(&dx,100*sizeof(double)));CUDA(cudaMalloc(&records,44*sizeof(Record)));
+    CUDA(cudaMalloc(&parameters,sizeof(*parameters)));
+    const auto p=fixture();
+    BoundaryTargets body{};body.values[0]=1.0;body.values[6]=2.0;body.vinf_max=p.vinf_max;
+    std::vector<double> x(100,0.0);for(int i=0;i<4;++i)x[7*i+6]=1.0;
+    x[0]=1.0;x[21]=1.9; // Dynamics-consistent reference misses its rendezvous.
+    CUDA(cudaMemcpy(dx,x.data(),x.size()*sizeof(double),cudaMemcpyHostToDevice));
+    initialize<<<1,1>>>(ds,p,parameters);
+    Metrics m{.1,0,0,0,0,.01,0};
+    CUDA(cudaMemcpy(dm,&m,sizeof(m),cudaMemcpyHostToDevice));
+    add_boundary_metrics<<<1,32>>>(dm,dx,4,body,ds,false,p.conic_tolerance);
+    set_reference<<<1,1>>>(ds,dm,p);
+    State reference{};CUDA(cudaMemcpy(&reference,ds,sizeof(reference),cudaMemcpyDeviceToHost));
+    REQUIRE(std::abs(reference.merit-(.1+1e4*(.1-p.conic_tolerance)))<1e-10);
+    // A higher-fuel, boundary-corrected candidate must improve that reference.
+    x[21]=2.0;CUDA(cudaMemcpy(dx,x.data(),x.size()*sizeof(double),cudaMemcpyHostToDevice));
+    m.fuel=.2;CUDA(cudaMemcpy(dm,&m,sizeof(m),cudaMemcpyHostToDevice));
+    add_boundary_metrics<<<1,32>>>(dm,dx,4,body,ds,true,p.conic_tolerance);
+    decide<<<1,1>>>(ds,p,dm,dx,4,0,0,1,1,records,parameters);
+    State accepted{};CUDA(cudaMemcpy(&accepted,ds,sizeof(accepted),cudaMemcpyDeviceToHost));
+    REQUIRE(accepted.copy_candidate==1 && accepted.result.accepted_iterations==1);
+
+    // Every endpoint mode uses its literal equality and auxiliary cone rows.
+    for(int free_dep=0;free_dep<2;++free_dep)for(int free_arr=0;free_arr<2;++free_arr) {
+        body.free_dep=free_dep;body.free_arr=free_arr;
+        const int ivd=11*4+14*3,iva=ivd+3*free_dep;
+        std::fill(x.begin(),x.end(),0.0);for(int i=0;i<4;++i)x[7*i+6]=1.0;
+        x[0]=1.0;x[21]=2.0;
+        if(free_dep) {x[3]=.1;x[ivd]=.1;}
+        if(free_arr) {x[24]=.1;x[iva]=.1;}
+        State ref{};ref.result.departure_vinf[0]=free_dep?.1:0;
+        ref.result.arrival_vinf[0]=free_arr?.1:0;
+        for(int test=0;test<8;++test) {
+            auto input=x;auto state=ref;
+            if(test==1)input[6]=.9; // Initial mass equality; final mass stays free.
+            if(test==2)input[27]=.7;
+            if(test==3)input[24]+=.03; // State/auxiliary mismatch must not hide in free mode.
+            if(test==4)input[21]=INFINITY;
+            if(test==5 && free_dep) {input[3]=.3;input[ivd]=.3;state.result.departure_vinf[0]=.3;}
+            if(test==6 && free_arr) {input[24]=.3;input[iva]=.3;state.result.arrival_vinf[0]=.3;}
+            if(test==7)input[21]+=p.conic_tolerance/2;
+            CUDA(cudaMemcpy(ds,&state,sizeof(state),cudaMemcpyHostToDevice));
+            CUDA(cudaMemcpy(dx,input.data(),input.size()*sizeof(double),cudaMemcpyHostToDevice));
+            for(bool candidate:{false,true}) {
+                Metrics zero{};CUDA(cudaMemcpy(dm,&zero,sizeof(zero),cudaMemcpyHostToDevice));
+                add_boundary_metrics<<<1,32>>>(dm,dx,4,body,ds,candidate,p.conic_tolerance);
+                Metrics got{};CUDA(cudaMemcpy(&got,dm,sizeof(got),cudaMemcpyDeviceToHost));
+                if(test==4) {REQUIRE(got.invalid==1);continue;}
+                double expected=test==1?.1:test==3?.03:
+                    (test==5&&free_dep)||(test==6&&free_arr)?.1:0.0;
+                REQUIRE(got.invalid==0);
+                REQUIRE(std::abs(got.boundary_penalty-std::max(expected-p.conic_tolerance,0.0))<1e-14);
+                REQUIRE(test==7 ? got.boundary_defect>0 && got.boundary_defect<p.conic_tolerance
+                    : std::abs(got.boundary_defect-expected)<1e-14);
+            }
+        }
+    }
+    // A boundary-infeasible stationary candidate and polish refresh cannot qualify.
+    for(bool polish:{false,true}) {
+        State state{};state.merit=1;state.trust_state=.2;state.trust_control=1;
+        state.polishing=polish;state.polish_left=4;state.command.refresh=polish;
+        state.result.virtual_inf=0;
+        Metrics bad{1,0,0,0,0,0,0};bad.boundary_defect=2*p.defect_tolerance;
+        CUDA(cudaMemcpy(ds,&state,sizeof(state),cudaMemcpyHostToDevice));
+        CUDA(cudaMemcpy(dm,&bad,sizeof(bad),cudaMemcpyHostToDevice));
+        if(polish)set_reference<<<1,1>>>(ds,dm,p,true);
+        else decide<<<1,1>>>(ds,p,dm,dx,4,0,0,1,1,records,parameters);
+        State out{};CUDA(cudaMemcpy(&out,ds,sizeof(out),cudaMemcpyDeviceToHost));
+        REQUIRE(out.result.status!=1 && !out.command.done);
+    }
+    CUDA(cudaFree(ds));CUDA(cudaFree(dm));CUDA(cudaFree(dx));CUDA(cudaFree(records));CUDA(cudaFree(parameters));
+}
+
 int main() {
+    boundary_merit();
     initial_velocity_outputs();
     controller();
     for (int n:{4,37,4097,10001}) for (bool poison:{false,true}) reductions(n,poison);
-    std::puts("PASS: 22 controller branches, 18 bounded-retry transitions, 48 stationary-failure transitions, 10 final states, 5 polish confirmations, 8 multi-block reductions, 24 physical thrust gates");
+    std::puts("PASS: boundary-corrective acceptance, 64 endpoint/auxiliary checks, 2 boundary convergence guards, 22 controller branches, 18 bounded-retry transitions, 48 stationary-failure transitions, 10 final states, 5 polish confirmations, 8 multi-block reductions, 24 physical thrust gates");
 }

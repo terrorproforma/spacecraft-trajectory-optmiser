@@ -1,0 +1,62 @@
+{
+  "stage": "prepared_only",
+  "changed_ship": 8,
+  "source_result_sha256": "97d1f351bf6ad4907ddce887aa47d1fa974f587ab270374f4bb46a5898491d48",
+  "certified_route_result_sha256": "931defc362c9299d28d089aa46130c05f92bf9ee38ea03d870b4dc2a83915946",
+  "composed_result_sha256": "63446ebf3ff1298911bccade7b789a8fb68a0f7db4171906c8e6783a7f174bab",
+  "all_other_22_ship_sections_byte_exact": true,
+  "source_ship8_matches_historical_v767_exactly": true,
+  "unchanged_footprints": true,
+  "required_ships": 23,
+  "required_asteroids": 200,
+  "baseline": {
+    "ok": true,
+    "ships": 23,
+    "mined_asteroids": 200,
+    "total_mass_kg": 14271.0472279267,
+    "weighted_score_fixed_bonus_kg": 12992.035662031367,
+    "weighted_score_dynamic_kg": null,
+    "ship_limit": 23.9284574183138,
+    "max_position_error_km": 26.573131056532365,
+    "max_velocity_error_km_s": 4.949671007934027e-06,
+    "max_mass_error_kg": 1.0049916454590857e-10,
+    "violations": []
+  },
+  "certified_delta": {
+    "both_checkers_passed": true,
+    "raw_kg": 14044.791238877497,
+    "weighted_kg": 12843.92777477852,
+    "raw_delta_from_retained_kg": 0.43805612589858356,
+    "weighted_delta_from_retained_kg": 0.37207919333195605,
+    "prescribed_score_matches": true,
+    "score_reporting_bound_kg": 1e-08,
+    "physics_tolerances_unchanged": true,
+    "accepted_improvement": true,
+    "incumbent_promoted": false
+  },
+  "expected_raw_kg": 14271.485284052598,
+  "expected_weighted_kg": 12992.407741224699,
+  "reporting_bound_kg": 1e-08,
+  "hard_deadline_seconds": 120,
+  "TERM_grace_seconds": 10,
+  "KILL_reap_seconds": 30,
+  "calls": {
+    "independent_fullfleet": 1,
+    "official_fullfleet": 1,
+    "GPU": 0,
+    "SCvx": 0,
+    "search": 0,
+    "extra_leg_certificates": 0
+  },
+  "source_sha256": {
+    "build/performance/seeded-current-composition-v628/prepare.py": "adef9f96eaaed5f607c512c772a87b03351b364afb280676b8de29690a4d8026",
+    "build/performance/seeded-current-composition-v628/run.py": "1e7be75d126606a7f352793fb96fca6384c4d28c521e989e889892bd78405229",
+    "results/lambda/2026-09-09/gpu-regeneration-v799/h100-best/Result.txt": "97d1f351bf6ad4907ddce887aa47d1fa974f587ab270374f4bb46a5898491d48",
+    "results/lambda/2026-09-09/gpu-regeneration-v799/h100-best/campaign-report.json": "57d60897d8a6d44c131eac524bf69e895884e000c4ba3948f595c29139732d3a",
+    "build/performance/seeded-candidate-boundary-merit-v627/campaign/output/fleet/Result.txt": "931defc362c9299d28d089aa46130c05f92bf9ee38ea03d870b4dc2a83915946",
+    "build/performance/seeded-candidate-boundary-merit-v627/campaign/output/report.json": "3b5ffb1b56f2e53446a4fb18bb10489b311b3d85d298927a4432ab029fd52015",
+    "build/performance/seeded-candidate-boundary-merit-v627/campaign/output/fleet/checker-binding.json": "d283fe68c145fa7562076c1b67e70af28b578a3c7703d6c8e99998d88e8d0a89",
+    "build/performance/seeded-candidate-boundary-merit-v627/campaign/ready.json": "fa26177cd9ec3b452f68f7ce37407a00125ca7885a06b963d2525b7df5d3d56c",
+    "build/performance/refinement-queue-v623/inputs/incumbent.txt": "d368babcf0656ab55b9a21bd8ccde4eef22629a37f9bc8f8a1877eb15a3e7efa"
+  }
+}

@@ -67,3 +67,32 @@ and a direct comparison against the best qualified GPU baseline. All conversion,
 correction, failure and certification time must be counted. If that path fails
 to improve complete time to verified accuracy, this one diagnostic is not a
 reason to retain it in production. The PDHCG core remains the method under test.
+
+## v626 isolated GPU diagnostic
+
+The next diagnostic implements the equality-constrained least-squares correction
+with one GPU QR factorization, one application of its orthogonal factor and two
+triangular solves. It targets zero original gap, keeps every primal/slack and
+retained dual value fixed, and retains all original KKT thresholds. Ten small
+GPU cases produce the intended two numerical passes and eight rejections.
+
+One correction of the same saved original PDHCG iterate passes both independent
+long-double and 65-digit original-coordinate audits. Its exact signed gap is
+approximately -5.112e-17; the unscaled stationarity norm improves from 1.587e-5
+to 7.176e-6. However, the diagnostic **rejects** the candidate because its
+separate numerical-quality rule fails. The inherited native termination also
+remains `ITERATION_LIMIT`; there is no production qualification or integration.
+
+The quality rejection is understood from saved arithmetic: four isolated
+zero-right-hand-side columns receive rounding corrections around 1e-23. The
+componentwise quality ratio divides each correction by its own magnitude and
+therefore reports one. The largest absolute normal-equation residual across all
+columns is about 1.37e-19. That explains the result but does not retrospectively
+change the frozen rule or promote the candidate. Exact elimination of those
+isolated coordinates or a justified backward-error rule needs a separate test.
+
+Evaluation takes 195.520 ms, with 218.238 ms of workspace creation measured
+separately; the complete launched process takes 569.874 ms. This is not a
+speedup result. Before another numerical policy is tried, a bounded phase
+profile should identify where that time goes. The diagnostic remains separate
+from the mission's GPU QOCO backend and earns no fleet score.

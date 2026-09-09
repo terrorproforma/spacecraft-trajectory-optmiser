@@ -1,0 +1,68 @@
+{
+  "status": "passed",
+  "checked_utc": "2026-09-09T00:18:39.848Z",
+  "http_checks": [
+    {
+      "path": "index.html",
+      "status": 200,
+      "bytes": 19940,
+      "sha256": "1ef5ba45c16bfc5241abb16e7ecccfdcf7fddf1b255f83df9baba969e072b46e"
+    },
+    {
+      "path": "app.js",
+      "status": 200,
+      "bytes": 57911,
+      "sha256": "16fa51b50e5dd3dfdb2afa9c3a4e05876fd0890b68747817060e0f11cade3c99"
+    },
+    {
+      "path": "data/gtoc12-current-composition-v628/manifest.json",
+      "status": 200,
+      "bytes": 2558,
+      "sha256": "f94cc18b6a0f62610a3c5fdf2c65cd79ebf0c1a7a01bd18f842dddd0b6bbf672"
+    },
+    {
+      "path": "data/gtoc12-current-composition-v628/fleet.json",
+      "status": 200,
+      "bytes": 2171410,
+      "sha256": "71b13d7e3cd02261c1ff768f75dbb0271f9aa1c046be0e74f6a94c8f6a96ddde"
+    },
+    {
+      "path": "data/gtoc12-current-composition-v628/compute.json",
+      "status": 200,
+      "bytes": 2263,
+      "sha256": "99ed6a00b1af82a876f60e0dd68606e868069253b13233e058117b86e7bc09f6"
+    },
+    {
+      "path": "data/gtoc12-current-composition-v628/checker-binding.json",
+      "status": 200,
+      "bytes": 912,
+      "sha256": "befa31537963ef51d8d7817a9ef680022a16c2f56b76dee1297c1697b32ba89d"
+    }
+  ],
+  "stages": [
+    {
+      "name": "schema",
+      "command": [
+        "node",
+        "scripts/check.mjs"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "syntax",
+      "command": [
+        "node",
+        "--check",
+        "app.js"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "url": "http://127.0.0.1:4173/?dataset=gtoc12-current-composition-v628&ship=8&epoch=69807&preset=oblique&z=1",
+  "default_dataset": "gtoc12-current-composition-v628",
+  "H100_v799_and_historical_v627_retained": true,
+  "stale_v595_best_label_removed": true,
+  "independent_history_audit_sha256": "d22bd60ba92d5caf816fefd9b82acaafb2d0fec4b2b05c6270f206d6fa99f37c",
+  "server": "Existing localhost:4173 server returned exact local bytes; no server was started or stopped.",
+  "browser_visual_check": "HTTP and data/schema verification only; parent will open the user-facing URL."
+}

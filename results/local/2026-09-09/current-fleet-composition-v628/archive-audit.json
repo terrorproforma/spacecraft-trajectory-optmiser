@@ -1,0 +1,23 @@
+{
+  "status": "all_gzip_roundtrips_byte_exact",
+  "files": [
+    {
+      "path": "viewer/export/trajectories.json.gz",
+      "source": "build/performance/current-composition-visualizer-v628/export/trajectories.json",
+      "compressed_bytes": 3355994,
+      "compressed_sha256": "2ccb996158ab167c2cc8da3bf6c7610d5b31102a032ee422d67a2cb634edbf76",
+      "uncompressed_bytes": 14221957,
+      "uncompressed_sha256": "5c1827b691839064aaebbcd71991746a2ecb0693af78bea957c01840cf345d9c",
+      "roundtrip_exact": true
+    },
+    {
+      "path": "viewer/installed/fleet.json.gz",
+      "source": "results/lambda/2026-09-06/visualiser/data/gtoc12-current-composition-v628/fleet.json",
+      "compressed_bytes": 515373,
+      "compressed_sha256": "c68c07b751223124409acbe91285c254beef215a17d1773aca0393d74be9dbed",
+      "uncompressed_bytes": 2171410,
+      "uncompressed_sha256": "71b13d7e3cd02261c1ff768f75dbb0271f9aa1c046be0e74f6a94c8f6a96ddde",
+      "roundtrip_exact": true
+    }
+  ]
+}

@@ -16,6 +16,16 @@ matching initial position/mass and matching fixed departure velocity. A free
 departure velocity is preserved as recorded. A seed is an iterate, not a
 certificate; the digest identifies its source but does not prove feasibility.
 
+The later `allow_mesh_refinement=True` option permits a seed to add interval
+boundaries. Every generated node and both leg endpoints must remain exactly
+present; moving or deleting nodes is rejected. The selected mesh drives native
+interval integration and fuel weights through the existing nonuniform-time
+interface. This lets a one-day archived burn end inside a default two-day
+interval without doubling its duration or averaging its thrust. The caller
+still supplies the complete physical ZOH schedule, and all original conic,
+SCvx and independent physics gates remain unchanged. The option defaults to
+false and neither propagates a trajectory on the CPU nor changes the native ABI.
+
 The native bridge uploads the physical initial state and thrust schedule once.
 On the GPU, DOP853 advances each original constant-thrust interval, constructs
 the state scaling and Gamma, and writes directly into the retained SCvx buffers.

@@ -14,7 +14,15 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
-The latest verified fleet reaches **12,992.036 weighted kg / 14,271.047 raw kg**:
+The latest locally verified fleet reaches **12,992.408 weighted kg / 14,271.485 raw
+kg**, with 23 ships, 200 asteroids and **620.499 raw kg per ship**. A GPU endpoint-merit
+fix lets a previously rejected route correction certify, adding 0.372079 weighted
+kg to the H100 v799 fleet. Both full-fleet checkers accept the combined Result;
+the other 22 ships are byte-identical. The new controller was tested on RTX 5090;
+the combined fleet is not a fresh H100 solver run.
+[Current result, exact files and visualiser loading instructions](results/local/2026-09-09/current-fleet-composition-v628/README.md).
+
+The preceding v799 fleet reached **12,992.036 weighted kg / 14,271.047 raw kg**:
 **148.480 weighted kg gained**, 23 ships, 200 asteroids and **620.480 raw kg per
 ship**. A wider raw-mass search generates 10,971 candidate routes; 373 native
 leg attempts produce 18 certified routes, and CUDA selects nine replacements.
@@ -23,6 +31,16 @@ downloaded and displayed in the web visualiser. An exhaustive 44-column fleet
 search confirms the selection in 1.884 seconds on H100; broader mission search
 and complete GPU control remain open work.
 [Results, measured throughput, remaining GPU work and loading instructions](docs/GPU_FLEET_REGENERATION.md).
+
+A separate matched refinement test fixes an outer-controller bug: an exactly
+propagated seed's destination error was missing from the acceptance cost. With
+that error included on GPU, the formerly rejected transfer certifies in four
+accepted steps. The historical comparison is retained alongside the current
+composition. [Endpoint-merit correction and verified method regression](docs/SCVX_ENDPOINT_MERIT.md).
+
+[Next priorities toward SOTA](docs/SOTA_EXECUTION_PLAN_2026-09-09.md#current-checkpoint-and-next-work):
+better verified routes, retained GPU search workspaces and device control, reliable
+PDHCG qualification, and matched complete-system performance comparisons.
 
 CUDA insertion search can now vary deployment and collection flight splits
 independently. A five-point grid screened **12.48 million schedules per GPU** on
@@ -800,8 +818,8 @@ apply to their named fixtures; they are not universal speedup claims.
 ## GTOC12 score versus the published leaderboard
 
 The comparison below records the earlier v595 snapshot. The current independently
-verified result is **12,843.556 weighted kg**; see the
-[new mission evidence](docs/GPU_ROUTE_HILLCLIMB.md). This update makes no new
+verified result is **12,992.408 weighted kg**; see the
+[new mission evidence](results/local/2026-09-09/current-fleet-composition-v628/README.md). This update makes no new
 official leaderboard-placement claim.
 
 Our verified `orphan_recovery_v595` snapshot collects **14,051.855 kg**, using **23 ships**

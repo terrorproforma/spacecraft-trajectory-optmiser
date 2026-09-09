@@ -21,14 +21,19 @@ class ZohTrajectorySeed:
     and an inactive zero final vector. The source digest identifies the archive;
     it is not itself a physical certificate. Inputs are copied into immutable
     FP64 buffers; no thrust clipping, normalization or interpolation occurs here.
+    ``allow_mesh_refinement`` permits additional burn/coast boundaries while
+    retaining every ordinary solver node and both leg endpoint epochs exactly.
     """
 
     node_epochs_mjd: NDArray[np.float64]
     initial_state: NDArray[np.float64]
     thrust_n: NDArray[np.float64]
     source_sha256: str
+    allow_mesh_refinement: bool = False
 
     def __post_init__(self) -> None:
+        if type(self.allow_mesh_refinement) is not bool:
+            raise ValueError("seed allow_mesh_refinement must be a bool")
         if (
             not isinstance(self.source_sha256, str)
             or len(self.source_sha256) != 64
@@ -57,6 +62,27 @@ class ZohTrajectorySeed:
             frozen = np.frombuffer(array.tobytes(order="C"), dtype=np.float64).reshape(array.shape)
             object.__setattr__(self, name, frozen)
 
+    def solver_node_epochs(self, generated_epochs: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Select an exact refinement without moving or deleting generated nodes.
+
+        Additional boundaries preserve a supplied ZOH burn's duration when its
+        endpoint falls inside a generated interval. This changes transcription
+        topology only; callers still supply every physical thrust vector.
+        """
+        if not self.allow_mesh_refinement:
+            if not np.array_equal(self.node_epochs_mjd, generated_epochs):
+                raise ValueError("seed node epochs must exactly match the generated solver grid")
+            return self.node_epochs_mjd
+        epochs = self.node_epochs_mjd
+        if epochs[0] != generated_epochs[0] or epochs[-1] != generated_epochs[-1]:
+            raise ValueError("seed mesh refinement must preserve both generated endpoints")
+        indices = np.searchsorted(epochs, generated_epochs)
+        if np.any(indices >= len(epochs)) or not np.array_equal(
+            epochs[indices], generated_epochs
+        ):
+            raise ValueError("seed mesh refinement must retain every generated solver node")
+        return epochs
+
     def validate_for(
         self,
         boundary: LegBoundary,
@@ -68,7 +94,12 @@ class ZohTrajectorySeed:
         if settings.seed_backend == "numpy":
             raise ValueError("a ZOH trajectory seed cannot select the NumPy seed ablation")
         if not np.array_equal(self.node_epochs_mjd, node_epochs_mjd):
-            raise ValueError("seed node epochs must exactly match the generated solver grid")
+            raise ValueError("seed node epochs must exactly match the selected solver grid")
+        if (
+            self.node_epochs_mjd[0] != boundary.departure_epoch
+            or self.node_epochs_mjd[-1] != boundary.arrival_epoch
+        ):
+            raise ValueError("seed node epochs must exactly match both leg boundary epochs")
         if (
             not math.isfinite(boundary.initial_mass)
             or self.initial_state[6] != boundary.initial_mass

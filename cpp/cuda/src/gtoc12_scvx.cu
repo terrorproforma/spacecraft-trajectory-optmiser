@@ -30,7 +30,48 @@ struct State {
     int graph_timeout;
 };
 struct GraphExit { int done,error,iterations,timeout; };
-struct Metrics { double fuel, penalty, virtual_sum, defect, virtual_inf, step, invalid; };
+struct Metrics {
+    double fuel, penalty, virtual_sum, defect, virtual_inf, step, invalid;
+    double boundary_penalty=0.0, boundary_defect=0.0;
+};
+struct BoundaryTargets { double values[12]; int free_dep,free_arr; double vinf_max; };
+
+// An exactly propagated reference can still miss its prescribed rendezvous.
+// Price the original endpoint equalities and free-vinf cones in both merits;
+// otherwise a wrong-arrival, low-fuel reference can reject every corrective step.
+__global__ void add_boundary_metrics(Metrics* m,const double* x,int nodes,
+    BoundaryTargets b,const State* state,bool candidate,double tolerance,const int* enabled=nullptr) {
+    if(enabled && !*enabled) return;
+    const int lane=threadIdx.x;
+    const int ivd=11*nodes+14*(nodes-1),iva=ivd+3*b.free_dep;
+    double violation=0.0;
+    if(lane<12) {
+        const int end=lane/6,j=lane%6,offset=end ? 7*(nodes-1) : 0;
+        const bool free=end ? b.free_arr : b.free_dep;
+        double eta=0.0;
+        if(j>=3 && free) eta=candidate ? x[(end ? iva : ivd)+j-3]
+            : (end ? state->result.arrival_vinf[j-3] : state->result.departure_vinf[j-3]);
+        violation=fabs(x[offset+j]-b.values[lane]-eta);
+    } else if(lane==12) violation=fabs(x[6]-1.0);
+    else if((lane==13 && b.free_dep) || (lane==14 && b.free_arr)) {
+        const int end=lane-13;
+        double eta[3];
+        for(int j=0;j<3;++j) eta[j]=candidate ? x[(end ? iva : ivd)+j]
+            : (end ? state->result.arrival_vinf[j] : state->result.departure_vinf[j]);
+        const double speed=hypot(hypot(eta[0],eta[1]),eta[2]);
+        violation=isfinite(speed) ? fmax(speed-b.vinf_max,0.0) : INFINITY;
+    }
+    const unsigned invalid=__ballot_sync(0xffffffff,!isfinite(violation));
+    double penalty=isfinite(violation) ? fmax(violation-tolerance,0.0) : INFINITY;
+    for(int offset=16;offset;offset/=2) {
+        penalty+=__shfl_down_sync(0xffffffff,penalty,offset);
+        violation=fmax(violation,__shfl_down_sync(0xffffffff,violation,offset));
+    }
+    if(!lane) {
+        m->boundary_penalty=penalty;m->boundary_defect=violation;
+        if(invalid || !isfinite(penalty)) m->invalid=1.0;
+    }
+}
 
 __global__ void reduce_metrics(int nodes, int variables, const double* candidate,
     const double* controls, const double* virtuals, const double* reference,
@@ -117,12 +158,13 @@ __global__ void initialize_vinf(State* s, const double* states, int nodes,
 
 __global__ void set_reference(State* s, const Metrics* m, Settings p, bool only_refresh=false) {
     if (only_refresh && !s->command.refresh) return;
-    const double merit=m->fuel+p.virtual_weight*m->penalty;
+    const double merit=m->fuel+p.virtual_weight*(m->penalty+m->boundary_penalty);
     // Polishing starts only after an accepted, feasible convergence step.
     // Validate that same point with the finer propagator before asking the IPM
     // for another near-identical solve. Budget/trust exhaustion is no substitute.
     const bool confirmed=only_refresh && s->polishing && !m->invalid
-        && m->defect<=p.defect_tolerance && s->result.virtual_inf<=10.0*p.defect_tolerance
+        && m->defect<=p.defect_tolerance && m->boundary_defect<=p.defect_tolerance
+        && s->result.virtual_inf<=10.0*p.defect_tolerance
         && isfinite(merit) && fabs(merit-s->merit)<=p.objective_tolerance;
     s->merit=merit;
     s->result.max_defect=m->defect;
@@ -171,14 +213,16 @@ __global__ void decide(State* s, Settings p, const Metrics* m, const double* x,
         }
     } else {
         s->inaccurate_retries=0;
-        const double merit=m->fuel+p.virtual_weight*m->penalty;
-        const double predicted=s->merit-(m->fuel+p.virtual_weight*m->virtual_sum);
+        const double merit=m->fuel+p.virtual_weight*(m->penalty+m->boundary_penalty);
+        const double model=m->fuel+p.virtual_weight*(m->virtual_sum+m->boundary_penalty);
+        const double predicted=s->merit-model;
         const double actual=s->merit-merit;
         const double ratio=predicted>1e-15 ? actual/predicted : (actual>=0.0 ? 1.0 : -1.0);
         record.merit=merit; record.final_mass_fraction=x[7*nodes-1]; record.max_defect=m->defect;
         record.virtual_inf=m->virtual_inf; record.ratio=ratio; record.step=m->step;
         record.trust_state=s->trust_state; record.trust_control=s->trust_control;
-        const bool feasible=m->defect<=p.defect_tolerance && m->virtual_inf<=10.0*p.defect_tolerance;
+        const bool feasible=m->defect<=p.defect_tolerance && m->boundary_defect<=p.defect_tolerance
+            && m->virtual_inf<=10.0*p.defect_tolerance;
         // A ratio of two negligible merit differences has no useful sign.
         // Accept a feasible stationary candidate using BOTH existing absolute
         // objective bounds, then retain the usual finer-propagation check.
@@ -194,7 +238,6 @@ __global__ void decide(State* s, Settings p, const Metrics* m, const double* x,
         // does not, so their absolute difference need not vanish at stagnation.
         // This local termination avoids a long trust-collapse tail;
         // callers may still retry this boundary or another seed.
-        const double model=m->fuel+p.virtual_weight*m->virtual_sum;
         const bool stalled=stop_stationary && !feasible && m->step<=p.step_tolerance
             && s->stationary_model_valid && fabs(model-s->stationary_model)<=p.objective_tolerance
             && fabs(actual)<=p.objective_tolerance;
@@ -427,6 +470,9 @@ static int solve_impl(int intervals,int hold,int free_dep,int free_arr,
     spacepdhcg_gtoc12_conic_dimensions dimensions{};
     if (spacepdhcg_gtoc12_qoco_get_dimensions(w.qoco,&dimensions)) return 2;
     const int nodes=intervals+1, budget=p.max_iterations+p.polish_iterations;
+    BoundaryTargets endpoints{};
+    std::copy(boundary,boundary+12,endpoints.values);
+    endpoints.free_dep=free_dep;endpoints.free_arr=free_arr;endpoints.vinf_max=p.vinf_max;
     const int blocks=std::min(256,(dimensions.variables+255)/256);
     if (cudaStreamCreateWithFlags(&w.stream,cudaStreamNonBlocking)!=cudaSuccess
         || !allocate(&w.states,7*nodes) || !allocate(&w.controls,4*nodes) || !allocate(&w.fuel,nodes)
@@ -462,6 +508,7 @@ static int solve_impl(int intervals,int hold,int free_dep,int free_arr,
             candidate ? w.controls : nullptr,propagated,invalid,w.fuel,p.conic_tolerance,
             hold ? nodes : nodes-1,w.partial);
         finish_metrics<<<1,256,0,w.stream>>>(blocks,w.partial,w.metrics);
+        add_boundary_metrics<<<1,32,0,w.stream>>>(w.metrics,x,nodes,endpoints,w.state,candidate,p.conic_tolerance);
         return cudaGetLastError()==cudaSuccess ? 0 : 2;
     };
     struct ConsumerContext {
@@ -501,6 +548,7 @@ static int solve_impl(int intervals,int hold,int free_dep,int free_arr,
             nullptr,nullptr,propagated,invalid,w.fuel,p.conic_tolerance,
             hold ? nodes : nodes-1,w.partial,enabled);
         finish_metrics<<<1,256,0,w.stream>>>(blocks,w.partial,w.metrics,enabled);
+        add_boundary_metrics<<<1,32,0,w.stream>>>(w.metrics,w.states,nodes,endpoints,w.state,false,p.conic_tolerance,enabled);
         set_reference<<<1,1,0,w.stream>>>(w.state,w.metrics,p,true);
         return cudaGetLastError()==cudaSuccess ? 0 : 2;
     };

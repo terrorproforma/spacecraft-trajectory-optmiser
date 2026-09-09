@@ -143,6 +143,65 @@ def test_exact_seed_reaches_native_without_host_rollout(monkeypatch):
     assert seen == [values["initial_state"].tobytes()]
 
 
+def refined_seed_values():
+    values = seed_values()
+    values["node_epochs_mjd"] = np.array([64400.0, 64402.0, 64403.0, 64404.0, 64406.0])
+    # The one-day burn must stop at the added seam, followed by one day of coast.
+    values["thrust_n"] = np.array(
+        [[0.0, 0.0, 0.0], [0.0, 0.6, 0.0], [0.0, 0.0, 0.0],
+         [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+    )
+    values["allow_mesh_refinement"] = True
+    return values
+
+
+def test_explicit_refinement_preserves_burn_duration_and_fuel_weights(monkeypatch):
+    seed = ZohTrajectorySeed(**refined_seed_values())
+    seen = []
+
+    def observed(bnd, config, model, times, days, bvalues, fuel, states, controls, started,
+                 *, seed):
+        assert states is controls is None
+        np.testing.assert_array_equal(days, [0.0, 2.0, 3.0, 4.0, 6.0])
+        np.testing.assert_array_equal(bnd.departure_epoch + days, seed.node_epochs_mjd)
+        np.testing.assert_array_equal(fuel[:-1], np.diff(times) * model.lam)
+        assert fuel[-1] == 0.0
+        impulse = np.dot(np.diff(days), np.linalg.norm(seed.thrust_n[:-1], axis=1))
+        assert impulse == 0.6  # N days: one day of thrust, not two.
+        seen.append(seed.thrust_n.tobytes())
+        return "refined-native-result"
+
+    monkeypatch.setattr(gpu_scvx, "solve_native", observed)
+    assert low_thrust.solve_leg(boundary(), settings(), seed=seed) == "refined-native-result"
+    assert seen == [seed.thrust_n.tobytes()]
+
+
+@pytest.mark.parametrize("change", ["no_opt_in", "missing_node", "moved_node", "start", "end"])
+def test_mesh_refinement_rejects_changed_or_deleted_generated_nodes(change):
+    values = refined_seed_values()
+    if change == "no_opt_in":
+        values["allow_mesh_refinement"] = False
+    elif change == "missing_node":
+        values["node_epochs_mjd"] = np.delete(values["node_epochs_mjd"], 1)
+        values["thrust_n"] = np.delete(values["thrust_n"], 1, axis=0)
+    elif change == "moved_node":
+        values["node_epochs_mjd"][1] = np.nextafter(64402.0, np.inf)
+    elif change == "start":
+        values["node_epochs_mjd"][0] -= 1.0
+    else:
+        values["node_epochs_mjd"][-1] += 1.0
+    with pytest.raises(ValueError, match="generated"):
+        low_thrust.solve_leg(boundary(), settings(), seed=ZohTrajectorySeed(**values))
+
+
+@pytest.mark.parametrize("value", [1, "yes", None])
+def test_mesh_refinement_flag_is_explicit_boolean(value):
+    values = seed_values()
+    values["allow_mesh_refinement"] = value
+    with pytest.raises(ValueError, match="must be a bool"):
+        ZohTrajectorySeed(**values)
+
+
 class StubSolve:
     """A Python ctypes-call sink, not a numerical solver or native library."""
 

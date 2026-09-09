@@ -1,0 +1,362 @@
+{
+  "candidate": {
+    "acceptance": {
+      "accepted_improvement": true,
+      "both_checkers_passed": true,
+      "incumbent_promoted": false,
+      "physics_tolerances_unchanged": true,
+      "prescribed_score_matches": true,
+      "raw_delta_from_retained_kg": 0.43805612589858356,
+      "raw_kg": 14044.791238877497,
+      "score_reporting_bound_kg": 1e-8,
+      "weighted_delta_from_retained_kg": 0.37207919333195605,
+      "weighted_kg": 12843.92777477852
+    },
+    "newly_solved_ship": 8,
+    "retained_ships": 22,
+    "verified_positive_gain": true
+  },
+  "current_incumbent_context": {
+    "candidate_ship8_footprint": [
+      15206,
+      15785,
+      16048,
+      26251,
+      33441,
+      37789,
+      51006,
+      59653
+    ],
+    "current_incumbent": {
+      "independent": {
+        "max_mass_error_kg": 1.0049916454590857e-10,
+        "max_position_error_km": 26.573131056532365,
+        "max_velocity_error_km_s": 0.000004949671007934027,
+        "mined_asteroids": 200,
+        "ok": true,
+        "ship_limit": 23.9284574183138,
+        "ships": 23,
+        "total_mass_kg": 14271.0472279267,
+        "violations": [],
+        "weighted_score_dynamic_kg": null,
+        "weighted_score_fixed_bonus_kg": 12992.035662031367
+      },
+      "official": {
+        "message": "Check successfully!",
+        "mined_asteroids": 200,
+        "ok": true,
+        "return_code": 0,
+        "ships": 23,
+        "total_mass_kg": 14271,
+        "wall_seconds": 0.35695940698497
+      },
+      "result_sha256": "97d1f351bf6ad4907ddce887aa47d1fa974f587ab270374f4bb46a5898491d48",
+      "version": "v799 H100"
+    },
+    "current_minus_v627_weighted_kg": 148.10788725284692,
+    "current_route_overlaps": [
+      {
+        "asteroids": [
+          15206,
+          15785,
+          16048,
+          26251,
+          33441,
+          37789,
+          51006,
+          59653
+        ],
+        "candidate_events": [
+          [
+            0,
+            64373
+          ],
+          [
+            26251,
+            64973
+          ],
+          [
+            59653,
+            65120
+          ],
+          [
+            15206,
+            65455
+          ],
+          [
+            15785,
+            65685
+          ],
+          [
+            37789,
+            65939
+          ],
+          [
+            51006,
+            66188
+          ],
+          [
+            16048,
+            66467
+          ],
+          [
+            33441,
+            67012
+          ],
+          [
+            26251,
+            67868
+          ],
+          [
+            16048,
+            68353
+          ],
+          [
+            15206,
+            68523
+          ],
+          [
+            51006,
+            68641
+          ],
+          [
+            37789,
+            68738
+          ],
+          [
+            15785,
+            68918
+          ],
+          [
+            33441,
+            69038
+          ],
+          [
+            59653,
+            69218
+          ]
+        ],
+        "current_bytes_match_candidate_ship8": false,
+        "current_bytes_match_historical_ship8": true,
+        "current_events": [
+          [
+            0,
+            64373
+          ],
+          [
+            26251,
+            64973
+          ],
+          [
+            59653,
+            65120
+          ],
+          [
+            15206,
+            65455
+          ],
+          [
+            15785,
+            65685
+          ],
+          [
+            37789,
+            65939
+          ],
+          [
+            51006,
+            66188
+          ],
+          [
+            16048,
+            66467
+          ],
+          [
+            33441,
+            67028
+          ],
+          [
+            26251,
+            67868
+          ],
+          [
+            16048,
+            68353
+          ],
+          [
+            15206,
+            68523
+          ],
+          [
+            51006,
+            68641
+          ],
+          [
+            37789,
+            68738
+          ],
+          [
+            15785,
+            68918
+          ],
+          [
+            33441,
+            69038
+          ],
+          [
+            59653,
+            69218
+          ]
+        ],
+        "exact_footprint": true,
+        "historical_baseline_events": [
+          [
+            0,
+            64373
+          ],
+          [
+            26251,
+            64973
+          ],
+          [
+            59653,
+            65120
+          ],
+          [
+            15206,
+            65455
+          ],
+          [
+            15785,
+            65685
+          ],
+          [
+            37789,
+            65939
+          ],
+          [
+            51006,
+            66188
+          ],
+          [
+            16048,
+            66467
+          ],
+          [
+            33441,
+            67028
+          ],
+          [
+            26251,
+            67868
+          ],
+          [
+            16048,
+            68353
+          ],
+          [
+            15206,
+            68523
+          ],
+          [
+            51006,
+            68641
+          ],
+          [
+            37789,
+            68738
+          ],
+          [
+            15785,
+            68918
+          ],
+          [
+            33441,
+            69038
+          ],
+          [
+            59653,
+            69218
+          ]
+        ],
+        "miner_count": 8,
+        "overlap": [
+          15206,
+          15785,
+          16048,
+          26251,
+          33441,
+          37789,
+          51006,
+          59653
+        ],
+        "ship": 8
+      }
+    ],
+    "historical_method_regression": {
+      "is_current_best": false,
+      "raw_kg": 14044.791238877497,
+      "result_sha256": "931defc362c9299d28d089aa46130c05f92bf9ee38ea03d870b4dc2a83915946",
+      "version": "v627 against v767",
+      "weighted_kg": 12843.92777477852
+    },
+    "scope": "Saved checker reports and Result parsing only; no propagation or fresh checker call.",
+    "source_sha256": {
+      "build/performance/refinement-queue-v623/inputs/incumbent.txt": "d368babcf0656ab55b9a21bd8ccde4eef22629a37f9bc8f8a1877eb15a3e7efa",
+      "build/performance/seeded-candidate-boundary-merit-v627/campaign/output/fleet/Result.txt": "931defc362c9299d28d089aa46130c05f92bf9ee38ea03d870b4dc2a83915946",
+      "build/performance/seeded-candidate-boundary-merit-v627/campaign/output/fleet/checker-binding.json": "d283fe68c145fa7562076c1b67e70af28b578a3c7703d6c8e99998d88e8d0a89",
+      "build/performance/seeded-candidate-visualizer-v627/current_context.py": "da11b9158c8030b638c462d9cfb6a11601384e25f1c6242c19666c226b0c092a",
+      "results/lambda/2026-09-09/gpu-regeneration-v799/h100-best/Result.txt": "97d1f351bf6ad4907ddce887aa47d1fa974f587ab270374f4bb46a5898491d48",
+      "results/lambda/2026-09-09/gpu-regeneration-v799/h100-best/campaign-report.json": "57d60897d8a6d44c131eac524bf69e895884e000c4ba3948f595c29139732d3a"
+    }
+  },
+  "dataset_kind": "gtoc12-fleet",
+  "files": {
+    "checker-binding.json": {
+      "bytes": 866,
+      "sha256": "39839e8da25289668007e3b04b0d07efa7296f57fd3cf86de3cc1e970852e2ff"
+    },
+    "compute.json": {
+      "bytes": 9065,
+      "sha256": "09845852d475cb89baf9ddefdefca5e88b2d3f691dbb76cab0cc043d5977025f"
+    },
+    "fleet.json": {
+      "bytes": 2170815,
+      "sha256": "41c68b95ab5260237499ab1b8d9d47925e8c313ea6ceab3ae6fa460eeaafc0bc"
+    }
+  },
+  "kepler_check": {
+    "asteroid_max_error_km": 0.000003589728468840934,
+    "context_points_checked": 73201,
+    "earth_max_error_km": 3.0719530854108674e-7,
+    "tolerance_km": 0.01
+  },
+  "schema_version": "1.0.0",
+  "source": {
+    "catalogue": {
+      "bytes": 6840111,
+      "name": "catalogue-v767.txt",
+      "sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675"
+    },
+    "export_manifest_sha256": "d69dd0c99d55d6fcd3a6fa96afc094a3644f39f634dce381b69a6506a52bdc5a",
+    "export_trajectories_bytes": 10522013,
+    "export_trajectories_sha256": "704ba802aa2df3ce7b1578a0b8735e89eee3050fa40059ddd7c8e9bc2f826523",
+    "fleet_json_sha256": "464fb627899f55ed57ea40180be762372a248f2624bef65d98f57bffeb5c48d8",
+    "generator": "spacepdhcg.gtoc12.pipeline",
+    "independent_verifier_ok": true,
+    "official_verifier_ok": true,
+    "solution_basename": "Result.txt",
+    "solution_bytes": 10096849,
+    "solution_sha256": "931defc362c9299d28d089aa46130c05f92bf9ee38ea03d870b4dc2a83915946",
+    "solution_verified_locally": true,
+    "transform": "Ship8 sampled after the run through frozen CPU verifier model; other22 ships reuse hash-bound v767 replay. Exact-sample decimation, no interpolated visual points; qualification from saved full-fleet checker binding."
+  },
+  "summary": {
+    "events": 436,
+    "official_total_mass_kg": 14044.8,
+    "replay_points": 11679,
+    "ships": 23,
+    "unique_asteroids": 195
+  },
+  "transform": "Verified export copied losslessly (exact samples, indices, hashes); events classified; pinned Keplerian elements attached; Kepler propagation cross-checked against exporter context orbits."
+}

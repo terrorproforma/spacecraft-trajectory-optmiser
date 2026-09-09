@@ -1,0 +1,61 @@
+{
+  "composition": {
+    "inserted_v627_sha256": "931defc362c9299d28d089aa46130c05f92bf9ee38ea03d870b4dc2a83915946",
+    "original_run_incumbent_promoted": false,
+    "other_ship_sections_exact": 22,
+    "qualified": true,
+    "raw_gain_kg": 0.43805612590040255,
+    "replaced_ship": 8,
+    "source_v799_sha256": "97d1f351bf6ad4907ddce887aa47d1fa974f587ab270374f4bb46a5898491d48",
+    "weighted_gain_kg": 0.37207919333013706
+  },
+  "dataset_kind": "gtoc12-fleet",
+  "files": {
+    "checker-binding.json": {
+      "bytes": 912,
+      "sha256": "befa31537963ef51d8d7817a9ef680022a16c2f56b76dee1297c1697b32ba89d"
+    },
+    "compute.json": {
+      "bytes": 2263,
+      "sha256": "99ed6a00b1af82a876f60e0dd68606e868069253b13233e058117b86e7bc09f6"
+    },
+    "fleet.json": {
+      "bytes": 2171410,
+      "sha256": "71b13d7e3cd02261c1ff768f75dbb0271f9aa1c046be0e74f6a94c8f6a96ddde"
+    }
+  },
+  "kepler_check": {
+    "asteroid_max_error_km": 0.000003738577530149141,
+    "context_points_checked": 75006,
+    "earth_max_error_km": 3.0719530854108674e-7,
+    "tolerance_km": 0.01
+  },
+  "schema_version": "1.0.0",
+  "source": {
+    "catalogue": {
+      "bytes": 6840111,
+      "name": "catalogue-v767.txt",
+      "sha256": "99a42cc30d4498d99b8acf507790ab74f040ff2e202ef6c8e90bbb39b6c46675"
+    },
+    "export_manifest_sha256": "4fa2d6dcccfd72515774bea7e2c6dfcc89debf2228b879a49114bf536bd4a1ee",
+    "export_trajectories_bytes": 14221957,
+    "export_trajectories_sha256": "5c1827b691839064aaebbcd71991746a2ecb0693af78bea957c01840cf345d9c",
+    "fleet_json_sha256": "743a64f3f3c845dde8da0e70aa348de7c066816eddcb80354f07dec1cc975f86",
+    "generator": "spacepdhcg.gtoc12.pipeline",
+    "independent_verifier_ok": true,
+    "official_verifier_ok": true,
+    "solution_basename": "Result.txt",
+    "solution_bytes": 10023413,
+    "solution_sha256": "63446ebf3ff1298911bccade7b789a8fb68a0f7db4171906c8e6783a7f174bab",
+    "solution_verified_locally": true,
+    "transform": "Reuse22 existing v799 histories and1 certified v627 ship8 history after exact Result-section equality. No new trajectory samples, interpolation, or propagation. Both complete-fleet checkers independently validate the composition."
+  },
+  "summary": {
+    "events": 446,
+    "official_total_mass_kg": 14271.5,
+    "replay_points": 11676,
+    "ships": 23,
+    "unique_asteroids": 200
+  },
+  "transform": "Verified export copied losslessly (exact samples, indices, hashes); events classified; pinned Keplerian elements attached; Kepler propagation cross-checked against exporter context orbits."
+}

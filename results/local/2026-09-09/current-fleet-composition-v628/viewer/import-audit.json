@@ -1,0 +1,36 @@
+{
+  "GPU_calls": 0,
+  "all_23_saved_histories_exact": true,
+  "copied_v627_histories": 1,
+  "copied_v799_histories": 22,
+  "dataset": "gtoc12-current-composition-v628",
+  "importer_seconds": 0.15641290000000002,
+  "input_sha256": {
+    "kepler.js": "37def2bb6e0ebf6655edee47c0101528492f4195dcb19fa4db7ba0578cf8f452",
+    "scripts/import-data.mjs": "a32ed8d41b9e26947f2278aa4be6d977bad634c02b41f78f906bb2db30961ca1",
+    "scripts/import-gtoc12.mjs": "127fe26068f0fae7f3f1ef38930d560d198033026714104e2de8ea8323b1fe16"
+  },
+  "kepler_check": {
+    "asteroid_max_error_km": 0.000003738577530149141,
+    "context_points_checked": 75006,
+    "earth_max_error_km": 3.0719530854108674e-7,
+    "tolerance_km": 0.01
+  },
+  "new_propagations": 0,
+  "output_sha256": {
+    ".gitattributes": "bb3c3a4751df0dc4460e370569ff389e93ab545025e3698ed5445661d62677b1",
+    "checker-binding.json": "befa31537963ef51d8d7817a9ef680022a16c2f56b76dee1297c1697b32ba89d",
+    "compute.json": "99ed6a00b1af82a876f60e0dd68606e868069253b13233e058117b86e7bc09f6",
+    "fleet.json": "71b13d7e3cd02261c1ff768f75dbb0271f9aa1c046be0e74f6a94c8f6a96ddde",
+    "manifest.json": "f94cc18b6a0f62610a3c5fdf2c65cd79ebf0c1a7a01bd18f842dddd0b6bbf672"
+  },
+  "source_result_sha256": "63446ebf3ff1298911bccade7b789a8fb68a0f7db4171906c8e6783a7f174bab",
+  "status": "passed",
+  "summary": {
+    "events": 446,
+    "official_total_mass_kg": 14271.5,
+    "replay_points": 11676,
+    "ships": 23,
+    "unique_asteroids": 200
+  }
+}

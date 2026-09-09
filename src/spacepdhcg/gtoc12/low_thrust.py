@@ -701,12 +701,15 @@ def _solve_leg(
         node_days = np.append(node_days, duration_days)
     if node_days.shape[0] < STENCIL:
         node_days = np.linspace(0.0, duration_days, STENCIL)
-    node_times = node_days * C.DAY_S / TU_S
-    nodes = node_times.shape[0]
     if seed is not None:
         if not isinstance(seed, ZohTrajectorySeed):
             raise TypeError("seed must be a ZohTrajectorySeed")
+        selected_epochs = seed.solver_node_epochs(boundary.departure_epoch + node_days)
+        if seed.allow_mesh_refinement:
+            node_days = selected_epochs - boundary.departure_epoch
         seed.validate_for(boundary, settings, boundary.departure_epoch + node_days)
+    node_times = node_days * C.DAY_S / TU_S
+    nodes = node_times.shape[0]
     model = _Model(boundary.initial_mass)
     if settings.discretisation_backend == "numpy":
         disc = _Discretisation(model, node_times, settings.substeps, settings.hold)

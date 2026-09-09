@@ -5,13 +5,62 @@ The next work must establish its advantage at independently verified accuracy
 and improve complete GTOC12 missions. Faster candidate arithmetic and the GPU
 integration are useful intermediate results; neither establishes either outcome.
 
-The current decision is to resume the roadmap with a focused convergence review,
-keeping PDHCG as the experimental core. A broad new literature survey or a larger
-unchanged search would not address the measured failures. Prioritize one tested
-numerical hypothesis about the remaining state-dynamics and cone residuals, and
-one mission experiment that sends promising proxy rejections through fixed-cargo
-refinement. Keep their outcomes separate: a faster proxy is not a qualified
-trajectory, and a QOCO-refined fleet gain is not a PDHCG convergence result.
+The current decision is to execute the remaining roadmap, preserve PDHCG as the
+core under development, and use targeted literature checks to resolve measured
+failures. Judge each tranche by complete time to verified accuracy and by verified
+mission score. The latest evidence supports broader route construction, reliable
+changed-route refinement and removal of measured host overhead. It does not yet
+establish a competitive PDHCG mission backend.
+
+## Current checkpoint and next work
+
+The latest locally checked fleet, v628, scores **12,992.407741 weighted kg** and
+returns **14,271.485284 raw kg**, or **620.499360 raw kg per ship**, with 23 ships
+and 200 asteroids. It combines the H100 v799 fleet with one newly certified local
+ship-8 replacement; both complete-fleet checkers accept the exact combined file.
+The other 22 ship sections are unchanged. This is a local composition, not an
+H100 rerun of the new controller.
+[Exact Result and checker evidence](../results/local/2026-09-09/current-fleet-composition-v628/README.md).
+
+The [v799 route-generation campaign](GPU_FLEET_REGENERATION.md) gained 148.479966
+weighted kg by generating better routes. The subsequent
+[endpoint-merit correction](SCVX_ENDPOINT_MERIT.md) adds 0.372079 weighted kg:
+the changed transfer now certifies in four accepted iterations instead of
+rejecting every step. This small gain validates a repair needed for further
+search. It is not a rate of progress that would close the overall score gap.
+
+The v799 fleet-selection pass exhausts its 44 certified route choices. Increasing
+that selection budget alone cannot improve the optimum within that pool. New
+high-quality route columns and coupled itinerary changes are therefore the next
+score opportunity. Its generator also retains each ship's Earth-leg seed and
+excludes other incumbent ships' asteroids; coordinated replacements must expand
+those restrictions while preserving fleet feasibility.
+
+| Priority | Concrete deliverable | Decision that advances the goal |
+| --- | --- | --- |
+| 1. Convert reliability into better missions | Apply the endpoint fix to current-fleet route regeneration; jointly consider deployment/collection timing, changed asteroid sets and compatible cross-ship replacements. Keep fixed-cargo incumbent controls and both full-fleet checks. | Compare verified best score versus total elapsed time from the same incumbent. Count unique candidates, rejected routes and all refinement time. Retain improvements to weighted score while meeting the raw-mass ship rule. |
+| 2. Remove the remaining host bottlenecks | Retain collection-DP workspaces across tours, then move completion packing and beam expansion/control into C++/CUDA. H100 v799 creates 25,112 DP workspaces; completion packing takes 48.280 s against 0.528 s in its kernel. | Reproduce route decisions and qualified scores, then reduce complete search time. More kernel evaluations are useful only if they yield more certified competitive routes within the same budget. |
+| 3. Make PDHCG qualify reliably | Resolve the isolated GPU correction's numerical-quality rejection, with a mathematically justified treatment of isolated coordinates; profile its factorization/setup costs before integrating it. Retest representative cold and changed warm captures, including nonzero-Q cases. | Every original acceptance gate must pass. The present saved point remains rejected and its native status is iteration-limited. No retrospective acceptance or relaxed physics gates. |
+| 4. Demonstrate the core's advantage | Connect a qualified PDHCG path to native GTOC12 SCvx, including retained starts and explicit recovery. Compare pure PDHCG, QOCO and any declared hybrid on identical inputs; then compare complete trajectory systems. | Measure median/p95 total latency, certified legs/s, reliability, objective and memory. Count setup, transfers, failed attempts and correction. Use the existing repeated-run and claim rules below. |
+| 5. Spend demonstrated throughput on broader search | Batch independent qualified trajectories, use interval-structured operators where profiling supports them, and expand diverse route pools under equal compute budgets. | Better score-time curves and stable gains on held-out missions, followed by comparison against published fleets rescored with the same bonus table. |
+
+The new GPU dual-QR diagnostic passes the saved point's original KKT numerical
+checks but fails its own quality rule, and its evaluation takes 195.520 ms plus
+218.238 ms of creation. It is a useful numerical finding, not a qualified solve
+or demonstrated speedup. Further isolated experiments need to resolve that
+specific obstruction and then reach the comparative suite; repeated tweaks to
+one saved point cannot establish SOTA.
+[Measured correction and rejection](PDHCG_CONSTRAINED_DUAL_POLISH.md).
+
+The focused reading list already below remains appropriate: upstream conic
+PDHCG/PDHCG-II for convergence and stopping, and TheAntipodes for route subsets,
+beam search, low-thrust refinement and fleet selection. These sources were
+checked again on 9 September. Each proposed change needs a specific missing
+capability and an ablation. A new broad survey is lower priority than applying
+and testing this existing knowledge.
+
+Historical checkpoints and their frozen settings follow. Their earlier scores
+are evidence for those experiments, not the current acceptance baseline.
 
 The [v623 warm-transfer experiment](PDHCG_WARM_START_AND_PROJECTION.md)
 tests changed adjacent SCvx inputs with a qualified predecessor iterate.
