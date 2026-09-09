@@ -1,0 +1,98 @@
+{
+  "passed": true,
+  "utc": "2026-09-09T01:07:20.249924+00:00",
+  "http_assets": [
+    {
+      "path": "index.html",
+      "status": 200,
+      "bytes": 19907,
+      "sha256": "f617d15aaea0b4c64738a0b80e1180b64d7310415e447f41f459f44503faab17"
+    },
+    {
+      "path": "app.js",
+      "status": 200,
+      "bytes": 58573,
+      "sha256": "5d819ec6273d1a1d12a0dc484765f5cd79c83b8a7a5a9f36f79b70ecac7aff63"
+    },
+    {
+      "path": "gtoc12.js",
+      "status": 200,
+      "bytes": 45885,
+      "sha256": "4018522f5814f2b8d44cc9c4679f9d77202dcc500dc5c283f2b4d2278630a5ac"
+    },
+    {
+      "path": "replay.js",
+      "status": 200,
+      "bytes": 1398,
+      "sha256": "7929c21b68acdc51e7ade4fd219e18fa0201ae3951da6bb9ef00a35873e22308"
+    },
+    {
+      "path": "kepler.js",
+      "status": 200,
+      "bytes": 4635,
+      "sha256": "37def2bb6e0ebf6655edee47c0101528492f4195dcb19fa4db7ba0578cf8f452"
+    },
+    {
+      "path": "data/gtoc12-frontier-v629/manifest.json",
+      "status": 200,
+      "bytes": 3075,
+      "sha256": "29b76c242d738e28d280d06756b4721dc42a3e1c024a37f76077bac887bc4f04"
+    },
+    {
+      "path": "data/gtoc12-frontier-v629/fleet.json",
+      "status": 200,
+      "bytes": 2170373,
+      "sha256": "f013e14fd7c84c855ae44e408c7896f29dbe7c50e7732992defbcd7fbf7d1680"
+    },
+    {
+      "path": "data/gtoc12-frontier-v629/compute.json",
+      "status": 200,
+      "bytes": 1977,
+      "sha256": "b812d5de9e00314f97c1c31f0e3006e02cb0e9bc36d5a476150604f0fa286d7f"
+    },
+    {
+      "path": "data/gtoc12-frontier-v629/checker-binding.json",
+      "status": 200,
+      "bytes": 864,
+      "sha256": "d7f22c5fe83fcdcd739595d521515a6ae19304a5bf6465dea1c33fb9ce8c4742"
+    },
+    {
+      "path": "data/gtoc12-frontier-v629/saved-node-provenance.json",
+      "status": 200,
+      "bytes": 15027,
+      "sha256": "41fd72d0bc6b581e758b854ed67bb328dfc4842af8253b46a19291c7e5930d59"
+    }
+  ],
+  "default_dataset": "gtoc12-frontier-v629",
+  "solution_sha256": "765cb7ef97d38926317dbbf4ae8700626dffec06c48af3d6f68dae47c154f3da",
+  "scope": "Exact HTTP bytes and registration; no new propagation or GPU work",
+  "prior_verification": {
+    "node_tests": {
+      "passed": 16,
+      "failed": 0,
+      "skipped": 1,
+      "skip_reason": "Historical fleet_master_v1 source export unavailable",
+      "files": [
+        "tests/replay.test.mjs",
+        "tests/geometry.test.mjs",
+        "tests/gtoc12-import.test.mjs"
+      ]
+    },
+    "schema_check": "node scripts/check.mjs: exit 0; all installed datasets validate",
+    "independent_read_only_review": "Gap rendering and 142 source/data hashes approved; unchanged 21 histories and original bindings verified",
+    "browser": {
+      "tab_id": "31",
+      "url": "http://127.0.0.1:4173/?dataset=gtoc12-frontier-v629&ship=8&epoch=69807&preset=oblique&z=1",
+      "observed_accessibility_state": "Correct selected dataset, 23 ships/199 asteroids, source label, ship8 missing intervals2, Active WebGL2 on RTX5090",
+      "pixel_screenshot_review": false
+    }
+  },
+  "reviewed_source": {
+    "app.js": "5d819ec6273d1a1d12a0dc484765f5cd79c83b8a7a5a9f36f79b70ecac7aff63",
+    "gtoc12.js": "4018522f5814f2b8d44cc9c4679f9d77202dcc500dc5c283f2b4d2278630a5ac",
+    "index.html": "f617d15aaea0b4c64738a0b80e1180b64d7310415e447f41f459f44503faab17",
+    "replay.js": "7929c21b68acdc51e7ade4fd219e18fa0201ae3951da6bb9ef00a35873e22308",
+    "scripts/import-gtoc12.mjs": "0f301542e23ecc7de4e9413c816e18494fa78d5bfc7da98173e3e7b1564ec4d4",
+    "tests/replay.test.mjs": "0d87b764db9b3c8a9e3a3f631665e4b06111a171b116997981c3800265c7698f"
+  }
+}

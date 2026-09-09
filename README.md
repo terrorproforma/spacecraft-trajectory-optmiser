@@ -14,7 +14,22 @@ interior-point backend. We compare complete solve time at the same verified
 accuracy. Fully GPU-controlled execution and scalable multi-GPU trajectory
 optimisation remain work in progress.
 
-The latest combined fleet reaches **12,999.825 weighted kg / 14,279.288 raw kg**,
+The latest locally verified fleet reaches **13,023.705 weighted kg / 14,291.006 raw
+kg**, with 23 ships, 199 asteroids and **621.348 raw kg per ship**. Four route
+alternatives all certify; composing the best two into the preceding fleet adds
+**23.880058 weighted kg**. Fleet selection can accept a ship with less raw cargo
+when its weighted contribution improves and the complete fleet still meets the
+original ship-count rule. Both original full-fleet physics checkers pass.
+The result is loaded in the existing visualiser; missing dense coast samples are
+shown as gaps. [Exact result, work counts, evidence and display instructions](docs/GPU_MASS_BUDGETED_FRONTIER.md).
+
+The PDHCG core also has a successful standalone GPU dual correction on one saved
+problem: both independent original-equation audits pass with the primal unchanged.
+Native PDHCG still reports its earlier iteration limit. This is a numerical
+milestone, with comparative performance and broader reliability still to prove.
+[GPU correction, retained failures and measured costs](docs/PDHCG_CONSTRAINED_DUAL_POLISH.md#v629-exact-isolated-coordinate-elimination).
+
+The preceding combined fleet reaches **12,999.825 weighted kg / 14,279.288 raw kg**,
 with 23 ships and 199 asteroids. Both full-fleet physics checkers pass locally
 and on Lambda. Retained CUDA collection buffers cut workspace creations by
 **97.7%**, with **2.46–5.78% higher whole-search throughput** in paired tests.
@@ -827,8 +842,8 @@ apply to their named fixtures; they are not universal speedup claims.
 ## GTOC12 score versus the published leaderboard
 
 The comparison below records the earlier v595 snapshot. The current independently
-verified result is **12,992.408 weighted kg**; see the
-[new mission evidence](results/local/2026-09-09/current-fleet-composition-v628/README.md). This update makes no new
+verified result is **13,023.705 weighted kg**; see the
+[new mission evidence](docs/GPU_MASS_BUDGETED_FRONTIER.md). This update makes no new
 official leaderboard-placement claim.
 
 Our verified `orphan_recovery_v595` snapshot collects **14,051.855 kg**, using **23 ships**

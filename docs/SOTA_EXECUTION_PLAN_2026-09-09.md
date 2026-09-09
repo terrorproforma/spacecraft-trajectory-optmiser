@@ -14,20 +14,24 @@ establish a competitive PDHCG mission backend.
 
 ## Current checkpoint and next work
 
-The latest locally checked fleet, v628, scores **12,992.407741 weighted kg** and
-returns **14,271.485284 raw kg**, or **620.499360 raw kg per ship**, with 23 ships
-and 200 asteroids. It combines the H100 v799 fleet with one newly certified local
-ship-8 replacement; both complete-fleet checkers accept the exact combined file.
-The other 22 ship sections are unchanged. This is a local composition, not an
-H100 rerun of the new controller.
-[Exact Result and checker evidence](../results/local/2026-09-09/current-fleet-composition-v628/README.md).
+The latest locally checked fleet, frontier v629, scores **13,023.704901 weighted
+kg** and returns **14,291.006160 raw kg**, or **621.348094 raw kg per ship**, with
+23 ships and 199 asteroids. Four fixed-cargo alternatives all certify on RTX 5090;
+the best two add **23.880058 weighted kg** to the preceding combined fleet.
+Both complete-fleet checkers accept the exact final file, with the other 21 ship
+sections unchanged. This latest improvement has not been rerun on H100.
+[Exact Result, work counts and display](GPU_MASS_BUDGETED_FRONTIER.md).
 
 The [v799 route-generation campaign](GPU_FLEET_REGENERATION.md) gained 148.479966
 weighted kg by generating better routes. The subsequent
 [endpoint-merit correction](SCVX_ENDPOINT_MERIT.md) adds 0.372079 weighted kg:
 the changed transfer now certifies in four accepted iterations instead of
-rejecting every step. This small gain validates a repair needed for further
-search. It is not a rate of progress that would close the overall score gap.
+rejecting every step. Retained collection workspaces then improve whole-search
+throughput by 2.46–5.78% in paired local/H100 tests, and a new ship-4 route gains
+7.417102 weighted kg. The current four-route batch uses 72 native flight solves
+and 286 SCvx iterations. Its complete worker takes 43.832 seconds, including
+21.431 seconds for the independent CPU fleet checker; this is an unpaired
+observation. These gains are real, but do not establish SOTA mission performance.
 
 The v799 fleet-selection pass exhausts its 44 certified route choices. Increasing
 that selection budget alone cannot improve the optimum within that pool. New
@@ -36,21 +40,37 @@ score opportunity. Its generator also retains each ship's Earth-leg seed and
 excludes other incumbent ships' asteroids; coordinated replacements must expand
 those restrictions while preserving fleet feasibility.
 
+The new batch exposes another restriction: requiring every replacement ship to
+improve raw mass rejects some weighted-score gains that fit the fleet's actual
+raw-mass budget. One selected alternative gains 12.676890 weighted kg while losing
+12.813142 raw kg. The final fleet remains feasible and its raw-mass rule permits
+24 ships; a feasible new route still has to be constructed and certified.
+
 | Priority | Concrete deliverable | Decision that advances the goal |
 | --- | --- | --- |
-| 1. Convert reliability into better missions | Apply the endpoint fix to current-fleet route regeneration; jointly consider deployment/collection timing, changed asteroid sets and compatible cross-ship replacements. Keep fixed-cargo incumbent controls and both full-fleet checks. | Compare verified best score versus total elapsed time from the same incumbent. Count unique candidates, rejected routes and all refinement time. Retain improvements to weighted score while meeting the raw-mass ship rule. |
-| 2. Remove the remaining host bottlenecks | Retain collection-DP workspaces across tours, then move completion packing and beam expansion/control into C++/CUDA. H100 v799 creates 25,112 DP workspaces; completion packing takes 48.280 s against 0.528 s in its kernel. | Reproduce route decisions and qualified scores, then reduce complete search time. More kernel evaluations are useful only if they yield more certified competitive routes within the same budget. |
-| 3. Make PDHCG qualify reliably | Resolve the isolated GPU correction's numerical-quality rejection, with a mathematically justified treatment of isolated coordinates; profile its factorization/setup costs before integrating it. Retest representative cold and changed warm captures, including nonzero-Q cases. | Every original acceptance gate must pass. The present saved point remains rejected and its native status is iteration-limited. No retrospective acceptance or relaxed physics gates. |
+| 1. Convert reliability into better missions | Expand Earth-leg seeds, changed asteroid sets and compatible cross-ship replacements. Rank weighted gains against the shared fleet raw-mass budget, including feasible fleet growth. Keep fixed-cargo controls and both full-fleet checks. | Compare verified best score versus total elapsed time from the same incumbent. Count unique candidates, rejected routes and all refinement time. Retain improvements to weighted score while meeting the raw-mass ship rule. |
+| 2. Remove the remaining host bottlenecks | Collection-DP buffer reuse is measured and implemented. Move completion packing and beam expansion/control into C++/CUDA. The newer local search still spends 28.793 s packing against 1.007 s in its completion kernel; the four-route batch retains 153 CPU ephemeris calls. | Reproduce route decisions and qualified scores, then reduce complete search time. More kernel evaluations are useful only if they yield more certified competitive routes within the same budget. |
+| 3. Make PDHCG qualify reliably | Exact isolated-coordinate elimination now passes the standalone GPU correction and independent original audits on one saved point. Retest representative cold and changed warm captures, including nonzero-Q cases; measure retained-workspace costs before integration. | Every original acceptance gate must pass. The new diagnostic accepts, but inherited native PDHCG termination is still iteration-limited. Earlier rejected runs remain rejected; physics gates are unchanged. |
 | 4. Demonstrate the core's advantage | Connect a qualified PDHCG path to native GTOC12 SCvx, including retained starts and explicit recovery. Compare pure PDHCG, QOCO and any declared hybrid on identical inputs; then compare complete trajectory systems. | Measure median/p95 total latency, certified legs/s, reliability, objective and memory. Count setup, transfers, failed attempts and correction. Use the existing repeated-run and claim rules below. |
 | 5. Spend demonstrated throughput on broader search | Batch independent qualified trajectories, use interval-structured operators where profiling supports them, and expand diverse route pools under equal compute budgets. | Better score-time curves and stable gains on held-out missions, followed by comparison against published fleets rescored with the same bonus table. |
 
-The new GPU dual-QR diagnostic passes the saved point's original KKT numerical
-checks but fails its own quality rule, and its evaluation takes 195.520 ms plus
-218.238 ms of creation. It is a useful numerical finding, not a qualified solve
-or demonstrated speedup. Further isolated experiments need to resolve that
-specific obstruction and then reach the comparative suite; repeated tweaks to
-one saved point cannot establish SOTA.
-[Measured correction and rejection](PDHCG_CONSTRAINED_DUAL_POLISH.md).
+The new GPU dual-QR diagnostic passes its quality rule and the saved point's
+original KKT numerical checks. Evaluation takes 155.032 ms and creation takes
+224.682 ms in one observation; its complete fresh process takes 520.776 ms.
+It still consumes an existing 10,000-update PDHCG point and leaves native
+termination unchanged. The older binary's profile lacks GPU activity because
+of a driver/tool incompatibility, so its API spans do not identify kernel costs.
+Broader qualification and complete comparative timing now matter more than
+further tuning to this one saved point.
+[Measured correction, inherited status and preserved failures](PDHCG_CONSTRAINED_DUAL_POLISH.md).
+
+A fresh cold QOCO solve of the exact same original snapshot now passes both
+independent common-gate audits, preserving native `SOLVED_INACCURATE`. It takes
+30 IPM iterations, 105.751 ms in the host solve span and 470.431 ms for the
+complete process. One observation is not a repeated performance comparison,
+and the correction path additionally needs the earlier PDHCG iterate. There is
+no demonstrated PDHCG speed advantage on this case. Count that missing work
+and measure representative retained-workspace solves before selecting a backend.
 
 The focused reading list already below remains appropriate: upstream conic
 PDHCG/PDHCG-II for convergence and stopping, and TheAntipodes for route subsets,

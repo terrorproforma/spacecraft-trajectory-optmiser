@@ -20,6 +20,7 @@ import {
   MU_SUN_KM3_S2, positionAt, prepareElements,
 } from "../kepler.js";
 import { serialize, sha256 } from "./import-data.mjs";
+import { replayGaps } from "../replay.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const CATALOGUE_PIN = {
@@ -135,6 +136,7 @@ export async function importGtoc12({
     assert(record.family === "GTOC12" && record.viewer?.scene_kind === "heliocentric", `record ${shipIndex} is not a GTOC12 heliocentric record`);
     assert(record.position_units === "km" && /MJD/.test(record.time_units), `record ${shipIndex} units`);
     checkSeries(record.replay, `ship ${shipId} replay`);
+    replayGaps(record.replay);
     checkSeries(record.transcription, `ship ${shipId} transcription`);
     assert(record.transcription.point_count === record.events.length, `ship ${shipId} transcription/event count`);
     const replayEpochs = new Set(record.replay.points_txyz.map((point) => point[0]));
@@ -171,6 +173,8 @@ export async function importGtoc12({
       collected_kg: collected, miners_deployed: events.filter((event) => event.role === "deploy").length,
       collects: events.filter((event) => event.role === "collect").length, asteroids, events,
       replay: record.replay, transcription: record.transcription, controls_summary: record.controls_summary,
+      display_sample_kind: record.display_sample_kind ?? "archived_trajectory_samples",
+      display_sample_provenance: record.display_sample_provenance ?? null,
       qualification: record.qualification, raw_evidence_sha256: record.raw_evidence_sha256,
     };
   });

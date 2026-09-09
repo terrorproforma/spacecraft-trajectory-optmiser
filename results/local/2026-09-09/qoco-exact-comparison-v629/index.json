@@ -1,0 +1,293 @@
+{
+  "archive_bytes": 385281,
+  "archive_sha256": "7bdac63b7c619fcb0b6286a45b8a460172dcfa76f0261ec5d60befe971f7b663",
+  "common_numerical_gates_pass": true,
+  "external_runtime_binaries": [
+    {
+      "bytes": 1048904,
+      "path": "/home/angus/spacepdhcg-qoco-exact-v629b/qoco_exact_replay",
+      "sha256": "ecfcbd69d312a84a7030262c01e20a476e3af038cf9c484a95d597bae5136db7"
+    },
+    {
+      "bytes": 4524200,
+      "path": "/home/angus/spacepdhcg-retry-conditioning-v683/final/libqoco.so",
+      "sha256": "5b1b1a047f9d5041f821b64490562a3d598f51b47fedb08d89cdae211728940a"
+    },
+    {
+      "bytes": 149210177,
+      "path": "/home/angus/cudss-isolated-0.8.0.10/nvidia/cu12/lib/libcudss.so.0",
+      "sha256": "0740250950abbbbc7690c4edb1506f8432558658764d6c1f7cba29615acb3dfc"
+    }
+  ],
+  "file_count": 60,
+  "files": {
+    "build/performance/audit_qoco_exact_package_v629.py": {
+      "bytes": 8789,
+      "sha256": "450674d392c9f032b20660b5d3aeb8bb78c55816fe64c6ff95a88320c30a0497"
+    },
+    "build/performance/package_qoco_exact_v629.py": {
+      "bytes": 7738,
+      "sha256": "88faea42fa94567c1ec3d3892a645de88ed5621b7ec4c0212716c8764211151b"
+    },
+    "build/performance/qoco-exact-comparison-v629/DESIGN.md": {
+      "bytes": 4705,
+      "sha256": "864ada949f0febf2bf6fe863d33e1dc92bc4cce70cfcf4bab148cd80c0dc7e2e"
+    },
+    "build/performance/qoco-exact-comparison-v629/LAUNCH_PLAN.md": {
+      "bytes": 3664,
+      "sha256": "4e2899cf2d6837548e12ce88971090814d1dd3aa7d74beb89cf8c89e284aedd4"
+    },
+    "build/performance/qoco-exact-comparison-v629/REPORT.md": {
+      "bytes": 4664,
+      "sha256": "a43e0d69d106e62a706a616c9e1fcf90d61f4b288816cd5f3f2a08738d0ef21d"
+    },
+    "build/performance/qoco-exact-comparison-v629/audit-findings.json": {
+      "bytes": 5904,
+      "sha256": "eda8bf6fd6c64246edd69f66e5143f37296bdf5ad962565135fd2a738fa881ca"
+    },
+    "build/performance/qoco-exact-comparison-v629/audit-inputs/decimal_auditor.py": {
+      "bytes": 13014,
+      "sha256": "b8697eedc3d91ed48849725b4fd8e17dc7515c020f5f3d30f1aa151794a5dbc4"
+    },
+    "build/performance/qoco-exact-comparison-v629/audit-inputs/long_double_auditor.py": {
+      "bytes": 11208,
+      "sha256": "0d944f768ad9c089499cc6e95cd1313677e153f650eced2c7d84b9815c00c7ff"
+    },
+    "build/performance/qoco-exact-comparison-v629/audit-inputs/snapshot.txt": {
+      "bytes": 267213,
+      "sha256": "4d3b8c1641722c0e44fa5e9518e5bf0311dbc8ad3847f45eaf9cc2af2f6eede5"
+    },
+    "build/performance/qoco-exact-comparison-v629/audit_saved.py": {
+      "bytes": 9490,
+      "sha256": "bcdbf31c547ec4056c737abe3712bf2f4a2897c91e1aa65989c8d17ada57fbc0"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-a/build_hidden.py": {
+      "bytes": 7265,
+      "sha256": "3ec149d61ceb502b87e337c6175798d851b877e59b4c97e83c2b8a6c9e61edb9"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-a/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-a/compiler.log": {
+      "bytes": 208,
+      "sha256": "68f8b0a1301428031e307cf5260142a517bff25cc232a09eae2734be475d721f"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-a/manifest.json": {
+      "bytes": 5931,
+      "sha256": "87586f262849fa6d0199ef50dc8c69bf98976866329d58b482bad9b77b6534e5"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-a/source-sha256.json": {
+      "bytes": 2615,
+      "sha256": "f1b1bc98c8e65d3bc4e0630d2da02c586fc7edc37c6342d950a06f8b034e9ed7"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-a/source.tar.gz": {
+      "bytes": 18078,
+      "sha256": "a4e52168185aba6c7426ab371ece32a38288be54cdbb96a01f3142aaa6669625"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-a/validate-original.log": {
+      "bytes": 657,
+      "sha256": "3db34893d1071ed174062ac630ff98f97feae01206a70837e54f6da06b35d501"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/build_hidden.py": {
+      "bytes": 7453,
+      "sha256": "9acb991f3a79b02d5061a0c29061f847f22c7b507e9110a38b6ff598fa27e99c"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/compile.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/compiler.log": {
+      "bytes": 208,
+      "sha256": "68f8b0a1301428031e307cf5260142a517bff25cc232a09eae2734be475d721f"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/linked-libraries.log": {
+      "bytes": 474,
+      "sha256": "01ecea48127f6bb61c7f071f9f4793223399dcd1b497c912b653d664e4250041"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/manifest.json": {
+      "bytes": 9575,
+      "sha256": "b43e8c4397da9c57cfc6603c817b1e9afc96c983fff1ccd62375b137ecbce89a"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/reject-no-input.log": {
+      "bytes": 411,
+      "sha256": "3593af16f272355b050a4776fbfd9365a694c7e1ac761596357af5b4bae5f5a8"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/reject-regularization-override.log": {
+      "bytes": 405,
+      "sha256": "0baa83293eda7e5785698c9c468dbdc2c8810fcf7779017e041e7a5ec0c7a45f"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/reject-repeat-argument.log": {
+      "bytes": 411,
+      "sha256": "3593af16f272355b050a4776fbfd9365a694c7e1ac761596357af5b4bae5f5a8"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/reject-shifted.log": {
+      "bytes": 414,
+      "sha256": "69f4bc4f5dc0263dc4fd4ee631a0768be9e5909a2dc7d8e3ff71ad0113d1ceeb"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/reject-tolerance-override.log": {
+      "bytes": 405,
+      "sha256": "0baa83293eda7e5785698c9c468dbdc2c8810fcf7779017e041e7a5ec0c7a45f"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/reject-trailing.log": {
+      "bytes": 404,
+      "sha256": "78d12208a75e691f7dd82b272b976fcc6e21ceb402ffb0c23b080efbecb44f9a"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/source-sha256.json": {
+      "bytes": 2615,
+      "sha256": "9d1254db44760cb7d647f6ff5b897fe7ef5812be337b14e272fa1f56ecb567fb"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/source.tar.gz": {
+      "bytes": 18057,
+      "sha256": "0e96befd928c7e955bb2dd56a33ab64d4c13fb903becaff0e4f94ca4c922db6c"
+    },
+    "build/performance/qoco-exact-comparison-v629/build-b/validate-original.log": {
+      "bytes": 657,
+      "sha256": "a4351787671fbf96016651590868b2e3e5beb2c29e80725a5e39e4b4e2032ebb"
+    },
+    "build/performance/qoco-exact-comparison-v629/build_hidden.py": {
+      "bytes": 7453,
+      "sha256": "9acb991f3a79b02d5061a0c29061f847f22c7b507e9110a38b6ff598fa27e99c"
+    },
+    "build/performance/qoco-exact-comparison-v629/inspect_runtime.py": {
+      "bytes": 3361,
+      "sha256": "dfee331ae1ac3cf4dc299b697576fa78e087fc690d9f7163bc5e661683bbdba5"
+    },
+    "build/performance/qoco-exact-comparison-v629/packaging-attempt-a/failure.json": {
+      "bytes": 239,
+      "sha256": "62244934782c4f43976d5df419e08e4c1234898375632cd0548b4226316736e7"
+    },
+    "build/performance/qoco-exact-comparison-v629/packaging-attempt-a/package.py": {
+      "bytes": 7260,
+      "sha256": "9aa91b81fdd0528618410c9681d6146f107c4056437a3f8730a62fd46f7755c8"
+    },
+    "build/performance/qoco-exact-comparison-v629/packaging-attempt-b/audit_package.py": {
+      "bytes": 8745,
+      "sha256": "bbb0dfc7b42119a2312dddd2deeac50b8df47386f6a7912bb0755987407a546e"
+    },
+    "build/performance/qoco-exact-comparison-v629/packaging-attempt-b/failure.json": {
+      "bytes": 182,
+      "sha256": "0dc689b0f24cb2f2120b92b838043507da782879d314962029d12ed472675403"
+    },
+    "build/performance/qoco-exact-comparison-v629/packaging-attempt-b/index.json": {
+      "bytes": 13009,
+      "sha256": "8ec3e2220c3b81405bb73a74b30960c1191c7e06cdb4cb96010a3600a991dfb3"
+    },
+    "build/performance/qoco-exact-comparison-v629/process_guard.py": {
+      "bytes": 3462,
+      "sha256": "c7039b63b8ba8e1745d77fcb759c83460f6eca309879d304bb60ae3e671f4422"
+    },
+    "build/performance/qoco-exact-comparison-v629/replay.cu": {
+      "bytes": 11386,
+      "sha256": "054891665272db4b46ce6abfc147baee5c520a98d7c49d8c1f1137b70e2e8d13"
+    },
+    "build/performance/qoco-exact-comparison-v629/run-a/build-manifest.json": {
+      "bytes": 9575,
+      "sha256": "b43e8c4397da9c57cfc6603c817b1e9afc96c983fff1ccd62375b137ecbce89a"
+    },
+    "build/performance/qoco-exact-comparison-v629/run-a/process_guard.py": {
+      "bytes": 3462,
+      "sha256": "c7039b63b8ba8e1745d77fcb759c83460f6eca309879d304bb60ae3e671f4422"
+    },
+    "build/performance/qoco-exact-comparison-v629/run-a/records.json": {
+      "bytes": 272267,
+      "sha256": "b620bc9dd12afc5b1a7b7c9a58c7f8298c4cacd8d740b6f595d276fe838a66b1"
+    },
+    "build/performance/qoco-exact-comparison-v629/run-a/replay.log": {
+      "bytes": 196512,
+      "sha256": "d928301733b6937277b808d3ec972a0ef0dc99cca2f538ae2b633952c901adcc"
+    },
+    "build/performance/qoco-exact-comparison-v629/run-a/report.json": {
+      "bytes": 3570,
+      "sha256": "a0fdfc00da6b41d6a68e91ab9978818a3da5b3e901fc489020ce232e85eed520"
+    },
+    "build/performance/qoco-exact-comparison-v629/run-a/run_once.py": {
+      "bytes": 9566,
+      "sha256": "45a7632f5e07d7d1f87293181915e568f7579758f6fffa2d251463225d2d1d3f"
+    },
+    "build/performance/qoco-exact-comparison-v629/run-preflight.json": {
+      "bytes": 1776,
+      "sha256": "7458beddf10ade72b91fdd4afdb199857451f9f08188d35d7624a8ddc55c286a"
+    },
+    "build/performance/qoco-exact-comparison-v629/run_once.py": {
+      "bytes": 9566,
+      "sha256": "45a7632f5e07d7d1f87293181915e568f7579758f6fffa2d251463225d2d1d3f"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-inspection.json": {
+      "bytes": 8141,
+      "sha256": "391e19650146cac234ec151c114f07a283edc8622dd1f1ee422016bdcbd0ef1e"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-observations/qoco/algebra/cuda/qoco_device_io.cuh": {
+      "bytes": 1850,
+      "sha256": "baece22391ee4e868ff3bb636bf4ef072d809ba19215051aacd17041c22a146a"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-observations/qoco/algebra/cuda/qoco_device_update.cuh": {
+      "bytes": 33595,
+      "sha256": "d2ae730b393add5e7d158bb7154bd1c2418fc35f14b6708648292a34eeb2567a"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-observations/qoco/include/definitions.h": {
+      "bytes": 2505,
+      "sha256": "c64d0546afdcf5bcec1734bd30c8673afec649317b17eeefd21b78cce19e0d8e"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-observations/qoco/include/qoco.h": {
+      "bytes": 534,
+      "sha256": "d7c9ea9bfa4f91ddf082b85a995bffe8553c33bedb0a68a78c7e39be6feb0cc2"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-observations/qoco/include/qoco_api.h": {
+      "bytes": 4552,
+      "sha256": "e4d4b6216fdf56c6fc38ed4c5fda566e65cd7583bb2860e64eb1d516ba5f6085"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-observations/qoco/include/qoco_config.h": {
+      "bytes": 365,
+      "sha256": "1b1993a1af4667749da3181b8ff35fcc51a9196954f7ada3eb7842d263d5e3d7"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-observations/qoco/include/structs.h": {
+      "bytes": 9699,
+      "sha256": "701abfcaee9d2a45b668c79e9bced38b0c862cea44fb1b0071dba837f3ac5eee"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-observations/qoco/src/qoco_api.c": {
+      "bytes": 21123,
+      "sha256": "5daa3929d04f1e2c7b8681b04a1913427cce5dab8bdbf83923609bdadadf7668"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-observations/qoco_snapshot_replay.cu": {
+      "bytes": 7220,
+      "sha256": "b24ca9fea93886725caafc4a4c5bb834326ea2d2c94c9d016c6136f632de70fd"
+    },
+    "build/performance/qoco-exact-comparison-v629/source-observations/v683-build-report.json": {
+      "bytes": 4333,
+      "sha256": "131d9e1fcf4582ad53d764ab51c0bbd658714ca25ad12f885680cc4b8f426a83"
+    },
+    "build/performance/qoco-exact-comparison-v629/test_process_guard.py": {
+      "bytes": 2385,
+      "sha256": "97835a2c2b2cd61b66d1613901de5fd4d83fe6f6233207348e747704549d7fc4"
+    }
+  },
+  "native_status": 2,
+  "native_status_name": "QOCO_SOLVED_INACCURATE",
+  "omitted_local_files": {
+    "build/performance/qoco-exact-comparison-v629/build-b/binaries/qoco_exact_replay": {
+      "bytes": 1048904,
+      "reason": "Compiled replay executable omitted; exact build/runtime identity is retained.",
+      "sha256": "ecfcbd69d312a84a7030262c01e20a476e3af038cf9c484a95d597bae5136db7"
+    }
+  },
+  "package_GPU_calls": 0,
+  "package_numerical_audits": 0,
+  "recorded_solve_calls": 1,
+  "schema": "qoco-exact-package-v629/1",
+  "top_files": {
+    ".gitattributes": {
+      "bytes": 20,
+      "sha256": "e97602ab9cac70102245345c5ab0fc9830df8b17f1072b188265a662a3a547ae"
+    },
+    "README.md": {
+      "bytes": 4414,
+      "sha256": "527db94a676889e5a5a10f20317af146b28423de43ae8524e687617224a7a546"
+    },
+    "audit_package.py": {
+      "bytes": 8789,
+      "sha256": "450674d392c9f032b20660b5d3aeb8bb78c55816fe64c6ff95a88320c30a0497"
+    }
+  },
+  "total_bytes": 1070325
+}

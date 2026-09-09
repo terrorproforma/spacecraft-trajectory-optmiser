@@ -1,0 +1,74 @@
+{
+  "commit": "v804-local+v627-local-boundary-merit-union-v629",
+  "composition": {
+    "inserted_v627_sha256": "931defc362c9299d28d089aa46130c05f92bf9ee38ea03d870b4dc2a83915946",
+    "original_run_incumbent_promoted": false,
+    "other_ship_sections_exact": 22,
+    "qualified": true,
+    "raw_gain_kg": 0.43805612590040255,
+    "replaced_ship": 8,
+    "source_v804_sha256": "a52080c6c239c8df9bdeb9fed1a84e658a7de59b79c127792214ab74d50db139",
+    "weighted_gain_kg": 0.37207919333195605
+  },
+  "display_replay_provenance": {
+    "all_histories_reused_exactly": true,
+    "newly_propagated_ships": 0,
+    "no_new_propagation": true,
+    "reused_v627_ship_ids": [
+      8
+    ],
+    "reused_v804_ship_ids": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23
+    ]
+  },
+  "fleet_run_id": "local_current_fleet_union_v629",
+  "hardware": {
+    "gpu": "No GPU work in composition v629",
+    "upstream_search": "local v804 fleet plus local RTX5090 v627 ship8 refinement"
+  },
+  "model": {
+    "dynamics": "Official GTOC12 dynamics, unchanged physical tolerances; both original complete-fleet checkers passed.",
+    "local_refine": "Reuse the17 certified flights and3 waits solved locally in v627. This composition performs no new refinement."
+  },
+  "optimisation": {
+    "proven_optimal": false,
+    "strategy": "Insert exact certified v627 ship8 into its unchanged v804 route slot; retain the other22 ship sections byte-for-byte. Separate CPU-only current-fleet verification, not a new H100 optimization run."
+  },
+  "raw_kg_per_ship": 620.8386155998174,
+  "result_sha256": "d9f9b30ecd229a8a089c88ded4372dc958390b6318d3552af51a1015cb9c62fc",
+  "run_counts": {
+    "GPU_calls": 0,
+    "extra_leg_certificates": 0,
+    "full_fleet_CPU_checks": 1,
+    "full_fleet_official_checks": 1,
+    "native_solves_started": 0,
+    "search_or_Lambert_calls": 0
+  },
+  "run_id": "local_current_fleet_union_v629",
+  "timing": {
+    "wall_human": "23.291 s composition verification; no additional GPU solve",
+    "wall_seconds_total": 23.29063773200005
+  },
+  "weighted_score_fixed_bonus_kg": 12999.82484338252
+}

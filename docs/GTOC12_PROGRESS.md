@@ -1,6 +1,15 @@
 # GTOC12 score progress — 9 September 2026
 
-The latest combined checkpoint is **12,999.824843 weighted kg / 14,279.288159
+The latest locally verified checkpoint is **13,023.704901 weighted kg /
+14,291.006160 raw kg**, with 23 ships, 199 asteroids and **621.348094 raw kg per
+ship**. All four fixed-cargo route alternatives certify on RTX 5090. The best two
+add **23.880058 weighted kg / 11.718001 raw kg** to the preceding combined fleet;
+both original full-fleet checkers accept the exact result and the other 21 ship
+sections remain unchanged. This latest improvement has local GPU provenance;
+it has not been rerun on H100.
+[Work counts, fleet-budget tradeoff, exact evidence and loaded visualiser](GPU_MASS_BUDGETED_FRONTIER.md).
+
+The preceding combined checkpoint is **12,999.824843 weighted kg / 14,279.288159
 raw kg**, with 23 ships and 199 asteroids. Both full-fleet checkers pass locally
 and on Lambda. Retained CUDA collection workspaces reduce allocations and
 improve paired whole-search throughput by 2.46–5.78%; a new GPU-refined ship-4

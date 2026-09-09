@@ -79,6 +79,8 @@ const FLEET_DATASETS = {
   "gtoc12-insertions-v774": { directory: "./data/gtoc12-insertions-v774", label: "H100 CUDA insertion batches v774 (23 ships, 12,843.556 weighted kg; verified faster replay)" },
   "gtoc12-regeneration-v799": { directory: "./data/gtoc12-regeneration-v799", label: "H100 fleet regeneration v799 (23 ships, 12,992.036 weighted kg; nine improved routes)" },
   "gtoc12-current-composition-v628": { directory: "./data/gtoc12-current-composition-v628", label: "Local fleet composition v628 (23 ships, 12,992.408 weighted kg; H100 v799 plus certified local ship 8)" },
+  "gtoc12-current-union-v629": { directory: "./data/gtoc12-current-union-v629", label: "Local fleet union v629 (23 ships, 12,999.825 weighted kg; combined September 9 improvements)" },
+  "gtoc12-frontier-v629": { directory: "./data/gtoc12-frontier-v629", label: "Latest verified fleet (23 ships, 13,023.705 weighted kg; two new routes)" },
   "gtoc12-layouts-v780": { directory: "./data/gtoc12-layouts-v780", label: "H100 CUDA layout generation v780 (23 ships, 12,843.556 weighted kg; verified faster replay)" },
   "gtoc12-v380": { directory: "./data/gtoc12-v380", label: "GPU recovery v380 (4 ships, 2,089 weighted kg)" },
   "gtoc12-v374": { directory: "./data/gtoc12-v374", label: "GPU fleet v374 (3 ships, 1,670 weighted kg)" },
@@ -911,7 +913,7 @@ try {
   const params = new URLSearchParams(location.search);
   const datasetParam = params.get("dataset");
   // Prefer the verified current composition; stay on archive if explicitly requested.
-  const initialDataset = availableFleets.has(datasetParam) ? datasetParam : "gtoc12-current-composition-v628";
+  const initialDataset = availableFleets.has(datasetParam) ? datasetParam : "gtoc12-frontier-v629";
   const wantsFleet = availableFleets.has(initialDataset) && datasetParam !== "archive";
   if (wantsFleet) {
     const ship = params.has("ship") ? Number(params.get("ship")) - 1 : null;

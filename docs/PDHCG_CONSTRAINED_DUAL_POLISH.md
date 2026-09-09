@@ -96,3 +96,74 @@ separately; the complete launched process takes 569.874 ms. This is not a
 speedup result. Before another numerical policy is tried, a bounded phase
 profile should identify where that time goes. The diagnostic remains separate
 from the mission's GPU QOCO backend and earns no fleet score.
+
+## v629 exact isolated-coordinate elimination
+
+The new GPU implementation removes only exactly isolated zero-target coordinates
+from the QR problem. A coordinate must have a single finite nonzero coefficient,
+its row must share no other column, and both its original right-hand side and
+stored stationarity target must be exactly zero. Its exact minimizing correction
+is zero, so its original multiplier bits are retained. No coordinate identifiers
+are hard-coded; nonzero targets and shared rows remain in the factorization.
+
+Thirteen small GPU cases pass their expected outcomes, including rejection of a
+tiny rank-deficient diagonal and a no-op that cannot strictly improve the original
+norm. The real saved capture then passes the diagnostic's quality rule and both
+independent long-double and Decimal65 original-coordinate audits. Its original
+dimensions and every original acceptance threshold are retained.
+
+| Measurement | v629 saved-point result |
+| --- | ---: |
+| Exact signed objective gap | -5.102438474e-17 |
+| Unscaled stationarity 2-norm | 1.58710704e-5 to 7.17619232e-6 |
+| Unscaled stationarity infinity norm | 5.05224336e-6 to 5.06881551e-6 |
+| Original numerical KKT gates / diagnostic quality gate | pass / pass |
+| Native PDHCG status | unchanged iteration limit |
+| Correction evaluation, one observation | 155.032 ms |
+| Separate workspace creation | 224.682 ms |
+| Whole fresh process | 520.776 ms |
+
+The primal, slack, retained cone multipliers and isolated equality multipliers
+remain bit-identical. All 525 released L1 pairs obey their exact pair sum and
+strict subgradient bounds. The infinity norm rises slightly but remains below
+the unchanged 1.0001e-5 bound. The original 1e-9 absolute gap limit now has almost
+its full margin, unlike the earlier CPU result at that boundary.
+
+The host QR/rank phase takes 121.362 ms in this observation. A separate profile
+of the unchanged older binary exposes CUDA API and NVTX spans, but its Nsight
+build does not support the installed driver and records no GPU kernel or memcpy
+activity tables. It cannot establish kernel-level attribution. Neither the
+single-run phase times nor the change from the older observation establish a
+speedup.
+
+The correction still consumes an existing 10,000-update PDHCG iterate. It is not
+integrated into native termination or SCvx, and the mission gain uses QOCO.
+Qualification on further cold and changed warm captures, retained-workspace
+costs, and complete time against the best GPU baseline are the next tests.
+[Sealed source, original inputs, full outputs, profile limitation and independent audits](../results/local/2026-09-09/gpu-dual-isolation-v629/README.md).
+
+## Exact-problem cold QOCO reference
+
+One fresh QOCO process solves the identical original snapshot with all thirteen
+original settings, two existing numeric updates, no supplied iterate and no
+retry. It finishes in 30 IPM iterations and 177 iterative-refinement iterations.
+Native status remains `QOCO_SOLVED_INACCURATE`. Both unchanged independent
+original-coordinate auditors pass all common numerical gates; the existing
+QOCO acceptance rule admits that status only when those gates pass.
+
+The normalized primal residual is 3.05782623e-11, dual residual 1.33647289e-14
+and objective gap 6.97734908e-11. Original cone and block-complementarity checks
+also pass. The full returned x/y/z/s arrays are retained; no CPU correction or
+further solve produces these audit results.
+
+The whole process takes **470.431 ms**, including a **105.751 ms** synchronized
+host solve span. Context/scope creation takes 235.142 ms, setup 46.494 ms and
+serialization 14.042 ms. These are one-case host timings. They do not establish
+median/p95 performance or a paired speedup. In particular, the standalone GPU
+correction's 520.776 ms process omits the earlier PDHCG solve that created its
+input, so it is not a complete competitor with equivalent starting conditions.
+
+There is no demonstrated PDHCG performance win on this capture. The next
+comparison must include the full PDHCG solve and any correction, test retained
+workspaces and use the same independent acceptance gates across representative
+problems. [Exact cold baseline, source and original-vector audits](../results/local/2026-09-09/qoco-exact-comparison-v629/README.md).

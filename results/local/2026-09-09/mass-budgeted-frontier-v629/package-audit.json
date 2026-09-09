@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "audited_index_sha256": "7e012e3b679610366e72e32250be23d44add0a9e3fc05540b80453ba6a353b25",
+  "verify_script_sha256": "038366e94e93aca05ae5a4844ac587e2d6e1cf39a696bacc24a61cf146d4e3cf",
+  "normal_archive_audit_and_optimized_mode_guard": [
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/results/local/2026-09-09/mass-budgeted-frontier-v629/verify_package.py"
+      ],
+      "returncode": 0,
+      "expected_returncode": 0,
+      "stdout": "{\"passed\": true, \"indexed_files\": 29, \"archive_members_round_trip\": 1235, \"original_ready_files_preserved\": 82, \"other21_sections_exact\": true, \"result_sha256\": \"765cb7ef97d38926317dbbf4ae8700626dffec06c48af3d6f68dae47c154f3da\", \"GPU_or_numerical_calls\": 0}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/angus/worktrees/spacepdhcg-literature-venv/bin/python",
+        "-B",
+        "-O",
+        "/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/results/local/2026-09-09/mass-budgeted-frontier-v629/verify_package.py"
+      ],
+      "returncode": 1,
+      "expected_returncode": 1,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/results/local/2026-09-09/mass-budgeted-frontier-v629/verify_package.py\", line 87, in <module>\n    main()\n  File \"/mnt/c/Users/Angus/Desktop/projects/spacecraft-trajectory-optmiser/results/local/2026-09-09/mass-budgeted-frontier-v629/verify_package.py\", line 29, in main\n    raise RuntimeError(\"Run without -O; package checks require assertions\")\nRuntimeError: Run without -O; package checks require assertions\n"
+    }
+  ],
+  "GPU_or_numerical_calls": 0
+}
